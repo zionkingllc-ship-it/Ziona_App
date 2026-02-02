@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-export default function SetingsLayout() {
+export default function CreateLayout() {
 
   return (
     <Stack>

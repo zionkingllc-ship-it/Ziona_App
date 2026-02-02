@@ -1,34 +1,16 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { useEffect } from "react";
-import { useColorScheme } from 'react-native';
-import { TamaguiProvider } from 'tamagui';
-import  config  from '../tamagui.config';
-import NotificationProvider from '../providers/notificationProvider'; // <---
-// app/_layout.tsx
-import { useNotificationPermissions } from "@/notifications/scheduler";
-import { useNotificationSoundBridge } from "@/notifications/useNotificationSoundBridge";
-import { registerHabitNotificationListener } from "@/notifications/scheduler";
+import { Stack } from 'expo-router'
+import { useAuthStore } from '@/store/authStore'
 
-
-  
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-    useNotificationPermissions();
-  useNotificationSoundBridge();
-  useEffect(() => {
-    registerHabitNotificationListener();
-  }, []);
+  const { isAuthenticated, isGuest } = useAuthStore()
 
   return (
-    <TamaguiProvider config={config} defaultTheme={colorScheme!} >
-      <NotificationProvider> 
-        <ThemeProvider value={DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
-        </ThemeProvider>
-      </NotificationProvider>
-    </TamaguiProvider>
-  );
+    <Stack screenOptions={{ headerShown: false }}>
+      {!isAuthenticated && !isGuest ? (
+        <Stack.Screen name="(auth)" />
+      ) : (
+        <Stack.Screen name="(tabs)" />
+      )}
+    </Stack>
+  )
 }

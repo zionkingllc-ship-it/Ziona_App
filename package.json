@@ -20,6 +20,7 @@
     "@tamagui/core": "1.144.1",
     "@tamagui/font-size": "1.144.1",
     "@tamagui/helpers": "1.144.1",
+    "@tamagui/lucide-icons": "^2.0.0-rc.0",
     "@tamagui/react-native-media-driver": "1.144.1",
     "@tamagui/themes": "1.144.1",
     "expo": "~54.0.31",
