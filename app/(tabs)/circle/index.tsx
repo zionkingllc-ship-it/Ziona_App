@@ -1,30 +1,11 @@
-import colors from "@/constants/colors";
+import { YStack, Text } from 'tamagui'
 
-import { Audio } from "expo-av";
-import * as Notifications from "expo-notifications";
-import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Switch, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { XStack } from "tamagui";
-
- 
-export default function CircleScreen() { 
-
+export default function Circles() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text
-          style={{
-            fontSize: 24,
-            fontWeight: "bold",
-            color: colors.primary,
-            marginBottom: 24,
-          }}
-        >
-          Settings
-        </Text>
- 
-      </ScrollView>
-    </SafeAreaView>
-  );
+    <YStack flex={1} padding="$4">
+      <Text fontSize="$7" fontWeight="700">
+        Faith Circles
+      </Text>
+    </YStack>
+  )
 }

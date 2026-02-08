@@ -21,7 +21,7 @@ export default function ProfileScreen() {
             marginBottom: 24,
           }}
         >
-          Settings
+          profile
         </Text>
  
       </ScrollView>

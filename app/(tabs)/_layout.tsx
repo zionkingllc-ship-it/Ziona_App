@@ -1,51 +1,64 @@
-import { Home, Plus, Search, User, Users } from "@tamagui/lucide-icons";
 import { Tabs } from "expo-router";
+import {
+  Home,
+  Network,
+  Plus,
+  Search,
+  User,
+  Users,
+} from "@tamagui/lucide-icons";
+import { View } from "react-native";
+import colors from "@/constants/colors";
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarShowLabel: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.gray,
         tabBarStyle: {
-          backgroundColor: "#000",
-          borderTopWidth: 0,
-          height: 64,
+          backgroundColor: colors.white,
         },
       }}
     >
       <Tabs.Screen
         name="feed"
         options={{
+          title: "Feed",
           tabBarIcon: ({ focused }) => (
-            <Home color={focused ? "white" : "gray"} />
+            <Home color={focused ? colors.primary : "#777"} size={23} />
           ),
         }}
       />
 
       <Tabs.Screen
-        name="circles"
+        name="discover"
         options={{
+          title: "Discover",
           tabBarIcon: ({ focused }) => (
-            <Users color={focused ? "white" : "gray"} />
+            <Search color={focused ? colors.primary : "#777"} size={23} />
           ),
         }}
       />
 
-      {/* CREATE BUTTON */}
+      {/* CREATE (special handling later) */}
       <Tabs.Screen
         name="create"
         options={{
-          href: null, //  not a route
-          tabBarIcon: () => <Plus color="white" size={28} />,
+          title: "Create",
+          tabBarIcon: ({ focused }) => (
+            <Plus color={focused ? colors.primary : "#777"} size={30} />
+          ),
         }}
       />
 
       <Tabs.Screen
-        name="search"
+        name="circle"
         options={{
+           title: "Circle",
           tabBarIcon: ({ focused }) => (
-            <Search color={focused ? "white" : "gray"} />
+            <Network color={focused ? colors.primary : "#777"} size={23} />
           ),
         }}
       />
@@ -53,8 +66,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
+           title: "Profile",
           tabBarIcon: ({ focused }) => (
-            <User color={focused ? "white" : "gray"} />
+            <Users color={focused ? colors.primary : "#777"} size={23} />
           ),
         }}
       />

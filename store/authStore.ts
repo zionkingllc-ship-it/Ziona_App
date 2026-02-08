@@ -1,33 +1,46 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { AuthState, User, AuthTokens } from '@/types'
 
-type AuthState = {
-  isAuthenticated: boolean
-  isGuest: boolean
-  token?: string
-
-  setGuest: () => Promise<void>
-  login: (token: string) => Promise<void>
-  logout: () => Promise<void>
+type AuthStore = AuthState & {
+  setAuth: (user: User, tokens: AuthTokens) => void
+  logout: () => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: false,
-  isGuest: false,
-  token: undefined,
+export const useAuthStore = create<AuthStore>()(
+  persist(
+    (set) => ({
+      user: null,
+      tokens: null,
+      isAuthenticated: false,
+      mode: 'unauthenticated', 
 
-  setGuest: async () => {
-    await AsyncStorage.setItem('authMode', 'guest')
-    set({ isGuest: true, isAuthenticated: false })
-  },
+      setAuth: (user, tokens) =>
+        set({
+          user,
+          tokens,
+          isAuthenticated: true,
+          mode: 'authenticated',
+        }),
 
-  login: async (token) => {
-    await AsyncStorage.setItem('token', token)
-    set({ token, isAuthenticated: true, isGuest: false })
-  },
-
-  logout: async () => {
-    await AsyncStorage.multiRemove(['token', 'authMode'])
-    set({ token: undefined, isAuthenticated: false, isGuest: false })
-  },
-}))
+      logout: () =>
+        set({
+          user: null,
+          tokens: null,
+          isAuthenticated: false,
+          mode: 'unauthenticated', 
+        }),
+    }),
+    {
+      name: 'auth-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        user: state.user,
+        tokens: state.tokens,
+        isAuthenticated: state.isAuthenticated,
+        mode: state.mode, 
+      }),
+    }
+  )
+)

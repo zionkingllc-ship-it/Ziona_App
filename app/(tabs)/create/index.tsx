@@ -1,30 +1,28 @@
-import colors from "@/constants/colors";
+import { YStack, Button, Text } from 'tamagui'
+import { router } from 'expo-router'
 
-import { Audio } from "expo-av";
-import * as Notifications from "expo-notifications";
-import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Switch, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { XStack } from "tamagui";
-
- 
-export default function CreateScreen() { 
-
+export default function CreatePost() {
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text
-          style={{
-            fontSize: 24,
-            fontWeight: "bold",
-            color: colors.primary,
-            marginBottom: 24,
-          }}
-        >
-          Settings
-        </Text>
- 
-      </ScrollView>
-    </SafeAreaView>
-  );
+    <YStack flex={1} padding="$4" gap="$4">
+      <Text fontSize="$8" fontWeight="700">
+        Create Post
+      </Text>
+
+      <Button onPress={() => router.push('/create/image')}>
+        Single Image
+      </Button>
+
+      <Button onPress={() => router.push('/create/carousel')}>
+        Image Carousel
+      </Button>
+
+      <Button onPress={() => router.push('/create/video')}>
+        Video Post
+      </Button>
+
+      <Button onPress={() => router.push('/create/text')}>
+        Text Post
+      </Button>
+    </YStack>
+  )
 }
