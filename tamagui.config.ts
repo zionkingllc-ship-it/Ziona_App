@@ -1,8 +1,7 @@
+import { spacing } from "@/constants/spacing";
 import { themes, tokens } from "@tamagui/themes";
-import { createTamagui } from "tamagui";
+import { createFont, createTamagui } from "tamagui";
 import colors from "./constants/colors";
-import { createFont } from "tamagui";
-import spacing from "@/constants/spacing"
 
 const appTokens = {
   color: {
@@ -14,10 +13,9 @@ const appTokens = {
     warning: colors.warning,
     danger: colors.danger,
   },
-  spacing:{
-    borderRadius:spacing.borderRadius
-  }
-
+  spacing: {
+    borderRadius: spacing.borderRadius,
+  },
 };
 
 const appThemes = {
@@ -36,7 +34,7 @@ const appThemes = {
 };
 
 const monaSansFont = createFont({
-  family: 'MonaSans',
+  family: "MonaSans",
 
   size: {
     1: 12,
@@ -61,20 +59,20 @@ const monaSansFont = createFont({
   },
 
   weight: {
-    4: '400',
-    6: '600',
+    4: "400",
+    6: "600",
   },
 
   face: {
     400: {
-      normal: 'MonaSans',
+      normal: "MonaSans",
     },
     600: {
-      normal: 'MonaSans_SemiBold',
-      italic: 'MonaSans_SemiBoldItalic',
+      normal: "MonaSans_SemiBold",
+      italic: "MonaSans_SemiBoldItalic",
     },
   },
-})
+});
 
 const config = createTamagui({
   tokens: {
@@ -90,8 +88,6 @@ const config = createTamagui({
     heading: monaSansFont,
   },
 });
-
-
 
 export type AppConfig = typeof config;
 
