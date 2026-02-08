@@ -1,15 +1,3 @@
-import { YStack, Text } from 'tamagui'
-
-export default function Circles() {
-  return (
-    <YStack flex={1} padding="$4">
-      <Text fontSize="$7" fontWeight="700">
-        Faith Circles
-      </Text>
-    </YStack>
-  )
-}
-
 import colors from "@/constants/colors";
 
 import { Audio } from "expo-av";
@@ -20,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { XStack } from "tamagui";
 
  
-export default function CircleScreen() { 
+export default function SearchScreen() { 
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
