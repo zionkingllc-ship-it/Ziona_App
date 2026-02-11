@@ -15,7 +15,9 @@
           }
         }
       ],
-           "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-video",
+      "expo-audio"
     ],
     "name": "Ziona",
     "slug": "ziona",
@@ -37,14 +39,13 @@
         "backgroundColor": "#E6F4FE",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
-    },
-    "edgeToEdgeEnabled": true,
+      },
+      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
-  },
-  "web": {
+    },
+    "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     }
-    
-}
+  }
 }

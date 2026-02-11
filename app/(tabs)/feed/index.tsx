@@ -45,7 +45,7 @@ export default function Feed() {
   ).current;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+    <SafeAreaView style={{ flex: 1,  alignItems:"center" }}>
       <FlatList
         data={MOCK_POSTS}
         keyExtractor={(item) => item.id}

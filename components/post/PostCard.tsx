@@ -1,10 +1,11 @@
 import { YStack, XStack, Text, Image } from "tamagui";
 import { Dimensions, Pressable } from "react-native";
-import { Video } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
+import { useEffect } from "react";
 import { Heart, MessageCircle, Share } from "@tamagui/lucide-icons";
 import { Post } from "@/types/post";
 
-const { height } = Dimensions.get("window");
+const { height, width } = Dimensions.get("window");
 
 type Props = {
   post: Post;
@@ -12,30 +13,57 @@ type Props = {
 };
 
 export function PostCard({ post, isActive }: Props) {
+  // 🎥 Create video player only for video posts
+  const player =
+    post.type === "video"
+      ? useVideoPlayer(post.media.url, (player) => {
+          player.loop = false;
+          player.muted = false;
+        })
+      : null;
+
+  // play / pause based on visibility
+  useEffect(() => {
+    if (!player) return;
+
+    if (isActive) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [isActive, player]);
+
   return (
-    <YStack height={height} backgroundColor="black">
+    <YStack height={height - 100} width={width} backgroundColor="black">
       {/* MEDIA */}
-      {post.type === "video" && (
-        <Video
-          source={{ uri: post.media.url }}
-          shouldPlay={isActive}
-          resizeMode="cover"
-          isLooping
-          style={{ flex: 1 }}
+      {post.type === "video" && player && (
+        <VideoView
+          player={player}
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
+          contentFit="contain"
+          allowsFullscreen={false}
+          allowsPictureInPicture={false}
         />
       )}
 
       {post.type === "image" && (
         <Image
           source={{ uri: post.media.imageUrl }}
-          style={{ flex: 1 }}
+          style={{
+            width: "100%",
+            height: "100%",
+            resizeMode: "contain",
+          }}
         />
       )}
 
       {/* OVERLAY */}
       <XStack
         position="absolute"
-        bottom={0}
+        bottom={25}
         left={0}
         right={0}
         padding="$4"

@@ -5,6 +5,7 @@ import {
   Plus,
   Search,
   User,
+  Share,
   Users,
 } from "@tamagui/lucide-icons";
 import { View } from "react-native";
