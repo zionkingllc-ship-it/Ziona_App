@@ -1,4 +1,4 @@
-package com.ziona
+package com.zionking.ziona
 
 import android.app.Application
 import android.content.res.Configuration
