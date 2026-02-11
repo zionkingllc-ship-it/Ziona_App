@@ -1,32 +1,32 @@
-import { Stack } from 'expo-router'
-import { TamaguiProvider } from 'tamagui'
-import { useColorScheme } from 'react-native'
-import { useFonts } from 'expo-font'
-import * as SplashScreen from 'expo-splash-screen'
-import { useEffect } from 'react'
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import { useColorScheme } from "react-native";
+import { TamaguiProvider } from "tamagui";
 
-import config from '@/tamagui.config'
-import NotificationProvider from '@/providers/notificationProvider'
+import NotificationProvider from "@/providers/notificationProvider";
+import config from "@/tamagui.config";
 
-SplashScreen.preventAutoHideAsync()
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const scheme = useColorScheme() ?? 'light'
+  const scheme = useColorScheme() ?? "light";
 
- const [fontsLoaded] = useFonts({
-  MonaSans: require('../assets/fonts/MonaSans-Regular.ttf'),
-  MonaSans_SemiBold: require('../assets/fonts/MonaSans-SemiBold.ttf'),
-  MonaSans_SemiBoldItalic: require('../assets/fonts/MonaSans-SemiBoldItalic.ttf'),
-})
+  const [fontsLoaded] = useFonts({
+    MonaSans: require("../assets/fonts/MonaSans-Regular.ttf"),
+    MonaSans_SemiBold: require("../assets/fonts/MonaSans-SemiBold.ttf"),
+    MonaSans_SemiBoldItalic: require("../assets/fonts/MonaSans-SemiBoldItalic.ttf"),
+  });
 
   useEffect(() => {
     if (fontsLoaded) {
-      SplashScreen.hideAsync()
+      SplashScreen.hideAsync();
     }
-  }, [fontsLoaded])
+  }, [fontsLoaded]);
 
   if (!fontsLoaded) {
-    return null
+    return null;
   }
 
   return (
@@ -38,5 +38,5 @@ export default function RootLayout() {
         </Stack>
       </NotificationProvider>
     </TamaguiProvider>
-  )
+  );
 }

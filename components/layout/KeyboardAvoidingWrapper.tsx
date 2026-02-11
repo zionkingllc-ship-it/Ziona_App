@@ -13,15 +13,13 @@ export function KeyboardAvoidingWrapper({
   offset = 80,
   backgroundColor = 'transparent',
 }: KeyboardAvoidingWrapperProps) {
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor }}>
+  return ( 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={offset}
       >
         {children}
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </KeyboardAvoidingView> 
   )
 }

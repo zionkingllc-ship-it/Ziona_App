@@ -1,82 +1,130 @@
-import { ScrollView } from 'react-native'
-import { YStack, Text } from 'tamagui'
-import { useRef, useEffect } from 'react'
-import * as Haptics from 'expo-haptics'
+import { useEffect } from "react";
+import Animated, {
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  interpolate,
+  runOnJS,
+} from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
+import { Text, YStack } from "tamagui";
 
-const ITEM_HEIGHT = 44
-const VISIBLE_ITEMS = 5
-const CENTER_INDEX = Math.floor(VISIBLE_ITEMS / 2)
+const ITEM_HEIGHT = 44;
+const VISIBLE_ITEMS = 6;
+const CENTER_INDEX = Math.floor(VISIBLE_ITEMS / 2);
 
-export function DateWheel({ data, value, onChange }) {
-  const scrollRef = useRef<ScrollView>(null)
-  const selectedIndex = Math.max(0, data.findIndex((v) => v === value))
+export function DateWheel({
+  data,
+  value,
+  onChange,
+}: {
+  data: any[];
+  value: any;
+  onChange: (v: any) => void;
+}) {
+  const scrollY = useSharedValue(0);
+
+  const selectedIndex = Math.max(
+    0,
+    data.findIndex((d) => d === value)
+  );
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      y: selectedIndex * ITEM_HEIGHT,
-      animated: false,
-    })
-  }, [selectedIndex])
+    scrollY.value = selectedIndex * ITEM_HEIGHT;
+  }, [selectedIndex]);
+
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+    onMomentumEnd: () => {
+      const index = Math.round(scrollY.value / ITEM_HEIGHT);
+      const clamped = Math.max(0, Math.min(index, data.length - 1));
+      runOnJS(onChange)(data[clamped]);
+    },
+  });
 
   return (
-    <YStack
-      height={ITEM_HEIGHT * VISIBLE_ITEMS}
-      overflow="hidden"
-      position="relative"
+    <Animated.ScrollView
+      showsVerticalScrollIndicator={false}
+      snapToInterval={ITEM_HEIGHT}
+      decelerationRate="fast"
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      contentOffset={{ y: selectedIndex * ITEM_HEIGHT, x: 0 }}
+      style={{ height: ITEM_HEIGHT * VISIBLE_ITEMS }}
     >
-      {/* Fixed selection background */}
-      <YStack
-        position="absolute"
-        top={ITEM_HEIGHT * CENTER_INDEX}
-        height={ITEM_HEIGHT}
-        width="100%"
-        backgroundColor="#fbeffc"
-        borderRadius={8}
-        pointerEvents="none"
-      />
+      <YStack height={ITEM_HEIGHT * CENTER_INDEX} />
 
-      <ScrollView
-        ref={scrollRef}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={ITEM_HEIGHT}
-        decelerationRate="fast"
-        contentContainerStyle={{
-          paddingVertical: ITEM_HEIGHT * CENTER_INDEX,
-        }}
-        onMomentumScrollEnd={(e) => {
-          const index = Math.round(
-            e.nativeEvent.contentOffset.y / ITEM_HEIGHT
-          )
+      {data.map((item, index) => (
+        <WheelItem
+          key={item}
+          item={item}
+          index={index}
+          scrollY={scrollY}
+        />
+      ))}
 
-          if (index !== selectedIndex) {
-            onChange(data[index])
-            Haptics.selectionAsync()
-          }
-        }}
-      >
-        {data.map((item, index) => {
-          const isSelected = index === selectedIndex
+      <YStack height={ITEM_HEIGHT * CENTER_INDEX} />
+    </Animated.ScrollView>
+  );
+}
 
-          return (
-            <YStack
-              key={index}
-              height={ITEM_HEIGHT}
-              justifyContent="center"
-              alignItems="center"
-              paddingHorizontal={10}
-            >
-              <Text
-                fontSize={isSelected ? '$5' : '$4'}
-                fontWeight={isSelected ? '500' : '400'}
-                opacity={isSelected ? 1 : 0.35}
-                
-              >
-                {item}
-              </Text>
-            </YStack>
-          )
-        })}
-      </ScrollView>
-    </YStack>
-  )
+function WheelItem({
+  item,
+  index,
+  scrollY,
+}: {
+  item: any;
+  index: number;
+  scrollY: SharedValue<number>;
+}) {
+ const style = useAnimatedStyle(() => {
+  const position = scrollY.value / ITEM_HEIGHT;
+  const distance = index - position;
+
+  return {
+    opacity: interpolate(
+      Math.abs(distance),
+      [0, 1, 2],
+      [1, 0.55, 0.2],
+      "clamp"
+    ),
+    transform: [
+      { perspective: 1000 },
+      {
+        rotateX: `${interpolate(
+          distance,
+          [-2, -1, 0, 1, 2],
+          [25, 12, 0, -12, -25],
+          "clamp"
+        )}deg`,
+      },
+      {
+        scale: interpolate(
+          Math.abs(distance),
+          [0, 1, 2],
+          [1, 0.96, 0.9],
+          "clamp"
+        ),
+      },
+    ],
+  };
+});
+  return (
+    <Animated.View
+      style={[
+        {
+          height: ITEM_HEIGHT,
+          justifyContent: "center",
+          alignItems: "center",
+        },
+        style,
+      ]}
+    >
+      <Text fontSize="$4" fontWeight="500">
+        {item}
+      </Text>
+    </Animated.View>
+  );
 }

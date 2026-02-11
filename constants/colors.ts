@@ -1,17 +1,22 @@
+import { ButtonText } from "tamagui";
+
 // theme/colors.ts
 const colors = {
   primary: "#742092",
   secondary: "#D396E8",
-  tertiary:"#E4C0F1",
+  tertiary: "#E4C0F1",
   background: "#FFF5E5",
   text: "#181419",
-  inactiveButton:"#CCC4CF",
+  inactiveButton: "#CCC4CF",
   success: "#e0eddc",
   warning: "#FACC15",
   danger: "#fcb9b9",
   gray: "#808080",
   white: "#FFFFFF",
   black: "#000000",
+  lightButton: "#FFFFFF",
+  primaryButton: "#742092",
+  inActiveButton: "#CCC4CF",
   ACTION_NAVY_BLUE: "#0E0E55",
   HEADER_ICON_GRAY: "#666666",
   primaryDark: "#0E0E55",
@@ -24,11 +29,27 @@ const colors = {
   placeholderText: "#999999",
   buttonBlue: "#0E0E55",
   SUCCESS_GREEN: "#30A413",
-  softGreen:"#F0FDED",
+  successText: "#23770E",
+  successBorder: "#23770E",
   DEBIT_RED: "#D52D3F",
   CREDIT_GREEN: "#1F8454",
+  successBackground: "#F0FDED",
+  activeBorderColor: "#23770E",
+  errorBorderColor: "#770E0E",
+  errorText: "#770E0E",
+  errorBackground: "#FDEDED",
+  subHeader: "#4E4252",
+  placeHolderText: "#836F8B",
+  borderColor:"#EEEBEF",
+  borderBackground:"#FAF9FA",
+  termsText: "#836F8B",
+  termsButton: "#4E4252",
+  inputIconColor: "#4E4252",
+  suggestionBackground: "#FAF9FA",
+  buttonText:"#F6EAFA",
+  spinner:"#F6EAFA",
+  inputTitle:"#836F8B",
+  forgotPassword:"#836F8B",
 };
 
 export default colors;
-
-

@@ -1,9 +1,6 @@
-import { ReactNode } from "react";
-import { Button, XStack, Text, View } from "tamagui";
+import { Button, XStack, Text, Spinner } from "tamagui";
 import { StyleProp, ViewStyle } from "react-native";
-import colors from "@/constants/colors";
-import { FontProps } from "react-native-svg";
-import { Font } from "@tamagui/core";
+import colors from "@/constants/colors"; 
 
 type AppButtonProps = {
   text: string;
@@ -11,8 +8,9 @@ type AppButtonProps = {
   color?: string;
   onPress?: () => void;
   textSize?: any;
-  textWeight?: any; 
+  textWeight?: any;
   disabled?: boolean;
+  loading?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -22,30 +20,37 @@ export function SimpleButton({
   textSize = "$4",
   textWeight = "600",
   onPress,
-  color, 
+  color,
   disabled = false,
+  loading = false,
   style,
-}: AppButtonProps) {
+}: AppButtonProps) { 
+  const isDisabled = disabled || loading;
+
   return (
     <Button
       onPress={onPress}
-      disabled={disabled}
+        
+      disabled={isDisabled}
       style={style}
-      backgroundColor={disabled ? colors.inactiveButton : color}
+      backgroundColor={isDisabled ? colors.inactiveButton : color}
       borderWidth={1}
       borderColor="$gray5"
       pressStyle={{ opacity: 0.85 }}
     >
-      <XStack width={"100%"}  gap={"$10"} justifyContent="center">
-        <Text
-          color={textColor ? textColor : "black"}
-          alignSelf="center"
-          textAlign="center"
-          fontSize={textSize}
-          fontWeight={textWeight}
-        >
-          {text}
-        </Text>
+      <XStack width="100%" justifyContent="center" alignItems="center">
+        {loading ? (
+          <Spinner color={textColor ?? "#F6EAFA"} size="small" />
+        ) : (
+          <Text
+            color={textColor ?? "black"}
+            textAlign="center"
+            fontSize={textSize}
+            fontWeight={textWeight}
+          >
+            {text}
+          </Text>
+        )}
       </XStack>
     </Button>
   );

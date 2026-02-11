@@ -1,9 +1,7 @@
-import { ReactNode } from "react";
-import { Button, XStack, Text, View } from "tamagui";
-import { StyleProp, ViewStyle } from "react-native";
 import colors from "@/constants/colors";
-import { FontProps } from "react-native-svg";
-import { Font } from "@tamagui/core";
+import { ReactNode } from "react";
+import { StyleProp, ViewStyle } from "react-native";
+import { Button, Text, View, XStack } from "tamagui";
 
 type AppButtonProps = {
   text: string;
@@ -40,15 +38,14 @@ export function PrimaryButton({
       style={style}
       backgroundColor={disabled ? colors.inactiveButton : color}
       borderWidth={1}
-      borderColor="$gray5"
+      borderColor={colors.borderColor}
       pressStyle={{ opacity: 0.85 }}
+      height={"$4"}
     >
-      <XStack width={"100%"}  gap={"$10"}>
-        {startIcon && (
-          <View width={iconSize} height={iconSize} alignSelf="flex-start">
-            {startIcon}
-          </View>
-        )}
+      <XStack width={"100%"}  justifyContent="space-between">
+        <View width={iconSize} height={iconSize} alignSelf="flex-start">
+          {startIcon && startIcon}
+        </View>
 
         <Text
           color={textColor ? textColor : "black"}
@@ -60,11 +57,9 @@ export function PrimaryButton({
           {text}
         </Text>
 
-        {endIcon && (
-          <View width={iconSize} height={iconSize} alignSelf="flex-end">
-            {endIcon}
-          </View>
-        )}
+        <View width={iconSize} height={iconSize} alignSelf="flex-end">
+          {endIcon && endIcon}
+        </View>
       </XStack>
     </Button>
   );

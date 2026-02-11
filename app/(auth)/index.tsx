@@ -1,17 +1,16 @@
-import { ScrollView, XStack, YStack, Text, Button, Image } from "tamagui";
-import { router } from "expo-router";
-import { Mail } from "@tamagui/lucide-icons";
-import { Pressable, useWindowDimensions } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import colors from "@/constants/colors";
+import { MarqueeCarousel } from "@/components/ui/marquee";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { GradientBackground } from "@/components/layout/GradientBackground";
+import colors from "@/constants/colors";
+import { router } from "expo-router";
+import { useEffect, useRef } from "react";
+import { Animated, Easing, Pressable, useWindowDimensions } from "react-native";
+import { Image, Text, YStack, View } from "tamagui";
 
 const cards = [
   {
     id: "1",
     image: require("@/assets/images/index1.png"),
-    text: "Connect with believers wherever you are",
+    text: "Enjoy ads-free faith based content",
   },
   {
     id: "2",
@@ -21,174 +20,153 @@ const cards = [
   {
     id: "3",
     image: require("@/assets/images/index3.png"),
-    text: "Grow spiritually with a global faith community",
+    text: "Connect with God from wherever you are, with prayer circles",
   },
 ];
 
 export default function AuthIndex() {
   const { width, height } = useWindowDimensions();
-  const CARD_WIDTH = Math.min(width * 0.7, 280);
+
+  const CARD_WIDTH = Math.min(width * 0.7, 350);
   const CARD_HEIGHT = height * 0.28;
+  const GAP = 16;
+
+  const TOTAL_WIDTH = (CARD_WIDTH + GAP) * cards.length;
+
+  const translateX = useRef(new Animated.Value(0)).current;
+
   const facebook = require("@/assets/images/facebook.png");
   const google = require("@/assets/images/google.png");
   const mail = require("@/assets/images/maiIcon.png");
 
+  /* --------------------------------------------------
+     Continuous marquee animation
+  --------------------------------------------------- */
+  useEffect(() => {
+    const start = () => {
+      translateX.setValue(0);
+
+      Animated.timing(translateX, {
+        toValue: -TOTAL_WIDTH,
+        duration: 26000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }).start(() => start());
+    };
+
+    start();
+  }, [TOTAL_WIDTH]);
+
   return (
-    <GradientBackground>
-      <SafeAreaView style={{ flex: 1}}>
-        <YStack flex={1}>
-          {/* Carousel */}
-
-          <YStack
-            height={CARD_HEIGHT + 40}
-            position="relative"
-            overflow="hidden"
+    <YStack flex={1}>
+      <YStack>
+        <MarqueeCarousel cards={cards} />
+      </YStack>
+      {/* ================= CONTENT ================= */}
+      <YStack padding="$5" gap="$4" justifyContent="space-between">
+        {/* Title */}
+        <YStack gap="$2">
+          <Text
+            fontSize="$4"
+            fontWeight="600"
+            textAlign="center"
+            color={colors.text}
           >
-            {/* Background image */}
-            <Image
-              source={require("@/assets/images/index2.png")}
-              position="absolute"
-              top={0}
-              left={0}
-              width="100%"
-              height="100%"
-              opacity={0.3}
-            />
+            Sign up for Ziona
+          </Text>
+          <Text
+            fontSize="$3"
+            fontWeight="400"
+            textAlign="center"
+            color={colors.subHeader}
+          >
+            Create a profile, follow worshippers, share worship moments, and
+            join a global community of faith.
+          </Text>
+        </YStack>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={CARD_WIDTH + 16}
-              decelerationRate="fast"
-              contentContainerStyle={{
-                paddingHorizontal: 24,
-                paddingTop: 24,
-              }}
+        {/* Buttons */}
+        <YStack gap="$3">
+          <PrimaryButton
+            text="Continue with Email"
+            color={colors.white}
+            textSize={13}
+            textWeight="400"
+            onPress={() => router.push("/(auth)/email")}
+            startIcon={<Image source={mail} width={24} height={24} />}
+          />
+
+          <PrimaryButton
+            text="Continue with Google"
+            textSize={13}
+            textWeight="400"
+            color={colors.white}
+            onPress={() => router.push("/")}
+            startIcon={<Image source={google} width={23} height={23} />}
+          />
+
+          <PrimaryButton
+            text="Continue with Facebook"
+            textSize={13}
+            textWeight="400"
+            color={colors.white}
+            onPress={() => router.push("/")}
+            startIcon={<Image source={facebook} width={23} height={23} />}
+          />
+        </YStack>
+
+        {/* Footer */}
+        <YStack gap="$7" alignItems="center">
+          <Text fontSize="$3" color={colors.termsText} textAlign="center">
+            By continuing, you agree to Ziona’s{" "}
+            <Text
+              color={colors.termsButton}
+              fontWeight="900"
+              textDecorationLine="underline"
             >
-              <XStack gap="$4">
-                {cards.map((card) => (
-                  <YStack
-                    key={card.id}
-                    width={CARD_WIDTH}
-                    height={CARD_HEIGHT}
-                    borderRadius={20}
-                    overflow="hidden"
-                    backgroundColor="#000"
-                  >
-                    <Image source={card.image} width="100%" height="100%" />
-
-                    <YStack
-                      position="absolute"
-                      bottom={16}
-                      left={16}
-                      right={16}
-                    >
-                      <Text color="white" fontSize="$3" fontWeight="400">
-                        {card.text}
-                      </Text>
-                    </YStack>
-                  </YStack>
-                ))}
-              </XStack>
-            </ScrollView>
-          </YStack>
-
-          {/* Content */}
-          <YStack padding="$5" gap="$4" justifyContent="space-between">
-            {/* Title */}
-            <YStack gap="$2">
+              Terms of use
+            </Text>{" "}
+            and confirm that you have read Ziona’s{" "}
+            <Text
+              color={colors.termsButton}
+              fontWeight="900"
+              textDecorationLine="underline"
+            >
+              Privacy Policy
+            </Text>
+          </Text>
+          <YStack justifyContent="center" alignItems="center" marginTop={"$9"}>
+            <Pressable
+              style={{
+                width: "50%",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: 10,
+                borderRadius: 8,
+              }}
+              onPress={() => router.push("/(tabs)/feed")}
+            >
               <Text
-                fontSize="$4"
-                fontWeight="600"
-                textAlign="center"
                 color={colors.text}
+                fontSize="$3"
+                fontWeight="600"
+                textDecorationLine="underline"
               >
-                Sign up for Ziona
+                Skip for now
               </Text>
-              <Text fontSize={"$3"} fontWeight={"400"} textAlign="center">
-                Create a profile, follow worshippers, share worship moments, and
-                join a global community of faith.
-              </Text>
-            </YStack>
+            </Pressable>
 
-            {/* Buttons */}
-            <YStack gap="$3">
-              <PrimaryButton
-                text=" Username/Email Signin"
-                color={colors.white}
-                textSize={13}
-                textWeight={"400"}
-                onPress={() => router.push("/(auth)/email")}
-                startIcon={<Image source={mail} width={24} height={24} />}
-              />
-
-              <PrimaryButton
-                text="Continue with Google"
-                textSize={13}
-                textWeight={"400"}
-                onPress={() => router.push("/(auth)/email")}
-                startIcon={<Image source={google} width={23} height={23} />}
-              />
-              <PrimaryButton
-                text="Continue with Facebook"
-                textSize={13}
-                textWeight={"400"}
-                onPress={() => router.push("/(auth)/email")}
-                startIcon={<Image source={facebook} width={23} height={23} />}
-              />
-            </YStack>
-
-            {/* Footer */}
-            <YStack gap={"$7"} alignItems="center">
-              <Text fontSize="$3" color={colors.balanceText}>
-                By continuing, you agree to Ziona’s{" "}
-                <Text
-                  color={colors.secondary}
-                  fontWeight={"900"}
-                  textDecorationLine="underline"
-                >
-                  Terms of use
-                </Text>{" "}
-                and confirm that you have read Ziona’s{" "}
-                <Pressable>
-                  <Text
-                    color={colors.secondary}
-                    fontWeight={"900"}
-                    textDecorationLine="underline"
-                  >
-                    Privacy Policy
-                  </Text>
-                </Pressable>
-              </Text>
-
-              <Pressable
-                style={{
-                  width: "50%",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: colors.white,
-                  padding: 10,
-                  borderRadius: 8,
-                }}
-                onPress={() => router.push("/(tabs)/feed")}
-              >
-                <Text fontSize={"$3"} fontWeight="600">
-                  Skip for now
+            <Pressable onPress={() => router.push("/(auth)/login")}>
+              <Text fontSize="$3">
+                Already have an account?{" "}
+                <Text color="$purple10" fontWeight="900">
+                  Login
                 </Text>
-              </Pressable>
-
-              <Pressable onPress={() => router.push("/(auth)/signin")}>
-                <Text fontSize="$3">
-                  Already have an account?{" "}
-                  <Text color="$purple10" fontWeight="900">
-                    Login
-                  </Text>
-                </Text>
-              </Pressable>
-            </YStack>
+              </Text>
+            </Pressable>
           </YStack>
         </YStack>
-      </SafeAreaView>
-    </GradientBackground>
+      </YStack>
+    </YStack>
   );
 }
