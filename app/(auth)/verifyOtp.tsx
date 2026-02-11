@@ -3,7 +3,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import OtpInputs from "react-native-otp-inputs";
 import { Image, Text, YStack } from "tamagui";
-
 import { KeyboardAvoidingWrapper } from "@/components/layout/KeyboardAvoidingWrapper";
 import Header from "@/components/layout/header";
 import colors from "@/constants/colors";
@@ -89,12 +88,12 @@ export default function VerifyOtp() {
 
         {/* RESEND */}
         <YStack alignItems="center" marginTop="$4">
-          <Text fontSize="$3" color={colors.gray} marginBottom="$1">
+          <Text fontSize="$3" color={colors.subHeader} marginBottom="$1">
             Didn’t receive a code?
           </Text>
 
           {timer > 0 ? (
-            <Text fontSize="$3" color={colors.gray}>
+            <Text fontSize="$3" color={colors.subHeader}>
               You can request a new code in 0:
               {timer.toString().padStart(2, "0")}s
             </Text>
