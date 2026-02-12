@@ -60,7 +60,7 @@ export default function AuthIndex() {
   return (
     <YStack flex={1}>
       <YStack>
-        <MarqueeCarousel cards={cards} />
+        <MarqueeCarousel animationType="loop" cards={cards} />
       </YStack>
       {/* ================= CONTENT ================= */}
       <YStack padding="$5" gap="$4" justifyContent="space-between">
@@ -121,7 +121,7 @@ export default function AuthIndex() {
             By continuing, you agree to Ziona’s{" "}
             <Text
               color={colors.termsButton}
-              fontWeight="900"
+              fontWeight="500"
               textDecorationLine="underline"
             >
               Terms of use
@@ -129,7 +129,7 @@ export default function AuthIndex() {
             and confirm that you have read Ziona’s{" "}
             <Text
               color={colors.termsButton}
-              fontWeight="900"
+              fontWeight="500"
               textDecorationLine="underline"
             >
               Privacy Policy
@@ -159,7 +159,7 @@ export default function AuthIndex() {
             <Pressable onPress={() => router.push("/(auth)/login")}>
               <Text fontSize="$3">
                 Already have an account?{" "}
-                <Text color="$purple10" fontWeight="900">
+                <Text color={colors.primary} fontWeight="900">
                   Login
                 </Text>
               </Text>

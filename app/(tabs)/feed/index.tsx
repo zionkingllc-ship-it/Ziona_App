@@ -1,40 +1,28 @@
-import { FlatList, ViewToken } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRef, useState } from "react";
 import { PostCard } from "@/components/post/PostCard";
-import { Post } from "@/types/post";
-
-const MOCK_POSTS: Post[] = [
-  {
-    id: "1",
-    type: "video",
-    author: { id: "user-1", name: "Ziona" },
-    media: {
-      type: "video",
-      url: "https://www.w3schools.com/html/mov_bbb.mp4",
-    },
-    caption: "If you are willing to pray, there is always a God to answer",
-    liked: false,
-    likesCount: 432,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    type: "video",
-    author: { id: "user-1", name: "Ziona" },
-    media: {
-      type: "video",
-      url: "https://www.w3schools.com/html/mov_bbb.mp4",
-    },
-    caption: "Faith grows when you trust God completely.",
-    liked: false,
-    likesCount: 120,
-    createdAt: new Date().toISOString(),
-  },
-];
+import TwoButtonSwitch from "@/components/ui/twoButtonSwitch";
+import colors from "@/constants/colors";
+import { MOCK_POSTS, unreadCount } from "@/constants/examplePost";
+import { Bell } from "@tamagui/lucide-icons";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useRef, useState } from "react";
+import {
+  FlatList,
+  ViewToken,
+  useWindowDimensions,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, Text, XStack, YStack } from "tamagui";
 
 export default function Feed() {
+  const { height } = useWindowDimensions();
+  const tabBarHeight = useBottomTabBarHeight();
+
+  const feedHeight = height - tabBarHeight;
+
   const [activePostId, setActivePostId] = useState<string | null>(null);
+  const [feedType, setFeedType] = useState<"forYou" | "following">(
+    "forYou"
+  );
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -45,21 +33,87 @@ export default function Feed() {
   ).current;
 
   return (
-    <SafeAreaView style={{ flex: 1,  alignItems:"center" }}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1  }}
+    >
+      {/* HEADER */}
+      <XStack
+        position="absolute"
+        top={50}
+        left={6}
+        right={0}
+        padding="$3"
+        alignItems="center"
+        justifyContent="space-between"
+        zIndex={10}
+      >
+        <Image source={require("@/assets/images/logowhite.png")} />
+
+        <TwoButtonSwitch
+          value={feedType}
+          onChange={setFeedType}
+          width="65%"
+        />
+
+        <XStack
+          width={40}
+          height={40}
+          borderRadius={20}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="rgba(255,255,255,0.12)"
+          pressStyle={{ scale: 0.95, opacity: 0.8 }}
+        >
+          <Bell size={24} color={colors.white} />
+
+          {unreadCount > 0 && (
+            <YStack
+              position="absolute"
+              top={6}
+              right={6}
+              minWidth={8}
+              height={8}
+              borderRadius={999}
+              backgroundColor="#FF3B30"
+              alignItems="center"
+              justifyContent="center"
+              paddingHorizontal={unreadCount > 9 ? 4 : 0}
+            >
+              {unreadCount > 9 && (
+                <Text fontSize={10} color="white" fontWeight="700">
+                  9+
+                </Text>
+              )}
+            </YStack>
+          )}
+        </XStack>
+      </XStack>
+
+      {/* FEED */}
       <FlatList
         data={MOCK_POSTS}
         keyExtractor={(item) => item.id}
+        pagingEnabled
+        decelerationRate="fast"
+        showsVerticalScrollIndicator={false}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={{ itemVisiblePercentThreshold: 80 }}
+        snapToInterval={feedHeight}
+        snapToAlignment="start"
+        getItemLayout={(_, index) => ({
+          length: feedHeight,
+          offset: feedHeight * index,
+          index,
+        })}
         renderItem={({ item }) => (
           <PostCard
             post={item}
             isActive={item.id === activePostId}
+            screenHeight={feedHeight}
           />
         )}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{ itemVisiblePercentThreshold: 80 }}
       />
     </SafeAreaView>
   );
-} 
+}

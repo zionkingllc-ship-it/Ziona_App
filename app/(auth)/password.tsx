@@ -49,7 +49,7 @@ export default function CreatePassword() {
         />
 
         <YStack alignItems="center" marginTop="$6" gap="$3">
-          <Text fontSize="$5" fontWeight="600">
+          <Text fontSize="$4" fontWeight="600">
             Create password
           </Text>
         </YStack>
@@ -70,6 +70,7 @@ export default function CreatePassword() {
         />
 
         <YStack gap="$2" marginLeft={5}>
+          <Text fontSize={"$4"} fontWeight={"500"} color={colors.headerText}>Your password must have at least:</Text>
           <Rule ok={checks.length} text="8 characters (20 max)" />
           <Rule ok={checks.letterNumber} text="1 letter and 1 number" />
           <Rule ok={checks.special} text="1 special character (e.g. ! @ &)" />
@@ -90,7 +91,7 @@ export default function CreatePassword() {
 
 function Rule({ ok, text }: { ok: boolean; text: string }) {
   return (
-    <Text color={ok ? colors.SUCCESS_GREEN : colors.gray}>
+    <Text fontSize={"$4"} color={ok ? colors.SUCCESS_GREEN : colors.subHeader}>
       {ok ? "✓" : "✓"} {text}
     </Text>
   );

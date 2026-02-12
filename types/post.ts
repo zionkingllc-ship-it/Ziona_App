@@ -57,18 +57,11 @@ export type TextPost = BasePost & {
   type: "text";
   text: string;
   background?: BackgroundType;
+  caption?: string;
 };
 
 /* ---------- Union ---------- */
 
-export type Post =
-  | ImagePost
-  | CarouselPost
-  | VideoPost
-  | TextPost;
+export type Post = ImagePost | CarouselPost | VideoPost | TextPost;
 
-export type PostType =
-  | "image"
-  | "carousel"
-  | "video"
-  | "text";
+export type PostType = "image" | "carousel" | "video" | "text";

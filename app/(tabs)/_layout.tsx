@@ -1,17 +1,22 @@
-import { Tabs } from "expo-router";
-import {
-  Home,
-  Network,
-  Plus,
-  Search,
-  User,
-  Share,
-  Users,
-} from "@tamagui/lucide-icons";
-import { View } from "react-native";
 import colors from "@/constants/colors";
+import { Tabs } from "expo-router";
+import { Image } from "tamagui";
 
 export default function TabsLayout() {
+  const homeActive = require("@/assets/images/homeTabB.png");
+  const homeInActive = require("@/assets/images/HomeTabA.png");
+
+  const discoverActive = require("@/assets/images/discoverTabB.png");
+  const discoverInActive = require("@/assets/images/discoverTabA.png");
+
+  const createActive = require("@/assets/images/createTabsB.png");
+  const createInActive = require("@/assets/images/createTabsA.png");
+
+  const circleInActive = require("@/assets/images/circleTabA.png");
+  const circleActive = require("@/assets/images/circleTabB.png");
+
+  const profile = require("@/assets/images/profile.png");
+
   return (
     <Tabs
       screenOptions={{
@@ -21,6 +26,10 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.white,
         },
+        tabBarLabelStyle: {
+          fontSize: 13, // try 13–14 for subtle increase
+          fontWeight: "400", 
+        },
       }}
     >
       <Tabs.Screen
@@ -28,7 +37,11 @@ export default function TabsLayout() {
         options={{
           title: "Feed",
           tabBarIcon: ({ focused }) => (
-            <Home color={focused ? colors.primary : "#777"} size={23} />
+            <Image
+              src={focused ? homeActive : homeInActive}
+              width={23}
+              height={23}
+            />
           ),
         }}
       />
@@ -38,18 +51,26 @@ export default function TabsLayout() {
         options={{
           title: "Discover",
           tabBarIcon: ({ focused }) => (
-            <Search color={focused ? colors.primary : "#777"} size={23} />
+            <Image
+              src={focused ? discoverActive : discoverInActive}
+              width={23}
+              height={23}
+            />
           ),
         }}
       />
 
-      {/* CREATE (special handling later) */}
+      {/* CREATE */}
       <Tabs.Screen
         name="create"
         options={{
           title: "Create",
           tabBarIcon: ({ focused }) => (
-            <Plus color={focused ? colors.primary : "#777"} size={30} />
+            <Image
+              src={focused ? createActive : createInActive}
+              width={23}
+              height={23}
+            />
           ),
         }}
       />
@@ -57,9 +78,13 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="circle"
         options={{
-           title: "Circle",
+          title: "Circle",
           tabBarIcon: ({ focused }) => (
-            <Network color={focused ? colors.primary : "#777"} size={23} />
+            <Image
+              src={focused ? circleActive : circleInActive}
+              width={23}
+              height={23}
+            />
           ),
         }}
       />
@@ -67,10 +92,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-           title: "Profile",
-          tabBarIcon: ({ focused }) => (
-            <Users color={focused ? colors.primary : "#777"} size={23} />
-          ),
+          title: "Profile",
+          tabBarIcon: () => <Image src={profile} width={23} height={23} />,
         }}
       />
     </Tabs>
