@@ -1,11 +1,11 @@
 import colors from "@/constants/colors";
 import { Post } from "@/types/post";
 import { Play } from "@tamagui/lucide-icons";
-import { VideoView, useVideoPlayer } from "expo-video";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View as RNView } from "react-native";
-import { Image, Text, View, XStack, YStack } from "tamagui";
 import Video from "react-native-video";
+import { Image, Text, View, XStack, YStack } from "tamagui";
+
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS } from "react-native-reanimated";
 
@@ -23,124 +23,44 @@ const shareIcon = require("@/assets/images/shareIcon.png");
 const flagIcon = require("@/assets/images/flagIcon.png");
 
 export function PostCard({ post, isActive, screenHeight }: Props) {
-  const player =
-    post.type === "video"
-      ? useVideoPlayer(post.media.url, (p) => {
-          p.loop = true;
-          p.muted = false;
-        })
-      : null;
+  const videoRef = useRef<any>(null);
 
   const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [showPlayIcon, setShowPlayIcon] = useState(false);
   const [liked, setLiked] = useState(false);
 
-  const durationRef = useRef(0);
-  const readyRef = useRef(false);
-  const rafRef = useRef<number | null>(null);
   const progressWidthRef = useRef(0);
   const lastRatioRef = useRef(0);
 
   /* =========================
-     PLAYER READY TRACKING
+     AUTO PLAY / PAUSE
   ========================== */
   useEffect(() => {
-    if (!player) return;
-
-    const sub = player.addListener("statusChange", (status) => {
-      if (status.status === "readyToPlay") {
-        readyRef.current = true;
-        durationRef.current = player.duration || 0;
-      }
-    });
-
-    return () => sub.remove();
-  }, [player]);
-
-  /* =========================
-     AUTO PLAY
-  ========================== */
-  useEffect(() => {
-    if (!player || !readyRef.current) return;
+    if (post.type !== "video") return;
 
     if (isActive) {
-      player.play();
+      setIsPlaying(true);
       setShowPlayIcon(false);
     } else {
-      player.pause();
+      setIsPlaying(false);
       setShowPlayIcon(true);
     }
-  }, [isActive, player]);
+  }, [isActive, post.type]);
 
   /* =========================
-     PROGRESS LOOP
+     VIDEO CONTROLS
   ========================== */
-  useEffect(() => {
-    if (!player) return;
 
-    const update = () => {
-      if (
-        readyRef.current &&
-        durationRef.current > 0
-      ) {
-        const ratio =
-          player.currentTime / durationRef.current;
-
-        setProgress(Math.max(0, Math.min(1, ratio)));
-      }
-
-      rafRef.current = requestAnimationFrame(update);
-    };
-
-    rafRef.current = requestAnimationFrame(update);
-
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [player]);
-
-  /* =========================
-     SAFE SEEK
-  ========================== */
-const handleSeek = async (ratio: number) => {
-  if (!player) return;
-  if (!durationRef.current) return;
-
-  const newTime = ratio * durationRef.current;
-  const wasPlaying = player.playing;
-
-  try {
-    //  Pause first
-    if (wasPlaying) {
-      player.pause();
-    }
-
-    //  Seek
-    player.currentTime = newTime;
-
-    // Resume next frame 
-    if (wasPlaying) {
-      requestAnimationFrame(() => {
-        player.play();
-      });
-    }
-  } catch (e) {
-    console.log("Seek error:", e);
-  }
-};
-  /* =========================
-     CONTROLS
-  ========================== */
   const handleSingleTap = () => {
-    if (!player || !readyRef.current) return;
+    if (post.type !== "video") return;
 
-    if (player.playing) {
-      player.pause();
-      setShowPlayIcon(true);
-    } else {
-      player.play();
-      setShowPlayIcon(false);
-    }
+    setIsPlaying((prev) => {
+      const next = !prev;
+      setShowPlayIcon(!next);
+      return next;
+    });
   };
 
   const handleDoubleTap = () => {
@@ -148,21 +68,36 @@ const handleSeek = async (ratio: number) => {
   };
 
   const handleLongPressStart = () => {
-    if (!player || !readyRef.current) return;
-    if (!player.playing) return;
+    if (post.type !== "video") return;
+    if (!videoRef.current) return;
 
-    player.playbackRate = 2.0;
+    videoRef.current.setNativeProps({
+      rate: 2.0,
+    });
   };
 
   const handleLongPressEnd = () => {
-    if (!player || !readyRef.current) return;
+    if (post.type !== "video") return;
+    if (!videoRef.current) return;
 
-    player.playbackRate = 1.0;
+    videoRef.current.setNativeProps({
+      rate: 1.0,
+    });
+  };
+
+  const handleSeek = (ratio: number) => {
+    if (!videoRef.current) return;
+    if (!duration) return;
+
+    const newTime = ratio * duration;
+
+    videoRef.current.seek(newTime);
   };
 
   /* =========================
      GESTURES
   ========================== */
+
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
     .onStart(() => runOnJS(handleDoubleTap)());
@@ -201,13 +136,26 @@ const handleSeek = async (ratio: number) => {
     <YStack height={screenHeight} width="100%" backgroundColor="black">
       <GestureDetector gesture={videoGesture}>
         <Animated.View style={{ flex: 1 }}>
-          {post.type === "video" && player && (
+          {post.type === "video" && (
             <>
-              <VideoView
-                player={player}
+              <Video
+                ref={videoRef}
+                source={{ uri: post.media.url }}
                 style={{ width: "100%", height: "100%" }}
-                contentFit="cover"
-                nativeControls={false}
+                resizeMode="cover"
+                repeat
+                paused={!isPlaying}
+                rate={1.0}
+                onLoad={(data) => {
+                  setDuration(data.duration);
+                }}
+                onProgress={(data) => {
+                  if (!duration) return;
+                  setProgress(
+                    data.currentTime / data.seekableDuration
+                  );
+                }}
+                progressUpdateInterval={250}
               />
 
               {showPlayIcon && (
@@ -230,9 +178,21 @@ const handleSeek = async (ratio: number) => {
               )}
             </>
           )}
+
+          {post.type === "image" && (
+            <Image
+              source={{ uri: post.media.url }}
+              style={{
+                width: "100%",
+                height: "100%",
+                resizeMode: "cover",
+              }}
+            />
+          )}
         </Animated.View>
       </GestureDetector>
 
+      {/* Overlay */}
       <YStack position="absolute" bottom={34} width="100%">
         <XStack padding="$4" alignItems="flex-end">
           <YStack flex={1} gap="$2">
@@ -255,6 +215,7 @@ const handleSeek = async (ratio: number) => {
           </YStack>
         </XStack>
 
+        {/* Progress Bar */}
         {post.type === "video" && (
           <GestureDetector gesture={panGesture}>
             <Animated.View
