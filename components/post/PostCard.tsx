@@ -1,13 +1,19 @@
 import colors from "@/constants/colors";
 import { Post } from "@/types/post";
-import { Play } from "@tamagui/lucide-icons";
+import { Heart, Play } from "@tamagui/lucide-icons";
 import React, { useEffect, useRef, useState } from "react";
-import { View as RNView } from "react-native";
-import Video from "react-native-video";
+import { Pressable } from "react-native";
 import { Image, Text, View, XStack, YStack } from "tamagui";
 
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnJS } from "react-native-reanimated";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import Video from "react-native-video";
 
 type Props = {
   post: Post;
@@ -23,75 +29,95 @@ const shareIcon = require("@/assets/images/shareIcon.png");
 const flagIcon = require("@/assets/images/flagIcon.png");
 
 export function PostCard({ post, isActive, screenHeight }: Props) {
-  const videoRef = useRef<any>(null);
-
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showPlayIcon, setShowPlayIcon] = useState(false);
-  const [liked, setLiked] = useState(false);
-
-  const progressWidthRef = useRef(0);
-  const lastRatioRef = useRef(0);
+  const videoRef = useRef<Video>(null);
+  const progressBarRef = useRef<any>(null);
 
   /* =========================
-     AUTO PLAY / PAUSE
+     STATE
+  ========================== */
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+
+  /* =========================
+     SHARED VALUES
+  ========================== */
+  const progress = useSharedValue(0);
+  const heartScale = useSharedValue(0);
+  const heartOpacity = useSharedValue(0);
+
+  const progressLayoutRef = useRef({
+    width: 0,
+    pageX: 0,
+  });
+
+  const isDraggingRef = useRef(false);
+  const lastRatioRef = useRef(0);
+  const durationRef = useRef(0);
+
+  /* =========================
+     AUTOPLAY (FEED SAFE)
   ========================== */
   useEffect(() => {
-    if (post.type !== "video") return;
-
-    if (isActive) {
-      setIsPlaying(true);
-      setShowPlayIcon(false);
-    } else {
-      setIsPlaying(false);
-      setShowPlayIcon(true);
-    }
-  }, [isActive, post.type]);
+    setIsPlaying(!!isActive);
+  }, [isActive]);
 
   /* =========================
-     VIDEO CONTROLS
+     PLAY / PAUSE
   ========================== */
-
-  const handleSingleTap = () => {
-    if (post.type !== "video") return;
-
-    setIsPlaying((prev) => {
-      const next = !prev;
-      setShowPlayIcon(!next);
-      return next;
-    });
+  const togglePlayback = () => {
+    setIsPlaying((prev) => !prev);
   };
 
+  /* =========================
+     DOUBLE TAP LIKE + HEART
+  ========================== */
   const handleDoubleTap = () => {
     setLiked(true);
+
+    heartOpacity.value = 1;
+    heartScale.value = 0;
+
+    heartScale.value = withSpring(1.2, { damping: 8 }, () => {
+      heartScale.value = withTiming(1, { duration: 120 });
+    });
+
+    heartOpacity.value = withTiming(0, { duration: 700 });
   };
 
+  /* =========================
+     LONG PRESS 2X SPEED
+  ========================== */
   const handleLongPressStart = () => {
-    if (post.type !== "video") return;
-    if (!videoRef.current) return;
-
-    videoRef.current.setNativeProps({
-      rate: 2.0,
-    });
+    setPlaybackRate(2);
   };
 
   const handleLongPressEnd = () => {
-    if (post.type !== "video") return;
-    if (!videoRef.current) return;
-
-    videoRef.current.setNativeProps({
-      rate: 1.0,
-    });
+    setPlaybackRate(1);
   };
 
+  /* =========================
+     SEEK
+  ========================== */
   const handleSeek = (ratio: number) => {
-    if (!videoRef.current) return;
-    if (!duration) return;
+    if (!videoRef.current || !duration) return;
 
     const newTime = ratio * duration;
 
+    const wasPlaying = isPlaying;
+
+    if (wasPlaying) {
+      setIsPlaying(false);
+    }
+
     videoRef.current.seek(newTime);
+
+    if (wasPlaying) {
+      setTimeout(() => {
+        setIsPlaying(true);
+      }, 50);
+    }
   };
 
   /* =========================
@@ -104,7 +130,8 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
 
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
-    .onStart(() => runOnJS(handleSingleTap)());
+    .maxDelay(250)
+    .onStart(() => runOnJS(togglePlayback)());
 
   const longPress = Gesture.LongPress()
     .minDuration(250)
@@ -113,27 +140,47 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
 
   const videoGesture = Gesture.Exclusive(
     doubleTap,
-    Gesture.Simultaneous(longPress, singleTap)
+    Gesture.Simultaneous(longPress, singleTap),
   );
 
   const panGesture = Gesture.Pan()
+    .onBegin(() => {
+      isDraggingRef.current = true;
+    })
     .onUpdate((e) => {
-      if (!progressWidthRef.current) return;
+      const { width, pageX } = progressLayoutRef.current;
 
-      const ratio = Math.max(
-        0,
-        Math.min(1, e.x / progressWidthRef.current)
-      );
+      if (!width) return;
 
+      const fingerX = e.absoluteX;
+      const relativeX = fingerX - pageX;
+
+      const ratio = Math.max(0, Math.min(1, relativeX / width));
+
+      progress.value = ratio;
       lastRatioRef.current = ratio;
-      runOnJS(setProgress)(ratio);
     })
     .onEnd(() => {
+      isDraggingRef.current = false;
       runOnJS(handleSeek)(lastRatioRef.current);
     });
 
+  /* =========================
+     ANIMATED STYLES
+  ========================== */
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+  }));
+
+  const heartStyle = useAnimatedStyle(() => ({
+    opacity: heartOpacity.value,
+    transform: [{ scale: heartScale.value }],
+  }));
+
   return (
     <YStack height={screenHeight} width="100%" backgroundColor="black">
+      {/* VIDEO + TAP GESTURES */}
       <GestureDetector gesture={videoGesture}>
         <Animated.View style={{ flex: 1 }}>
           {post.type === "video" && (
@@ -144,21 +191,50 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
                 style={{ width: "100%", height: "100%" }}
                 resizeMode="cover"
                 repeat
+                controls={false}
                 paused={!isPlaying}
-                rate={1.0}
+                rate={playbackRate}
+                progressUpdateInterval={100}
                 onLoad={(data) => {
-                  setDuration(data.duration);
+                  durationRef.current = data.duration;
                 }}
                 onProgress={(data) => {
-                  if (!duration) return;
-                  setProgress(
-                    data.currentTime / data.seekableDuration
-                  );
+                  if (isDraggingRef.current) return;
+
+                  const total = data.seekableDuration;
+
+                  if (total > 0) {
+                    progress.value = data.currentTime / total;
+                    setDuration(total);
+                  }
                 }}
-                progressUpdateInterval={250}
+                playInBackground={false}
+                ignoreSilentSwitch="ignore"
               />
 
-              {showPlayIcon && (
+              {/* Heart Animation */}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  {
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    marginLeft: -50,
+                    marginTop: -50,
+                  },
+                  heartStyle,
+                ]}
+              >
+                <Heart
+                  size={90}
+                  fill={colors.secondary}
+                  color={colors.secondary}
+                />
+              </Animated.View>
+
+              {/* Play Icon */}
+              {!isPlaying && (
                 <View
                   position="absolute"
                   top="50%"
@@ -192,36 +268,48 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
         </Animated.View>
       </GestureDetector>
 
-      {/* Overlay */}
+      {/* OVERLAY */}
       <YStack position="absolute" bottom={34} width="100%">
         <XStack padding="$4" alignItems="flex-end">
           <YStack flex={1} gap="$2">
             <Text color="white">@{post.author.name}</Text>
-            {post.caption && (
-              <Text color="white">{post.caption}</Text>
-            )}
+            {post.caption && <Text color="white">{post.caption}</Text>}
           </YStack>
 
           <YStack gap="$4" alignItems="center">
-            <Image
-              source={liked ? likeIconActive : likeIcon}
-              width={24}
-              height={24}
-            />
-            <Image source={commentIcon} width={24} height={24} />
-            <Image source={bookmarkIcon} width={24} height={24} />
-            <Image source={shareIcon} width={24} height={24} />
-            <Image source={flagIcon} width={24} height={24} />
+            <Pressable onPress={() => setLiked((p) => !p)}>
+              <Image
+                source={liked ? likeIconActive : likeIcon}
+                width={24}
+                height={24}
+              />
+            </Pressable>
+            <Pressable>
+              <Image source={commentIcon} width={24} height={24} />
+            </Pressable>
+            <Pressable>
+              <Image source={bookmarkIcon} width={24} height={24} />
+            </Pressable>
+            <Pressable>
+              <Image source={shareIcon} width={24} height={24} />
+            </Pressable>
+            <Pressable>
+              <Image source={flagIcon} width={24} height={24} />
+            </Pressable>
           </YStack>
         </XStack>
 
-        {/* Progress Bar */}
+        {/* SEEK BAR */}
         {post.type === "video" && (
           <GestureDetector gesture={panGesture}>
             <Animated.View
-              onLayout={(e) => {
-                progressWidthRef.current =
-                  e.nativeEvent.layout.width;
+              ref={progressBarRef}
+              onLayout={() => {
+                progressBarRef.current?.measure(
+                  (x, y, width, height, pageX) => {
+                    progressLayoutRef.current = { width, pageX };
+                  },
+                );
               }}
               style={{
                 height: 6,
@@ -229,12 +317,14 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
                 width: "100%",
               }}
             >
-              <RNView
-                style={{
-                  height: "100%",
-                  width: `${progress * 100}%`,
-                  backgroundColor: colors.secondary,
-                }}
+              <Animated.View
+                style={[
+                  {
+                    height: "100%",
+                    backgroundColor: colors.secondary,
+                  },
+                  progressStyle,
+                ]}
               />
             </Animated.View>
           </GestureDetector>

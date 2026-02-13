@@ -30,7 +30,7 @@ export const MOCK_POSTS: Post[] = [
     },
     media: {
       type: "video",
-      url: require("@/assets/videos/sample.mp4"),
+      url: "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4",
     },
     caption: "Faith grows when you trust God completely.",
     liked: false,
