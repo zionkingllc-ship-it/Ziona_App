@@ -1,5 +1,5 @@
 import { Button, XStack, Text, Spinner } from "tamagui";
-import { StyleProp, ViewStyle } from "react-native";
+import { Pressable, StyleProp, ViewStyle } from "react-native";
 import colors from "@/constants/colors"; 
 
 type AppButtonProps = {
@@ -14,7 +14,7 @@ type AppButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function SimpleButton({
+export function SimpleButtonWithStyle({
   text,
   textColor,
   textSize = "$4",
@@ -28,14 +28,11 @@ export function SimpleButton({
   const isDisabled = disabled || loading;
 
   return (
-    <Button
-      onPress={onPress}
-        
+    <Pressable
+      onPress={onPress} 
       disabled={isDisabled}
-      style={style}
-      backgroundColor={isDisabled ? colors.inactiveButton : color}
-      borderWidth={1} 
-      pressStyle={{ opacity: 0.85 }}
+      style={[style,{ backgroundColor:isDisabled ? colors.inactiveButton : color, height:50, justifyContent:"center"}]}
+        
     >
       <XStack width="100%" justifyContent="center" alignItems="center">
         {loading ? (
@@ -51,6 +48,6 @@ export function SimpleButton({
           </Text>
         )}
       </XStack>
-    </Button>
+    </Pressable>
   );
 }

@@ -147,7 +147,7 @@ export default function Email() {
           text="Next"
           textColor={colors.buttonText}
           color={colors.primaryButton}
-          disabled={!isValidEmail}
+          disabled={!isValidEmail || !passwordIsValid}
           loading={loading}
           onPress={handleNext}
           style={{ width: "100%", marginTop: 20 }}

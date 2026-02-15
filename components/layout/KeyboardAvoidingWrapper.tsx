@@ -10,7 +10,7 @@ type KeyboardAvoidingWrapperProps = {
 
 export function KeyboardAvoidingWrapper({
   children,
-  offset = 80,
+  offset = 8,
   backgroundColor = 'transparent',
 }: KeyboardAvoidingWrapperProps) {
   return ( 

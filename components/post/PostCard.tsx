@@ -2,9 +2,7 @@ import colors from "@/constants/colors";
 import { Post } from "@/types/post";
 import { Heart, Play } from "@tamagui/lucide-icons";
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable } from "react-native";
-import { Image, Text, View, XStack, YStack } from "tamagui";
-
+import { Pressable, TouchableOpacity } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -14,6 +12,11 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import Video from "react-native-video";
+import { Image, Text, View, XStack, YStack } from "tamagui";
+import { CommentsSheet } from "../comments/commentsModal";
+import ConfirmReportModal from "../ui/modals/ConfirmReportModal";
+import ReportReasonsModal from "../ui/modals/ReportReasonsModal";
+import SuccessModal from "../ui/modals/successModal";
 
 type Props = {
   post: Post;
@@ -29,7 +32,7 @@ const shareIcon = require("@/assets/images/shareIcon.png");
 const flagIcon = require("@/assets/images/flagIcon.png");
 
 export function PostCard({ post, isActive, screenHeight }: Props) {
-  const videoRef = useRef<Video>(null);
+  const videoRef = useRef<any>(null);
   const progressBarRef = useRef<any>(null);
 
   /* =========================
@@ -39,7 +42,14 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
   const [duration, setDuration] = useState(0);
   const [liked, setLiked] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [commentsVisible, setCommentsVisible] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [reasonsVisible, setReasonsVisible] = useState(false);
+  const [successVisible, setSuccessVisible] = useState(false);
+  const [foldersVisible, setFoldersVisible] = useState(false);
+  const [createVisible, setCreateVisible] = useState(false);
 
+  
   /* =========================
      SHARED VALUES
   ========================== */
@@ -272,8 +282,39 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
       <YStack position="absolute" bottom={34} width="100%">
         <XStack padding="$4" alignItems="flex-end">
           <YStack flex={1} gap="$2">
-            <Text color="white">@{post.author.name}</Text>
-            {post.caption && <Text color="white">{post.caption}</Text>}
+            <XStack gap={"$4"} alignItems="center">
+              <XStack gap={"$2"} alignItems="center">
+                <Image
+                  source={require("@/assets/images/profile.png")}
+                  width={30}
+                  height={30}
+                />
+                <Text color={colors.white} fontSize={16} fontWeight={"500"}>
+                  {post.author.name}
+                </Text>
+              </XStack>
+
+              <TouchableOpacity
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.white,
+                  height: 22,
+                  borderRadius: 8,
+                  paddingHorizontal: 6,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text color={colors.white} fontSize={13} fontWeight={"500"}>
+                  following
+                </Text>
+              </TouchableOpacity>
+            </XStack>
+            {post.caption && (
+              <Text color={colors.white} fontSize={16} fontWeight={"400"}>
+                {post.caption}
+              </Text>
+            )}
           </YStack>
 
           <YStack gap="$4" alignItems="center">
@@ -284,7 +325,7 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
                 height={24}
               />
             </Pressable>
-            <Pressable>
+            <Pressable onPress={() => setCommentsVisible(true)}>
               <Image source={commentIcon} width={24} height={24} />
             </Pressable>
             <Pressable>
@@ -293,7 +334,7 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
             <Pressable>
               <Image source={shareIcon} width={24} height={24} />
             </Pressable>
-            <Pressable>
+            <Pressable onPress={() => setConfirmVisible(true)}>
               <Image source={flagIcon} width={24} height={24} />
             </Pressable>
           </YStack>
@@ -330,6 +371,37 @@ export function PostCard({ post, isActive, screenHeight }: Props) {
           </GestureDetector>
         )}
       </YStack>
+      <CommentsSheet
+        visible={commentsVisible}
+        onClose={() => setCommentsVisible(false)}
+      />
+      <ConfirmReportModal
+        visible={confirmVisible}
+        onClose={() => setConfirmVisible(false)}
+        onConfirm={() => {
+          setConfirmVisible(false);
+          setReasonsVisible(true);
+        }}
+      />
+
+      <ReportReasonsModal
+        visible={reasonsVisible}
+        onClose={() => setReasonsVisible(false)}
+        onSelectReason={(reason) => {
+          console.log(reason);
+          setReasonsVisible(false);
+          setSuccessVisible(true); // ✅ show success here
+        }}
+      />
+
+      <SuccessModal
+        visible={successVisible}
+        duration={3000}
+        onClose={() => setSuccessVisible(false)}
+        autoClose
+        title="Tank you for reporting this post"
+        message="Your feedback is important to us, while we review the content of this post, you won’t see this user’s post on your feed again."
+      />
     </YStack>
   );
 }

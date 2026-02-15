@@ -4,7 +4,7 @@ import colors from "@/constants/colors";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, useWindowDimensions } from "react-native";
-import { Image, Text, YStack, View } from "tamagui";
+import { Image, Text, YStack } from "tamagui";
 
 const cards = [
   {
@@ -127,13 +127,21 @@ export default function AuthIndex() {
               Terms of use
             </Text>{" "}
             and confirm that you have read Ziona’s{" "}
-            <Text
-              color={colors.termsButton}
-              fontWeight="500"
-              textDecorationLine="underline"
+            <Pressable
+              onPress={() =>
+                router.push(
+                  "https://www.privacypolicies.com/live/db459a7c-78ec-4d12-8d82-cf20f7e716a6",
+                )
+              }
             >
-              Privacy Policy
-            </Text>
+              <Text
+                color={colors.termsButton}
+                fontWeight="500"
+                textDecorationLine="underline"
+              >
+                Privacy Policy
+              </Text>
+            </Pressable>
           </Text>
           <YStack justifyContent="center" alignItems="center" marginTop={"$9"}>
             <Pressable
