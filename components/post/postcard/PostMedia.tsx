@@ -9,7 +9,6 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import Video from "react-native-video";
@@ -34,6 +33,7 @@ export default function PostMedia({
   const [videoDuration, setVideoDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const likeIconActive = require("@/assets/images/likeIcon2.png");
 
   function resolveSource(source?: string | number) {
     if (!source) return undefined;
@@ -48,15 +48,26 @@ export default function PostMedia({
   /* ================= HEART ANIMATION ================= */
 
   const heartScale = useSharedValue(0);
+  const heartOpacity = useSharedValue(0);
 
   const heartStyle = useAnimatedStyle(() => ({
     transform: [{ scale: heartScale.value }],
-    opacity: heartScale.value,
+    opacity: heartOpacity.value,
   }));
 
   const triggerHeart = () => {
-    heartScale.value = withSpring(1, { damping: 8 }, () => {
-      heartScale.value = withTiming(0, { duration: 10 });
+    // Reset first
+    heartScale.value = 0;
+    heartOpacity.value = 1;
+
+    // Pop up
+    heartScale.value = withTiming(1.2, { duration: 180 }, () => {
+      // Settle
+      heartScale.value = withTiming(1, { duration: 100 }, () => {
+        // Fade + shrink out
+        heartScale.value = withTiming(0, { duration: 200 });
+        heartOpacity.value = withTiming(0, { duration: 200 });
+      });
     });
   };
 
@@ -128,9 +139,7 @@ export default function PostMedia({
               heartStyle,
             ]}
           >
-            <Animated.Text style={{ fontSize: 80, color: "white" }}>
-              ❤️
-            </Animated.Text>
+            <Animated.Image source={likeIconActive} />
           </Animated.View>
         </Animated.View>
       </GestureDetector>
@@ -140,39 +149,49 @@ export default function PostMedia({
   /* ================= CAROUSEL ================= */
 
   if (post.type === "carousel") {
-  return (
-    <GestureDetector gesture={doubleTap}>
-      <Animated.View style={{ flex: 1 }}>
-        <FlatList
-          data={post.media.items}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => {
-            if (!item?.url) return null;
+    return (
+      <GestureDetector gesture={doubleTap}>
+        <Animated.View style={{ flex: 1 }}>
+          <FlatList
+            data={post.media.items}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => {
+              if (!item?.url) return null;
 
-            const source =
-              typeof item.url === "string"
-                ? { uri: item.url }
-                : item.url;
+              const source =
+                typeof item.url === "string" ? { uri: item.url } : item.url;
 
-            return (
-              <Image
-                source={source}
-                style={{
-                  width: SCREEN_WIDTH,
-                  height: "100%",
-                  resizeMode: "cover",
-                }}
-              />
-            );
-          }}
-        />
-      </Animated.View>
-    </GestureDetector>
-  );
-}
+              return (
+                <Image
+                  source={source}
+                  style={{
+                    width: SCREEN_WIDTH,
+                    height: "100%",
+                    resizeMode: "cover",
+                  }}
+                />
+              );
+            }}
+          />
+          <Animated.View
+            style={[
+              {
+                position: "absolute",
+                alignSelf: "center",
+                top: "40%",
+              },
+              heartStyle,
+            ]}
+          >
+            <Animated.Image source={likeIconActive} />
+          </Animated.View>
+        </Animated.View>
+      </GestureDetector>
+    );
+  }
 
   /* ================= IMAGE ================= */
 
@@ -204,9 +223,7 @@ export default function PostMedia({
               heartStyle,
             ]}
           >
-            <Animated.Text style={{ fontSize: 80, color: "white" }}>
-              ❤️
-            </Animated.Text>
+            <Animated.Image source={likeIconActive} />
           </Animated.View>
         </Animated.View>
       </GestureDetector>
@@ -270,9 +287,7 @@ export default function PostMedia({
             heartStyle,
           ]}
         >
-          <Animated.Text style={{ fontSize: 80, color: "white" }}>
-            ❤️
-          </Animated.Text>
+          <Animated.Image source={likeIconActive} />
         </Animated.View>
       </Animated.View>
     </GestureDetector>
