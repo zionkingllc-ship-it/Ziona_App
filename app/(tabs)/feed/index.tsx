@@ -1,10 +1,10 @@
-import { PostCard } from "@/components/post/PostCard";
+import {PostCard}from "@/components/post/PostCard";
 import TwoButtonSwitch from "@/components/ui/twoButtonSwitch";
 import colors from "@/constants/colors";
 import { MOCK_POSTS, unreadCount } from "@/constants/examplePost";
-import { Bell } from "@tamagui/lucide-icons";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useRef, useState } from "react";
+import { Bell } from "@tamagui/lucide-icons";
+import { useCallback, useRef, useState } from "react";
 import {
   FlatList,
   ViewToken,
@@ -16,13 +16,18 @@ import { Image, Text, XStack, YStack } from "tamagui";
 export default function Feed() {
   const { height } = useWindowDimensions();
   const tabBarHeight = useBottomTabBarHeight();
-
   const feedHeight = height - tabBarHeight;
 
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [feedType, setFeedType] = useState<"forYou" | "following">(
     "forYou"
   );
+
+  /* ================= VIEWABILITY ================= */
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 80,
+  }).current;
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -32,11 +37,21 @@ export default function Feed() {
     }
   ).current;
 
+  /* ================= RENDER ITEM ================= */
+
+const renderItem = useCallback(
+  ({ item }:any) => (
+    <PostCard
+      post={item}
+      isPlaying={item.id === activePostId}
+      screenHeight={feedHeight}
+    />
+  ),
+  [activePostId, feedHeight]
+);
+
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1  }}
-    >
+    <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
       {/* HEADER */}
       <XStack
         position="absolute"
@@ -81,7 +96,11 @@ export default function Feed() {
               paddingHorizontal={unreadCount > 9 ? 4 : 0}
             >
               {unreadCount > 9 && (
-                <Text fontSize={10} color="white" fontWeight="700">
+                <Text
+                  fontSize={10}
+                  color="white"
+                  fontWeight="700"
+                >
                   9+
                 </Text>
               )}
@@ -94,25 +113,23 @@ export default function Feed() {
       <FlatList
         data={MOCK_POSTS}
         keyExtractor={(item) => item.id}
+        renderItem={renderItem}
         pagingEnabled
         decelerationRate="fast"
         showsVerticalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{ itemVisiblePercentThreshold: 80 }}
         snapToInterval={feedHeight}
         snapToAlignment="start"
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
         getItemLayout={(_, index) => ({
           length: feedHeight,
           offset: feedHeight * index,
           index,
         })}
-        renderItem={({ item }) => (
-          <PostCard
-            post={item}
-            isActive={item.id === activePostId}
-            screenHeight={feedHeight}
-          />
-        )}
+        windowSize={3}
+        initialNumToRender={2}
+        maxToRenderPerBatch={2}
+        removeClippedSubviews
       />
     </SafeAreaView>
   );

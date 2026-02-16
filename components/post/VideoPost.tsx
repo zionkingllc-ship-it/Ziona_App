@@ -1,39 +1,44 @@
-import { useEffect, useRef, useState } from 'react'
-import { Pressable } from 'react-native'
-import { Video, ResizeMode } from 'expo-av'
-import { YStack, Text } from 'tamagui'
-import { Play } from '@tamagui/lucide-icons'
-import { VideoPost as VideoPostType } from '@/types'
+import { useEffect, useRef, useState } from "react";
+import { Pressable } from "react-native";
+import { Video, ResizeMode } from "expo-av";
+import { YStack, Text } from "tamagui";
+import { Play } from "@tamagui/lucide-icons";
+import { VideoPost as VideoPostType } from "@/types/post";
 
 type Props = {
-  post: VideoPostType
-  isActive: boolean
-}
+  post: VideoPostType;
+  isActive: boolean;
+};
 
 export function VideoPost({ post, isActive }: Props) {
-  const videoRef = useRef<Video>(null)
-  const [paused, setPaused] = useState(false)
+  const videoRef = useRef<Video>(null);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    if (!videoRef.current) return
+    if (!videoRef.current) return;
 
     if (isActive && !paused) {
-      videoRef.current.playAsync()
+      videoRef.current.playAsync();
     } else {
-      videoRef.current.pauseAsync()
+      videoRef.current.pauseAsync();
     }
-  }, [isActive, paused])
+  }, [isActive, paused]);
 
   const togglePlayback = () => {
-    setPaused((prev) => !prev)
-  }
+    setPaused((prev) => !prev);
+  };
+
+  const source =
+    typeof post.media.videoUrl === "string"
+      ? { uri: post.media.videoUrl }
+      : post.media.videoUrl;
 
   return (
     <Pressable style={{ flex: 1 }} onPress={togglePlayback}>
       <Video
         ref={videoRef}
-        source={{ uri: post.videoUrl }}
-        style={{ width: '100%', height: '100%' }}
+        source={source}
+        style={{ width: "100%", height: "100%" }}
         resizeMode={ResizeMode.COVER}
         isLooping
         isMuted
@@ -57,17 +62,12 @@ export function VideoPost({ post, isActive }: Props) {
 
       {/* Caption */}
       {post.caption && (
-        <YStack
-          position="absolute"
-          bottom={80}
-          left={16}
-          right={80}
-        >
+        <YStack position="absolute" bottom={80} left={16} right={80}>
           <Text color="white" fontSize="$5">
             {post.caption}
           </Text>
         </YStack>
       )}
     </Pressable>
-  )
+  );
 }

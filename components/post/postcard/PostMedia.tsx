@@ -1,90 +1,280 @@
 // components/post/PostMedia.tsx
 
-import React, { useRef, useState } from "react";
-import { Image } from "react-native";
-import Video from "react-native-video";
-import Animated from "react-native-reanimated";
-import { GestureDetector } from "react-native-gesture-handler";
+import colors from "@/constants/colors";
 import { Post } from "@/types/post";
+import React, { useRef, useState } from "react";
+import { Dimensions, FlatList, Image } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import Video from "react-native-video";
 
 interface Props {
   post: Post;
   isPlaying: boolean;
-  playbackRate?: number;
-  videoGesture?: any;
-  progress?: any;
+  onTogglePlay?: () => void;
+  onLike?: () => void;
 }
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function PostMedia({
   post,
   isPlaying,
-  playbackRate = 1,
-  videoGesture,
+  onTogglePlay,
+  onLike,
 }: Props) {
-  const videoRef = useRef<any>(null);
-  const [duration, setDuration] = useState(0);
+  const videoRef = useRef<any | null>(null);
+
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
+
+  function resolveSource(source?: string | number) {
+    if (!source) return undefined;
+
+    if (typeof source === "string") {
+      if (source.trim() === "") return undefined;
+      return { uri: source };
+    }
+
+    return source; // require(...)
+  }
+  /* ================= HEART ANIMATION ================= */
+
+  const heartScale = useSharedValue(0);
+
+  const heartStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: heartScale.value }],
+    opacity: heartScale.value,
+  }));
+
+  const triggerHeart = () => {
+    heartScale.value = withSpring(1, { damping: 8 }, () => {
+      heartScale.value = withTiming(0, { duration: 10 });
+    });
+  };
+
+  const handleLike = () => {
+    if (onLike) onLike();
+    triggerHeart();
+  };
+
+  /* ================= COMMON GESTURES ================= */
+
+  const singleTap = Gesture.Tap()
+    .numberOfTaps(1)
+    .onEnd(() => {
+      if (onTogglePlay) {
+        runOnJS(onTogglePlay)();
+      }
+    });
+
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      runOnJS(handleLike)();
+    });
 
   /* ================= TEXT ================= */
 
   if (post.type === "text") {
-    return null;
+    const gesture = Gesture.Exclusive(doubleTap, singleTap);
+    const bgSource = resolveSource(post.media?.backgroundImage);
+    return (
+      <GestureDetector gesture={gesture}>
+        <Animated.View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 24,
+            backgroundColor: colors.white,
+          }}
+        >
+          {bgSource && (
+            <Image
+              source={bgSource}
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+              }}
+            />
+          )}
+          <Animated.Text
+            style={{
+              color: "white",
+              fontSize: 22,
+              textAlign: "center",
+              fontWeight: "600",
+            }}
+          >
+            {post.text}
+          </Animated.Text>
+
+          <Animated.View
+            style={[
+              {
+                position: "absolute",
+                alignSelf: "center",
+                top: "40%",
+              },
+              heartStyle,
+            ]}
+          >
+            <Animated.Text style={{ fontSize: 80, color: "white" }}>
+              ❤️
+            </Animated.Text>
+          </Animated.View>
+        </Animated.View>
+      </GestureDetector>
+    );
   }
 
   /* ================= CAROUSEL ================= */
 
   if (post.type === "carousel") {
+  return (
+    <GestureDetector gesture={doubleTap}>
+      <Animated.View style={{ flex: 1 }}>
+        <FlatList
+          data={post.media.items}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => {
+            if (!item?.url) return null;
+
+            const source =
+              typeof item.url === "string"
+                ? { uri: item.url }
+                : item.url;
+
+            return (
+              <Image
+                source={source}
+                style={{
+                  width: SCREEN_WIDTH,
+                  height: "100%",
+                  resizeMode: "cover",
+                }}
+              />
+            );
+          }}
+        />
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+
+  /* ================= IMAGE ================= */
+
+  if (post.type === "image") {
+    const gesture = Gesture.Exclusive(doubleTap, singleTap);
+
+    const imageSource = resolveSource(post.media.url);
+
+    if (!imageSource) return null;
+
     return (
-      <Image
-        source={{ uri: post.media[0]?.url }}
-        style={{ width: "100%", height: "100%", resizeMode: "cover" }}
-      />
+      <GestureDetector gesture={gesture}>
+        <Animated.View style={{ flex: 1 }}>
+          <Image
+            source={imageSource}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+          />
+
+          <Animated.View
+            style={[
+              {
+                position: "absolute",
+                alignSelf: "center",
+                top: "40%",
+              },
+              heartStyle,
+            ]}
+          >
+            <Animated.Text style={{ fontSize: 80, color: "white" }}>
+              ❤️
+            </Animated.Text>
+          </Animated.View>
+        </Animated.View>
+      </GestureDetector>
     );
   }
 
   /* ================= VIDEO ================= */
 
-  if (post.type === "video") {
-    const videoElement = (
+  const handleSeek = (newTime: number) => {
+    if (videoRef.current) {
+      videoRef.current.seek(newTime);
+    }
+  };
+
+  const longPress = Gesture.LongPress()
+    .minDuration(250)
+    .onStart(() => {
+      runOnJS(setPlaybackRate)(2);
+    })
+    .onEnd(() => {
+      runOnJS(setPlaybackRate)(1);
+    });
+
+  const pan = Gesture.Pan().onUpdate((e) => {
+    if (videoDuration > 0) {
+      const percent = e.translationX / SCREEN_WIDTH;
+      const newTime = Math.max(
+        0,
+        Math.min(videoDuration, currentTime + percent * videoDuration),
+      );
+      runOnJS(handleSeek)(newTime);
+    }
+  });
+
+  const videoGesture = Gesture.Exclusive(doubleTap, singleTap, longPress, pan);
+
+  return (
+    <GestureDetector gesture={videoGesture}>
       <Animated.View style={{ flex: 1 }}>
         <Video
           ref={videoRef}
-          source={{ uri: post.media.url }}
+          source={{ uri: post.media.videoUrl }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
           repeat
-          paused={!isPlaying}
           rate={playbackRate}
-          controls={false}
-          progressUpdateInterval={100}
-          onLoad={(data) => setDuration(data.duration)}
+          paused={!isPlaying}
+          onLoad={(data) => setVideoDuration(data.duration)}
+          onProgress={(data) => setCurrentTime(data.currentTime)}
           playInBackground={false}
           ignoreSilentSwitch="ignore"
         />
+
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              alignSelf: "center",
+              top: "40%",
+            },
+            heartStyle,
+          ]}
+        >
+          <Animated.Text style={{ fontSize: 80, color: "white" }}>
+            ❤️
+          </Animated.Text>
+        </Animated.View>
       </Animated.View>
-    );
-
-    //  SAFE GUARD
-    if (videoGesture) {
-      return (
-        <GestureDetector gesture={videoGesture}>
-          {videoElement}
-        </GestureDetector>
-      );
-    }
-
-    return videoElement;
-  }
-
-  /* ================= IMAGE ================= */
-
-  return (
-    <Image
-      source={{ uri: post.media.url }}
-      style={{
-        width: "100%",
-        height: "100%",
-        resizeMode: "cover",
-      }}
-    />
+    </GestureDetector>
   );
 }

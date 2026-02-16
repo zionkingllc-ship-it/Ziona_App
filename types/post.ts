@@ -1,67 +1,62 @@
-import { BackgroundType } from "./background";
+export type PostType = "image" | "video" | "carousel" | "text";
 
-/* ---------- Shared ---------- */
-
-export type Author = {
-  id: string;
-  name: string;
-  avatarUrl?: string;
-};
-
-export type BasePost = {
+export interface BasePost {
   id: string;
   type: PostType;
-  author: Author;
-  likesCount: number;
-  liked: boolean;
   createdAt: string;
-};
+  liked: boolean;
+  likesCount: number;
 
-/* ---------- Media ---------- */
+  author: {
+    id: string;
+    name: string;
+    avatarUrl?: string; // allow require() for local assets
+  };
 
-export type ImageMedia = {
-  type: "image";
-  url: string;
-};
-
-export type VideoMedia = {
-  type: "video";
-  url: string;
-  thumbnailUrl?: string;
-  durationSec?: number;
-};
-
-export type PostMedia = ImageMedia | VideoMedia;
-
-/* ---------- Post Variants ---------- */
-
-export type ImagePost = BasePost & {
-  type: "image";
-  media: ImageMedia;
   caption?: string;
-};
+}
 
-export type CarouselPost = BasePost & {
+/* IMAGE */
+
+export interface ImagePost extends BasePost {
+  type: "image";
+  media: {
+    url: string;
+  };
+}
+
+/* VIDEO */
+
+export interface VideoPost extends BasePost {
+  type: "video";
+  media: {
+    videoUrl: string;
+    thumbnailUrl: string;
+  };
+}
+
+/* CAROUSEL */
+
+export interface CarouselPost extends BasePost {
   type: "carousel";
-  media: ImageMedia[]; // ordered images
-  caption?: string;
-};
+  media: {
+    items: {
+      id: string;
+      type: "image" | "video";
+      url: string;
+      thumbnailUrl?: string;
+    }[];
+  };
+}
 
-export type VideoPost = BasePost & {
-  type: "video";
-  media: VideoMedia;
-  caption?: string;
-};
+/* TEXT */
 
-export type TextPost = BasePost & {
+export interface TextPost extends BasePost {
   type: "text";
+  media: {
+    backgroundImage: string;
+  };
   text: string;
-  background?: BackgroundType;
-  caption?: string;
-};
+}
 
-/* ---------- Union ---------- */
-
-export type Post = ImagePost | CarouselPost | VideoPost | TextPost;
-
-export type PostType = "image" | "carousel" | "video" | "text";
+export type Post = ImagePost | VideoPost | CarouselPost | TextPost;

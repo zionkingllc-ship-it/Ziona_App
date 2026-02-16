@@ -1,8 +1,8 @@
 // components/modals/CreateFolderModal.tsx
 
-import React, { useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, Image } from "react-native";
-import { View, Text, XStack } from "tamagui";
+import React, { useEffect, useState } from "react";
+import { Image, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { Text, View, XStack } from "tamagui";
 import KeyboardBottomSheetModal from "./KeyboardBottomSheetModal";
 
 interface Props {
@@ -25,7 +25,9 @@ export default function CreateFolderModal({
     onSave(name.trim());
     setName("");
   };
-
+  useEffect(() => {
+    if (!visible) setName("");
+  }, [visible]);
   return (
     <KeyboardBottomSheetModal visible={visible} onClose={onClose}>
       <View style={styles.container}>

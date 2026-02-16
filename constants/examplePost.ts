@@ -1,5 +1,4 @@
-import { Post } from "@/types";
-
+import { Post } from "@/types/post";
 
 export const MOCK_POSTS: Post[] = [
   {
@@ -11,49 +10,105 @@ export const MOCK_POSTS: Post[] = [
       avatarUrl: require("@/assets/images/profile.png"),
     },
     media: {
-      type: "video",
-      url: "https://www.w3schools.com/html/mov_bbb.mp4",
+      videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+      thumbnailUrl: "https://picsum.photos/800/1200?random=10",
     },
     caption: "If you are willing to pray, there is always a God to answer",
     liked: false,
     likesCount: 432,
     createdAt: new Date().toISOString(),
   },
+
   {
     id: "2",
-    type: "video",
-
+    type: "text",
     author: {
-      id: "user-1",
-      name: "Ziona",
+      id: "user-2",
+      name: "Elijah",
       avatarUrl: require("@/assets/images/profile.png"),
     },
+    text: "Sometimes God calms the storm. Sometimes He lets the storm rage and calms His child.",
     media: {
-      type: "video",
-      url: "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4",
+      backgroundImage: require("@/assets/images/textPostBackground1.png"),
     },
-    caption: "Faith grows when you trust God completely.",
+    caption: "Daily reflection",
     liked: false,
-    likesCount: 120,
+    likesCount: 87,
     createdAt: new Date().toISOString(),
   },
+
   {
     id: "3",
-    type: "video",
-
+    type: "carousel",
     author: {
-      id: "user-1",
-      name: "Ziona",
+      id: "user-3",
+      name: "Miriam",
       avatarUrl: require("@/assets/images/profile.png"),
     },
     media: {
-      type: "video",
-      url: require("@/assets/videos/sample.mp4"),
+      items: [
+        {
+          id: "c1",
+          type: "image",
+          url: "https://picsum.photos/800/1200?random=1",
+        },
+        {
+          id: "c2",
+          type: "image",
+          url: "https://picsum.photos/800/1200?random=2",
+        },
+        {
+          id: "c3",
+          type: "image",
+          url: "https://picsum.photos/800/1200?random=3",
+        },
+      ],
+    },
+    caption: "Swipe to see more moments ✨",
+    liked: false,
+    likesCount: 214,
+    createdAt: new Date().toISOString(),
+  },
+
+  {
+    id: "4",
+    type: "video",
+    author: {
+      id: "user-4",
+      name: "Daniel",
+      avatarUrl: require("@/assets/images/profile.png"),
+    },
+    media: {
+      videoUrl: "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4",
+      thumbnailUrl: require("@/assets/images/profile.png"),
     },
     caption: "Faith grows when you trust God completely.",
     liked: false,
     likesCount: 120,
     createdAt: new Date().toISOString(),
   },
+
+
+    {
+    id: "5",
+    type: "video",
+    author: {
+      id: "user-4",
+      name: "Daniel",
+      avatarUrl: require("@/assets/images/profile.png"),
+    },
+    media: {
+      videoUrl: require("@/assets/videos/sample.mp4"),
+      thumbnailUrl: require("@/assets/images/profile.png"),
+    },
+    caption: "Faith grows when you trust God completely.",
+    liked: false,
+    likesCount: 120,
+    createdAt: new Date().toISOString(),
+  },
+     
 ];
-export const unreadCount = 3; // later from API
+
+
+
+export const unreadCount = 3;

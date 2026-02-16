@@ -1,6 +1,13 @@
-export type Folder = {
+export interface Folder {
   id: string;
   name: string;
   cover: string;
-  selected: boolean;
-};
+  createdAt: string;
+}
+
+export interface Bookmark {
+  id: string;
+  postId: string;
+  folderId: string;
+  createdAt: string;
+}

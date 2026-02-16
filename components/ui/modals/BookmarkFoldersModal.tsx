@@ -1,30 +1,24 @@
-// components/modals/BookmarkFoldersModal.tsx
-
 import React from "react";
 import { FlatList, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { View, Text, XStack } from "tamagui";
 import KeyboardBottomSheetModal from "./KeyboardBottomSheetModal";
-
-interface Folder {
-  id: string;
-  name: string;
-  cover: string;
-  selected?: boolean;
-}
+import { Folder } from "@/types/folder";
 
 interface Props {
   visible: boolean;
   folders: Folder[];
+  savedFolderIds: string[];
   onClose: () => void;
-  onSelectFolder: (folder: Folder) => void;
+  onToggleFolder: (folderId: string) => void;
   onCreateNew: () => void;
 }
 
 export default function BookmarkFoldersModal({
   visible,
   folders,
+  savedFolderIds,
   onClose,
-  onSelectFolder,
+  onToggleFolder,
   onCreateNew,
 }: Props) {
   return (
@@ -41,20 +35,24 @@ export default function BookmarkFoldersModal({
           data={folders}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.row}
-              onPress={() => onSelectFolder(item)}
-            >
-              <Image source={{ uri: item.cover }} style={styles.image} />
+          renderItem={({ item }) => {
+            const isSaved = savedFolderIds.includes(item.id);
 
-              <Text flex={1}>{item.name}</Text>
+            return (
+              <TouchableOpacity
+                style={styles.row}
+                onPress={() => onToggleFolder(item.id)}
+              >
+                <Image source={{ uri: item.cover }} style={styles.image} />
 
-              <Text color={item.selected ? "#7A2E8A" : "#ccc"}>
-                {item.selected ? "🔖" : "📑"}
-              </Text>
-            </TouchableOpacity>
-          )}
+                <Text flex={1}>{item.name}</Text>
+
+                <Text color={isSaved ? "#7A2E8A" : "#ccc"}>
+                  {isSaved ? "🔖" : "📑"}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
         />
       </View>
     </KeyboardBottomSheetModal>
