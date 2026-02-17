@@ -1,11 +1,8 @@
 // components/modals/SuccessModal.tsx
 
 import React, { useEffect } from "react";
-import {
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
-import { View, Text } from "tamagui";
+import { StyleSheet } from "react-native";
+import { Text, View, Image } from "tamagui";
 import BaseModal from "./BaseModal";
 
 interface Props {
@@ -15,15 +12,17 @@ interface Props {
   message?: string;
   autoClose?: boolean;
   duration?: number; // ms
+  iconImage?:any
 }
 
 export default function SuccessModal({
   visible,
+  iconImage,
   onClose,
   title = "Thank you for reporting this post",
   message = "Your feedback is important to us, we’ll review the content of this post, you won’t see this user’s post on your feed again.",
   autoClose = true,
-  duration = 2000,
+  duration = 4000,
 }: Props) {
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -43,9 +42,13 @@ export default function SuccessModal({
     <BaseModal visible={visible} onClose={onClose}>
       <View style={styles.card}>
         {/* Green Check Circle */}
-        <View style={styles.iconWrapper}>
-          <Text style={styles.check}>✓</Text>
-        </View>
+        {iconImage ? (
+          <Image source={iconImage} width={25} height={25} bottom={10}/>
+        ) : (
+          <View style={styles.iconWrapper}>
+            <Text style={styles.check}>✓</Text>
+          </View>
+        )}
 
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.message}>{message}</Text>
@@ -60,7 +63,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 24,
     alignItems: "center",
-    margin:20
+    margin: 20,
   },
   iconWrapper: {
     width: 40,

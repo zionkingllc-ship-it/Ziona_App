@@ -13,7 +13,7 @@ export const MOCK_POSTS: Post[] = [
       videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
       thumbnailUrl: "https://picsum.photos/800/1200?random=10",
     },
-    caption: "If you are willing to pray, there is always a God to answer",
+    caption: `If you are willing to pray, there is always a God to answer If you are willing to pray, there is always a God to answerIf you are willing to pray, there is always a God to answerIf you are willing to pray, there is always a God to answer`,
     liked: false,
     likesCount: 432,
     createdAt: new Date().toISOString(),
@@ -31,7 +31,7 @@ export const MOCK_POSTS: Post[] = [
     media: {
       backgroundImage: require("@/assets/images/textPostBackground1.png"),
     },
-    caption: "Daily reflection",
+    caption: `Daily reflection Sometimes God calms the storm. Sometimes God calms the storm. Sometimes He lets the storm rage and calms His childSometimes He lets the storm rage and calms His childSometimes God calms the storm. Sometimes He lets the storm rage and calms His child`,
     liked: false,
     likesCount: 87,
     createdAt: new Date().toISOString(),
@@ -79,7 +79,8 @@ export const MOCK_POSTS: Post[] = [
       avatarUrl: require("@/assets/images/profile.png"),
     },
     media: {
-      videoUrl: "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4",
+      videoUrl:
+        "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4",
       thumbnailUrl: require("@/assets/images/profile.png"),
     },
     caption: "Faith grows when you trust God completely.",
@@ -88,8 +89,7 @@ export const MOCK_POSTS: Post[] = [
     createdAt: new Date().toISOString(),
   },
 
-
-    {
+  {
     id: "5",
     type: "video",
     author: {
@@ -106,9 +106,6 @@ export const MOCK_POSTS: Post[] = [
     likesCount: 120,
     createdAt: new Date().toISOString(),
   },
-     
 ];
-
-
 
 export const unreadCount = 3;

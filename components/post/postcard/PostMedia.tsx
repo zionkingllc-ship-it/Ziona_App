@@ -105,7 +105,7 @@ export default function PostMedia({
             justifyContent: "center",
             alignItems: "center",
             padding: 24,
-            backgroundColor: colors.white,
+            backgroundColor: colors.black,
           }}
         >
           {bgSource && (
@@ -113,8 +113,9 @@ export default function PostMedia({
               source={bgSource}
               style={{
                 position: "absolute",
-                width: "100%",
-                height: "100%",
+                width: "115%",
+                height: "75%",
+                borderRadius: 10,
               }}
             />
           )}
@@ -229,14 +230,71 @@ export default function PostMedia({
       </GestureDetector>
     );
   }
-
   /* ================= VIDEO ================= */
 
-  const handleSeek = (newTime: number) => {
-    if (videoRef.current) {
-      videoRef.current.seek(newTime);
+  const progress = useSharedValue(0);
+  const scrubOpacity = useSharedValue(1);
+  const scrubScale = useSharedValue(1);
+
+  const fadeTimeout = useRef<NodeJS.Timeout | null>(null);
+  const isUserInteracting = useRef(false);
+
+  const resetFadeTimer = () => {
+    if (fadeTimeout.current) {
+      clearTimeout(fadeTimeout.current);
+    }
+
+    // Only auto fade if video is playing
+    if (isPlaying && !isUserInteracting.current) {
+      fadeTimeout.current = setTimeout(() => {}, 2000);
     }
   };
+
+  const handleSeek = (newTime: number) => {
+    if (!videoRef.current) return;
+    if (isNaN(newTime) || newTime < 0) return;
+
+    videoRef.current.seek(newTime);
+  };
+  const scrubAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: scrubOpacity.value,
+    transform: [{ scale: scrubScale.value }],
+  }));
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: progress.value * (SCREEN_WIDTH * 0.9),
+  }));
+
+  const scrubPan = Gesture.Pan()
+    .onBegin(() => {
+      isUserInteracting.current = true;
+
+      scrubScale.value = withTiming(1.05, { duration: 120 });
+    })
+    .onUpdate((e) => {
+      if (videoDuration <= 0) return;
+      const trackWidth = SCREEN_WIDTH * 0.9;
+      // Clamp position properly
+      const clampedX = Math.max(0, Math.min(e.x, trackWidth));
+      const percent = clampedX / trackWidth;
+      // Clamp percent too (double safety)
+      const safePercent = Math.max(0, Math.min(1, percent));
+      progress.value = safePercent;
+      const newTime = safePercent * videoDuration;
+
+      if (!isNaN(newTime) && newTime >= 0) {
+        runOnJS(handleSeek)(newTime);
+      }
+    })
+    .onFinalize(() => {
+      scrubScale.value = withTiming(1, { duration: 120 });
+      isUserInteracting.current = false;
+      // Start a fade timer after user interaction ends
+      if (isPlaying) {
+        // Keep it visible initially
+        scrubOpacity.value = withTiming(1, { duration: 100 }); 
+      }
+    });
 
   const longPress = Gesture.LongPress()
     .minDuration(250)
@@ -271,12 +329,23 @@ export default function PostMedia({
           repeat
           rate={playbackRate}
           paused={!isPlaying}
-          onLoad={(data) => setVideoDuration(data.duration)}
-          onProgress={(data) => setCurrentTime(data.currentTime)}
-          playInBackground={false}
-          ignoreSilentSwitch="ignore"
+          onLoad={(data) => {
+            setVideoDuration(data.duration);
+          }}
+          onProgress={(data) => {
+            setCurrentTime(data.currentTime);
+
+            if (videoDuration > 0) {
+              progress.value = data.currentTime / videoDuration;
+            }
+
+            // If video completes → keep scrub visible
+            if (videoDuration > 0 && data.currentTime >= videoDuration - 0.2) {
+            }
+          }}
         />
 
+        {/* HEART */}
         <Animated.View
           style={[
             {
@@ -288,6 +357,40 @@ export default function PostMedia({
           ]}
         >
           <Animated.Image source={likeIconActive} />
+        </Animated.View>
+
+        {/* SCRUB BAR */}
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              bottom: 70,
+              width: SCREEN_WIDTH * 0.9,
+              alignSelf: "center",
+            },
+            scrubAnimatedStyle,
+          ]}
+        >
+          <GestureDetector gesture={scrubPan}>
+            <Animated.View
+              style={{
+                height: 7,
+                backgroundColor: colors.white,
+                overflow: "hidden",
+                top: 36,
+              }}
+            >
+              <Animated.View
+                style={[
+                  {
+                    height: "100%",
+                    backgroundColor: colors.secondary,
+                  },
+                  progressStyle,
+                ]}
+              />
+            </Animated.View>
+          </GestureDetector>
         </Animated.View>
       </Animated.View>
     </GestureDetector>

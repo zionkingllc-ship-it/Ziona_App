@@ -1,49 +1,49 @@
 {
   "expo": {
-    "scheme": "acme",
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#ffffff"
-          }
-        }
-      ],
-      "@react-native-community/datetimepicker",
-      "expo-video",
-      "expo-audio",
-      "react-native-video"
-    ],
+    "scheme": "ziona",
     "name": "Ziona",
     "slug": "ziona",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
+
+    "ios": {
+      "bundleIdentifier": "com.zionking.ziona",
+      "associatedDomains": ["applinks:ziona.app"]
+    },
+
+    "android": {
+      "package": "com.zionking.ziona",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "dev.ziona.app",
+              "pathPrefix": "/post"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+
+    "plugins": [
+      "expo-router",
+      "expo-video",
+      "expo-audio",
+      "react-native-video"
+    ],
+
     "extra": {
       "router": {},
       "eas": {
         "projectId": "ae56ecb7-5133-4048-849f-b5f191d82d6a"
       }
     },
-    "owner": "1ziondev",
-    "android": {
-      "package": "com.zionking.ziona",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundColor": "#E6F4FE",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
+
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"

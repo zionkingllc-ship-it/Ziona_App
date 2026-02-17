@@ -6,6 +6,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Keyboard, Pressable, TextInput } from "react-native";
 import { Image, Text, XStack, YStack } from "tamagui";
+import SuccessModal from "@/components/ui/modals/successModal";
 
 const OTP_LENGTH = 6;
 
@@ -13,6 +14,7 @@ export default function VerifyOtp() {
   const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [timer, setTimer] = useState(50);
+  const[successVisible, setSuccessVisible]= useState(false)
 
   const hasSubmitted = useRef(false);
 
@@ -171,6 +173,15 @@ const resendCode = () => {
           )}
         </YStack>
       </YStack>
+            <SuccessModal
+              visible={successVisible}
+              iconImage={require("@/assets/images/xCircle.png")}
+              duration={3000}
+              onClose={() => setSuccessVisible(false)}
+              autoClose
+              title="Incorrect code entered"
+              message="please check code and try again"
+            />
     </KeyboardAvoidingWrapper>
   );
 }

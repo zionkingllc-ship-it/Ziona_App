@@ -1,5 +1,6 @@
 import { YStack, Text, Image } from "tamagui";
 import { TextPost as TextPostType } from "@/types/post";
+import colors from "@/constants/colors";
 
 type Props = {
   post: TextPostType;
@@ -16,8 +17,8 @@ export function TextPost({ post }: Props) {
       <Image
         source={backgroundSource}
         position="absolute"
-        width="100%"
-        height="100%"
+        width="90%"
+        height="200%"
       />
 
       <YStack
@@ -33,7 +34,7 @@ export function TextPost({ post }: Props) {
           borderRadius="$4"
         >
           <Text
-            color="white"
+            color={colors.black}
             fontSize="$6"
             textAlign="center"
             fontWeight="600"

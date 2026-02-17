@@ -12,7 +12,6 @@ import {
 import { Text, View, XStack } from "tamagui";
 import { SimpleButtonWithStyle } from "../SimpleButtonWithStyle";
 import KeyboardBottomSheetModal from "./KeyboardBottomSheetModal";
- 
 
 const { height } = Dimensions.get("window");
 
@@ -39,7 +38,7 @@ export default function ReportReasonsModal({
 }: Props) {
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [otherText, setOtherText] = useState("");
-  const [isFocus, setIsFocus] = useState(false); 
+  const [isFocus, setIsFocus] = useState(false);
 
   const handleSelect = (reason: string) => {
     setSelectedReason(reason);
@@ -51,7 +50,7 @@ export default function ReportReasonsModal({
 
   const handleSubmitOther = () => {
     if (!otherText.trim()) return;
-    onSelectReason(otherText.trim()); 
+    onSelectReason(otherText.trim());
   };
 
   return (
@@ -86,7 +85,10 @@ export default function ReportReasonsModal({
 
           {/* OTHER INPUT */}
           {selectedReason === "Other" && (
-            <View padding={20}>
+            <View
+              padding={20}
+              marginBottom={selectedReason === "Other" ? 20 : 0}
+            >
               <TextInput
                 value={otherText}
                 onFocus={() => setIsFocus(true)}
@@ -109,7 +111,6 @@ export default function ReportReasonsModal({
           )}
         </ScrollView>
       </View>
-
     </KeyboardBottomSheetModal>
   );
 }
@@ -153,7 +154,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     padding: 12,
-    minHeight: 80,
+    minHeight: 40,
+    maxHeight: 80,
     textAlignVertical: "top",
   },
   doneButton: {

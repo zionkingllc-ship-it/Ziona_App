@@ -6,10 +6,12 @@ import { Pressable, TouchableOpacity } from "react-native";
 import { Image, Text, XStack, YStack } from "tamagui";
 import { CommentsSheet } from "../comments/commentsModal";
 
+import { LinearGradient } from "expo-linear-gradient";
 import BookmarkFoldersModal from "../ui/modals/BookmarkFoldersModal";
 import ConfirmReportModal from "../ui/modals/ConfirmReportModal";
 import CreateFolderModal from "../ui/modals/CreateFolderModal";
 import ReportReasonsModal from "../ui/modals/ReportReasonsModal";
+import ShareModal from "../ui/modals/ShareModal";
 import SuccessModal from "../ui/modals/successModal";
 import PostMedia from "./postcard/PostMedia";
 
@@ -39,6 +41,8 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
   const [successVisible, setSuccessVisible] = useState(false);
   const [foldersVisible, setFoldersVisible] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
+  const [shareVisible, setShareVisible] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const { folders, toggleBookmark, getSavedFolderIds, createFolder } =
     useBookmarksStore();
@@ -48,28 +52,28 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
 
   /* ================= DERIVED ================= */
 
-const postImage: string = useMemo(() => {
-  switch (post.type) {
-    case "image":
-      return resolveToString(post.media.url);
+  const postImage: string = useMemo(() => {
+    switch (post.type) {
+      case "image":
+        return resolveToString(post.media.url);
 
-    case "video":
-      return resolveToString(post.media.thumbnailUrl);
+      case "video":
+        return resolveToString(post.media.thumbnailUrl);
 
-    case "text":
-      return resolveToString(post.media?.backgroundImage);
+      case "text":
+        return resolveToString(post.media?.backgroundImage);
 
-    case "carousel":
-      return resolveToString(post.media.items[0]?.url);
+      case "carousel":
+        return resolveToString(post.media.items[0]?.url);
 
-    default:
-      return "";
-  } 
-}, [post]);
+      default:
+        return "";
+    }
+  }, [post]);
 
-function resolveToString(source: string | number | undefined): string {
-  return typeof source === "string" ? source : "";
-}
+  function resolveToString(source: string | number | undefined): string {
+    return typeof source === "string" ? source : "";
+  }
   /* ================= SYNC LOGIC ================= */
 
   useEffect(() => {
@@ -77,6 +81,10 @@ function resolveToString(source: string | number | undefined): string {
       setManualPaused(false);
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    setExpanded(false);
+  }, [post.id]);
 
   const effectiveIsPlaying =
     post.type === "video" ? isPlaying && !manualPaused : isPlaying;
@@ -141,9 +149,37 @@ function resolveToString(source: string | number | undefined): string {
             </XStack>
 
             {"caption" in post && post.caption && (
-              <Text color={colors.white} fontSize={16}>
-                {post.caption}
-              </Text>
+              <XStack maxWidth="80%" alignItems="flex-end">
+                <Text
+                  color={colors.white}
+                  fontSize={16}
+                  numberOfLines={expanded ? undefined : 3}
+                >
+                  {post.caption}
+                </Text>
+
+                {post.caption.length > 90 && (
+                  <Pressable onPress={() => setExpanded((p) => !p)}>
+                    <LinearGradient
+                      colors={["transparent", "rgba(55, 55, 55, 0.6)"]}
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        height: 24,
+                        width: "100%",
+                      }}
+                    />
+                    <Text
+                      color={colors.white}
+                      fontSize={14}
+                      fontWeight="600"
+                      alignSelf="flex-end"
+                    >
+                      {expanded ? "less" : "more"}
+                    </Text>
+                  </Pressable>
+                )}
+              </XStack>
             )}
           </YStack>
 
@@ -172,7 +208,7 @@ function resolveToString(source: string | number | undefined): string {
             </Pressable>
 
             {/* SHARE */}
-            <Pressable>
+            <Pressable onPress={() => setShareVisible(true)}>
               <Image source={shareIcon} width={24} height={24} />
             </Pressable>
 
@@ -207,10 +243,14 @@ function resolveToString(source: string | number | undefined): string {
           setSuccessVisible(true);
         }}
       />
-
+      <ShareModal
+        visible={shareVisible}
+        onClose={() => setShareVisible(false)}
+        post={post}
+      />
       <SuccessModal
         visible={successVisible}
-        duration={3000}
+        iconImage={require("@/assets/images/xCircle.png")}
         onClose={() => setSuccessVisible(false)}
         autoClose
         title="Thank you for reporting this post"
