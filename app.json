@@ -7,12 +7,12 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
-
     "ios": {
       "bundleIdentifier": "com.zionking.ziona",
-      "associatedDomains": ["applinks:ziona.app"]
+      "associatedDomains": [
+        "applinks:ziona.app"
+      ]
     },
-
     "android": {
       "package": "com.zionking.ziona",
       "intentFilters": [
@@ -25,29 +25,32 @@
               "pathPrefix": "/post"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
+      ],
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
-
     "plugins": [
       "expo-router",
       "expo-video",
       "expo-audio",
       "react-native-video"
     ],
-
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "ae56ecb7-5133-4048-849f-b5f191d82d6a"
+        "projectId": "1631baf6-fc77-47d5-9168-ef3affdfa7b2"
       }
     },
-
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     }
-    
   }
 }
