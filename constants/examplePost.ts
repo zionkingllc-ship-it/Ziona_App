@@ -30,6 +30,7 @@ export const MOCK_POSTS: Post[] = [
     text: "Sometimes God calms the storm. Sometimes He lets the storm rage and calms His child.",
     media: {
       backgroundImage: require("@/assets/images/textPostBackground1.png"),
+      thumbnailUrl: "https://picsum.photos/800/1200?random=10",
     },
     caption: `Daily reflection Sometimes God calms the storm. Sometimes God calms the storm. Sometimes He lets the storm rage and calms His childSometimes He lets the storm rage and calms His childSometimes God calms the storm. Sometimes He lets the storm rage and calms His child`,
     liked: false,
@@ -81,7 +82,7 @@ export const MOCK_POSTS: Post[] = [
     media: {
       videoUrl:
         "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4",
-      thumbnailUrl: require("@/assets/images/profile.png"),
+      thumbnailUrl: "https://picsum.photos/800/1200?random=10",
     },
     caption: "Faith grows when you trust God completely.",
     liked: false,
@@ -99,7 +100,7 @@ export const MOCK_POSTS: Post[] = [
     },
     media: {
       videoUrl: require("@/assets/videos/sample.mp4"),
-      thumbnailUrl: require("@/assets/images/profile.png"),
+      thumbnailUrl: "https://picsum.photos/800/1200?random=10",
     },
     caption: "Faith grows when you trust God completely.",
     liked: false,

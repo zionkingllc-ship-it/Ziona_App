@@ -1,15 +1,18 @@
 // components/screens/FollowSuggestions.tsx
+import colors from "@/constants/colors";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
   FlatList,
   Image,
+  StyleSheet,
+  Text,
   TouchableOpacity,
-  StyleSheet, 
+  View,
 } from "react-native";
-import colors from "@/constants/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { YStack } from "tamagui";
+
+import CenteredMessage from "@/components/ui/CenteredMessage";
 
 interface User {
   id: string;
@@ -28,12 +31,13 @@ const mockSuggestions: User[] = [
 
 export default function FollowSuggestions() {
   const [following, setFollowing] = useState<string[]>([]);
+  const [feedType, setFeedType] = useState<"forYou" | "following">("following"); // default to "following"
 
   const toggleFollow = (userId: string) => {
     setFollowing((prev) =>
       prev.includes(userId)
         ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
+        : [...prev, userId],
     );
   };
 
@@ -42,7 +46,9 @@ export default function FollowSuggestions() {
     return (
       <View style={styles.userRow}>
         <Image source={{ uri: item.avatar }} style={styles.avatar} />
-        <Text style={styles.userName}>{item.name}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.userName}>{item.name}</Text>
+        </View>
         <TouchableOpacity
           style={[styles.followBtn, isFollowing && styles.followingBtn]}
           onPress={() => toggleFollow(item.id)}
@@ -62,81 +68,62 @@ export default function FollowSuggestions() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.tabTitle}>For You</Text>
-        <Text style={[styles.tabTitle, styles.tabActive]}>Following</Text>
-      </View>
-
-      <View style={styles.messageContainer}>
+      <YStack flex={1} padding={5} paddingTop={following.length === 0 ? 0 : 55}>
+        {/* Empty state */}
         {following.length === 0 && (
-          <Text style={styles.messageText}>
-            You are currently not following anyone
-          </Text>
+          <CenteredMessage
+            text="You are currently not following anyone"
+            subtitle="Follow users to see their posts here."
+          />
         )}
-      </View>
-
-      <FlatList
-        data={mockSuggestions}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+        <Text
+          style={{
+            marginLeft: 18,
+            fontSize: 16,
+            fontWeight: "400",
+            color: colors.headerText,
+            position: "static",
+          }}
+        >
+          Suggestions
+        </Text>
+        <FlatList
+          data={mockSuggestions}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      </YStack>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
-  header: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginVertical: 16,
-  },
-  tabTitle: {
-    fontSize: 16,
-    color: colors.gray,
-    marginHorizontal: 16,
-  },
-  tabActive: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-  messageContainer: {
-    alignItems: "center",
-    marginVertical: 8,
-    paddingHorizontal: 24,
-  },
-  messageText: {
-    fontSize: 14,
-    color: colors.gray,
-    textAlign: "center",
-  },
   listContent: { paddingHorizontal: 16, paddingTop: 8 },
   userRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
-    borderBottomWidth: 0.5,
     borderBottomColor: colors.border,
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: 30,
+    height: 30,
     borderRadius: 24,
     marginRight: 12,
   },
-  userName: { flex: 1, fontSize: 16, fontWeight: "500", color: colors.black },
+  userName: { fontSize: 16, fontWeight: "500", color: colors.black },
   followBtn: {
     backgroundColor: colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 8,
   },
   followBtnText: {
     color: colors.white,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "600",
   },
   followingBtn: {

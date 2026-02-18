@@ -32,20 +32,19 @@ export default function TabsLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="feed"
-        options={{
-          title: "Feed",
-          tabBarIcon: ({ focused }) => (
-            <Image
-              src={focused ? homeActive : homeInActive}
-              width={23}
-              height={23}
-            />
-          ),
-        }}
+ <Tabs.Screen
+  name="feed"
+  options={{
+    title: "Feed", 
+    tabBarIcon: ({ focused }) => (
+      <Image
+        src={focused ? homeActive : homeInActive}
+        width={23}
+        height={23}
       />
-
+    ),
+  }}
+/>
       <Tabs.Screen
         name="discover"
         options={{

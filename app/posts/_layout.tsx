@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-export default function FeedLayout() {
+export default function PostLayout() {
 
   return (
     <Stack>

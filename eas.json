@@ -16,6 +16,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./serviceAccountZiona.json",
+        "track": "internal"
+      }
+    }
   }
 }
+

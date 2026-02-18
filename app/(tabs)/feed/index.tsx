@@ -1,27 +1,74 @@
-import {PostCard}from "@/components/post/PostCard";
-import TwoButtonSwitch from "@/components/ui/twoButtonSwitch";
-import colors from "@/constants/colors";
-import { MOCK_POSTS, unreadCount } from "@/constants/examplePost";
+// import NetInfo from "@react-native-community/netinfo";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { Bell } from "@tamagui/lucide-icons";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
-  ViewToken,
+  Text,
   useWindowDimensions,
+  View,
+  ViewToken,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image, Text, XStack, YStack } from "tamagui";
+
+import FollowSuggestions from "@/components/following/FollowingSuggestions";
+import { PostCard } from "@/components/post/PostCard";
+import CenteredMessage from "@/components/ui/CenteredMessage";
+
+import FeedHeader from "@/components/feedHeader";
+import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
+import { Post } from "@/types/post"; // adjust path if needed
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function Feed() {
   const { height } = useWindowDimensions();
   const tabBarHeight = useBottomTabBarHeight();
   const feedHeight = height - tabBarHeight;
 
+  const flatListRef = useRef<FlatList<Post>>(null);
+
   const [activePostId, setActivePostId] = useState<string | null>(null);
-  const [feedType, setFeedType] = useState<"forYou" | "following">(
-    "forYou"
-  );
+  const [feedType, setFeedType] = useState<"forYou" | "following">("forYou");
+
+  const forYouQuery = useForYouFeed();
+  const followingQuery = useFollowingFeed();
+
+  const query = feedType === "forYou" ? forYouQuery : followingQuery;
+
+  const pages = query.data?.pages ?? [];
+  const data: Post[] = pages.flatMap((page) => page.posts ?? []);
+
+  const followsCount = followingQuery.data?.pages?.[0]?.followsCount ?? 0;
+
+  const [isOffline, setIsOffline] = useState(false);
+
+  /* ================= NETWORK ================= */
+
+  // useEffect(() => {
+  //   const unsubscribe = NetInfo.addEventListener((state) => {
+  //     setIsOffline(!state.isConnected);
+  //   });
+
+  //   return unsubscribe;
+  // }, []);
+
+  useFocusEffect(
+  useCallback(() => {
+    // SCREEN FOCUSED
+    return () => {
+      // SCREEN BLURRED (switched tab / navigated away)
+      setActivePostId(null);
+    };
+  }, [])
+);
+  /* Reset playback + scroll when switching */
+  useEffect(() => {
+    setActivePostId(null);
+    flatListRef.current?.scrollToOffset({
+      offset: 0,
+      animated: false,
+    });
+  }, [feedType]);
 
   /* ================= VIEWABILITY ================= */
 
@@ -34,87 +81,71 @@ export default function Feed() {
       if (viewableItems.length > 0) {
         setActivePostId(viewableItems[0].item.id);
       }
-    }
+    },
   ).current;
 
-  /* ================= RENDER ITEM ================= */
+  const renderItem = useCallback(
+    ({ item }: { item: Post }) => (
+      <PostCard
+        post={item}
+        isPlaying={item.id === activePostId}
+        screenHeight={feedHeight}
+      />
+    ),
+    [activePostId, feedHeight],
+  );
 
-const renderItem = useCallback(
-  ({ item }:any) => (
-    <PostCard
-      post={item}
-      isPlaying={item.id === activePostId}
-      screenHeight={feedHeight}
-    />
-  ),
-  [activePostId, feedHeight]
-);
+  /* ================= STATE HANDLING ================= */
 
-  return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
-      {/* HEADER */}
-      <XStack
-        position="absolute"
-        top={50}
-        left={6}
-        right={0}
-        padding="$3"
-        alignItems="center"
-        justifyContent="space-between"
-        zIndex={10}
-      >
-        <Image source={require("@/assets/images/logowhite.png")} />
+  let content: React.ReactNode = null;
 
-        <TwoButtonSwitch
-          value={feedType}
-          onChange={setFeedType}
-          width="65%"
-        />
-
-        <XStack
-          width={40}
-          height={40}
-          borderRadius={20}
-          alignItems="center"
-          justifyContent="center"
-          backgroundColor="rgba(255,255,255,0.12)"
-          pressStyle={{ scale: 0.95, opacity: 0.8 }}
-        >
-          <Bell size={24} color={colors.white} />
-
-          {unreadCount > 0 && (
-            <YStack
-              position="absolute"
-              top={6}
-              right={6}
-              minWidth={8}
-              height={8}
-              borderRadius={999}
-              backgroundColor="#FF3B30"
-              alignItems="center"
-              justifyContent="center"
-              paddingHorizontal={unreadCount > 9 ? 4 : 0}
-            >
-              {unreadCount > 9 && (
-                <Text
-                  fontSize={10}
-                  color="white"
-                  fontWeight="700"
-                >
-                  9+
-                </Text>
-              )}
-            </YStack>
-          )}
-        </XStack>
-      </XStack>
-
-      {/* FEED */}
-      <FlatList
-        data={MOCK_POSTS}
+  if (query.isLoading) {
+    content = (
+      <View style={{ flex: 1, justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  } else if (query.isError) {
+    content = (
+      <CenteredMessage
+        text="Something went wrong"
+        actionLabel="Retry"
+        onActionPress={() => query.refetch()}
+      />
+    );
+  } else if (data.length === 0) {
+    if (feedType === "following") {
+      if (followsCount === 0) {
+        content = <FollowSuggestions />;
+      } else {
+        content = (
+          <CenteredMessage text="No posts yet from people you follow." />
+        );
+      }
+    } else {
+      content = <CenteredMessage text="No posts available." />;
+    }
+  } else {
+    content = (
+      <FlatList<Post>
+        ref={flatListRef}
+        data={data}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         pagingEnabled
+        refreshing={query.isRefetching}
+        onRefresh={() => query.refetch()}
+        onEndReached={() => {
+          if (query.hasNextPage && !query.isFetchingNextPage) {
+            query.fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          query.isFetchingNextPage ? (
+            <ActivityIndicator style={{ marginVertical: 20 }} />
+          ) : null
+        }
         decelerationRate="fast"
         showsVerticalScrollIndicator={false}
         snapToInterval={feedHeight}
@@ -131,6 +162,38 @@ const renderItem = useCallback(
         maxToRenderPerBatch={2}
         removeClippedSubviews
       />
+    );
+  }
+
+  /* ================= RENDER ================= */
+
+  return (
+    <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
+      {/* HEADER */}
+      <FeedHeader
+        feedType={feedType}
+        onChangeFeedType={setFeedType}
+        emptyFollowing={feedType === "following" && followsCount === 0}
+      />
+
+      {isOffline && (
+        <View
+          style={{
+            position: "absolute",
+            top: 100,
+            alignSelf: "center",
+            backgroundColor: "#000",
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 20,
+            zIndex: 20,
+          }}
+        >
+          <Text style={{ color: "#fff" }}>You're offline</Text>
+        </View>
+      )}
+
+      {content}
     </SafeAreaView>
   );
 }

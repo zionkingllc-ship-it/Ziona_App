@@ -1,4 +1,11 @@
 export type PostType = "image" | "video" | "carousel" | "text";
+export type CategoryId =
+  | "all"
+  | "love"
+  | "trust"
+  | "worship"
+  | "patience"
+  | "prayer";
 
 export interface BasePost {
   id: string;
@@ -55,6 +62,7 @@ export interface TextPost extends BasePost {
   type: "text";
   media: {
     backgroundImage: string;
+    thumbnailUrl: any;
   };
   text: string;
 }

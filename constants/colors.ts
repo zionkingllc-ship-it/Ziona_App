@@ -49,6 +49,7 @@ const colors = {
   buttonText:"#F6EAFA",
   spinner:"#F6EAFA",
   inputTitle:"#836F8B",
+  bell:"#836F8B",
   forgotPassword:"#836F8B",
 };
 

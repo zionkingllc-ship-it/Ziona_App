@@ -1,3 +1,5 @@
+import { queryClient } from "@/lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -7,6 +9,7 @@ import { TamaguiProvider } from "tamagui";
 
 import NotificationProvider from "@/providers/notificationProvider";
 import config from "@/tamagui.config";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,12 +35,15 @@ export default function RootLayout() {
   return (
     <TamaguiProvider config={config} defaultTheme={scheme}>
       <NotificationProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="[id]" />
-          
-        </Stack>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <QueryClientProvider client={queryClient}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="[id]" />
+            </Stack>
+          </QueryClientProvider>
+        </GestureHandlerRootView>
       </NotificationProvider>
     </TamaguiProvider>
   );
