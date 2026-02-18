@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFeedStore } from "@/components/store/feedStore";
+import { useFeedStore } from "@/components/store/FeedStore";
 import { PostCard } from "@/components/post/PostCard";
 import CenteredMessage from "@/components/ui/CenteredMessage";
 import { Post } from "@/types/post";

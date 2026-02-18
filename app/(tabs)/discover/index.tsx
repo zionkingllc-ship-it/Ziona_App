@@ -1,6 +1,6 @@
 // components/screens/DiscoverScreen.tsx
 import PostThumbnail from "@/components/discover/PostThumbnail";
-import { useFeedStore } from "@/components/store/feedStore";
+import { useFeedStore } from "@/components/store/FeedStore";
 import colors from "@/constants/colors";
 import { MOCK_POSTS } from "@/constants/examplePost";
 import { Post } from "@/types/post";

@@ -1,5 +1,5 @@
 import { GradientBackground } from "@/components/layout/GradientBackground";
-import { FeedProvider } from "@/components/store/feedStore";
+import { FeedProvider } from "@/components/store/FeedStore";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
