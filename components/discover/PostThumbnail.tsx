@@ -57,10 +57,10 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
       )}
 
       {post.type === "video" && (
-        <Ionicons name="play" size={18} color="white" style={{ position: "absolute", top: 6, right: 6 }} />
+        <Ionicons name="videocam" size={18} color="white" style={{ position: "absolute", top: 6, left: 6 }} />
       )}
       {post.type === "carousel" && (
-        <Ionicons name="images" size={18} color="white" style={{ position: "absolute", top: 6, right: 6 }} />
+        <Ionicons name="images" size={18} color="white" style={{ position: "absolute", top: 6, left: 6 }} />
       )}
     </TouchableOpacity>
   );

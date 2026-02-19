@@ -13,6 +13,8 @@ export interface BasePost {
   createdAt: string;
   liked: boolean;
   likesCount: number;
+  bookmarked:number;
+  bookmarks:string
 
   author: {
     id: string;

@@ -6,6 +6,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 import { TamaguiProvider } from "tamagui";
+import { StatusBar } from "expo-status-bar";
 
 import NotificationProvider from "@/providers/notificationProvider";
 import config from "@/tamagui.config";
@@ -34,13 +35,13 @@ export default function RootLayout() {
 
   return (
     <TamaguiProvider config={config} defaultTheme={scheme}>
+      <StatusBar style="dark" />
       <NotificationProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <QueryClientProvider client={queryClient}>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="[id]" />
+              <Stack.Screen name="(auth)" /> 
             </Stack>
           </QueryClientProvider>
         </GestureHandlerRootView>

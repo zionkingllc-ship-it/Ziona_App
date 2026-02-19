@@ -101,7 +101,7 @@ export default function AuthIndex() {
             textSize={13}
             textWeight="400"
             color={colors.white}
-            onPress={() => router.push("/")}
+            onPress={() =>{}}
             startIcon={<Image source={google} width={23} height={23} />}
           />
 
@@ -110,7 +110,7 @@ export default function AuthIndex() {
             textSize={13}
             textWeight="400"
             color={colors.white}
-            onPress={() => router.push("/")}
+            onPress={() => {}}
             startIcon={<Image source={facebook} width={23} height={23} />}
           />
         </YStack>

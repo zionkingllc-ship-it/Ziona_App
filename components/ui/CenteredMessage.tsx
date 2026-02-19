@@ -1,12 +1,26 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ViewStyle,
+  StyleProp,
+} from "react-native";
 import colors from "@/constants/colors";
 
 type Props = {
   text: string;
   subtitle?: string;
+
   actionLabel?: string;
   onActionPress?: () => void;
+
+  titleColor?: string;
+  subtitleColor?: string;
+
+  fullScreen?: boolean;
+  containerStyle?: StyleProp<ViewStyle>;
 };
 
 export default function CenteredMessage({
@@ -14,19 +28,35 @@ export default function CenteredMessage({
   subtitle,
   actionLabel,
   onActionPress,
+  titleColor = colors.black,
+  subtitleColor = colors.gray,
+  fullScreen = true,
+  containerStyle,
 }: Props) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{text}</Text>
+    <View
+      style={[
+        styles.container,
+        fullScreen && { flex: 1 },
+        containerStyle,
+      ]}
+    >
+      <Text style={[styles.title, { color: titleColor }]}>
+        {text}
+      </Text>
 
       {subtitle && (
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text
+          style={[styles.subtitle, { color: subtitleColor }]}
+        >
+          {subtitle}
+        </Text>
       )}
 
-      {actionLabel && onActionPress && (
+      {actionLabel && (
         <TouchableOpacity
           style={styles.button}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           onPress={onActionPress}
         >
           <Text style={styles.buttonText}>{actionLabel}</Text>
@@ -38,29 +68,27 @@ export default function CenteredMessage({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 32,
   },
   title: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
-    color: colors.white,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    color: colors.gray,
     textAlign: "center",
     marginTop: 8,
+    lineHeight: 20,
   },
   button: {
-    marginTop: 16,
+    marginTop: 20,
     backgroundColor: colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 24,
   },
   buttonText: {
     color: colors.white,

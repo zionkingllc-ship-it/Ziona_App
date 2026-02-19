@@ -16,6 +16,7 @@ import { PostCard } from "@/components/post/PostCard";
 import CenteredMessage from "@/components/ui/CenteredMessage";
 
 import FeedHeader from "@/components/feedHeader";
+import colors from "@/constants/colors";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
 import { Post } from "@/types/post"; // adjust path if needed
 import { useFocusEffect } from "@react-navigation/native";
@@ -53,14 +54,14 @@ export default function Feed() {
   // }, []);
 
   useFocusEffect(
-  useCallback(() => {
-    // SCREEN FOCUSED
-    return () => {
-      // SCREEN BLURRED (switched tab / navigated away)
-      setActivePostId(null);
-    };
-  }, [])
-);
+    useCallback(() => {
+      // SCREEN FOCUSED
+      return () => {
+        // SCREEN BLURRED (switched tab / navigated away)
+        setActivePostId(null);
+      };
+    }, []),
+  );
   /* Reset playback + scroll when switching */
   useEffect(() => {
     setActivePostId(null);
@@ -102,7 +103,7 @@ export default function Feed() {
   if (query.isLoading) {
     content = (
       <View style={{ flex: 1, justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   } else if (query.isError) {
@@ -127,41 +128,49 @@ export default function Feed() {
     }
   } else {
     content = (
-      <FlatList<Post>
-        ref={flatListRef}
-        data={data}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        pagingEnabled
-        refreshing={query.isRefetching}
-        onRefresh={() => query.refetch()}
-        onEndReached={() => {
-          if (query.hasNextPage && !query.isFetchingNextPage) {
-            query.fetchNextPage();
+      <View style={{flex:1}}>
+        {/* HEADER */}
+        <FeedHeader
+          feedType={feedType}
+          onChangeFeedType={setFeedType}
+          emptyFollowing={feedType === "following" && followsCount === 0}
+        />
+        <FlatList<Post>
+          ref={flatListRef}
+          data={data}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          pagingEnabled
+          refreshing={query.isRefetching}
+          onRefresh={() => query.refetch()}
+          onEndReached={() => {
+            if (query.hasNextPage && !query.isFetchingNextPage) {
+              query.fetchNextPage();
+            }
+          }}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            query.isFetchingNextPage ? (
+              <ActivityIndicator style={{ marginVertical: 20 }} />
+            ) : null
           }
-        }}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          query.isFetchingNextPage ? (
-            <ActivityIndicator style={{ marginVertical: 20 }} />
-          ) : null
-        }
-        decelerationRate="fast"
-        showsVerticalScrollIndicator={false}
-        snapToInterval={feedHeight}
-        snapToAlignment="start"
-        viewabilityConfig={viewabilityConfig}
-        onViewableItemsChanged={onViewableItemsChanged}
-        getItemLayout={(_, index) => ({
-          length: feedHeight,
-          offset: feedHeight * index,
-          index,
-        })}
-        windowSize={3}
-        initialNumToRender={2}
-        maxToRenderPerBatch={2}
-        removeClippedSubviews
-      />
+          decelerationRate="fast"
+          showsVerticalScrollIndicator={false}
+          snapToInterval={feedHeight}
+          snapToAlignment="start"
+          viewabilityConfig={viewabilityConfig}
+          onViewableItemsChanged={onViewableItemsChanged}
+          getItemLayout={(_, index) => ({
+            length: feedHeight,
+            offset: feedHeight * index,
+            index,
+          })}
+          windowSize={3}
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          removeClippedSubviews
+        />
+      </View>
     );
   }
 
@@ -169,13 +178,6 @@ export default function Feed() {
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
-      {/* HEADER */}
-      <FeedHeader
-        feedType={feedType}
-        onChangeFeedType={setFeedType}
-        emptyFollowing={feedType === "following" && followsCount === 0}
-      />
-
       {isOffline && (
         <View
           style={{

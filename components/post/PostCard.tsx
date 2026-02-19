@@ -1,11 +1,10 @@
 import colors from "@/constants/colors";
 import { useBookmarksStore } from "@/store/useBookmarkStore";
 import { Post } from "@/types/post";
-import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, TouchableOpacity } from "react-native";
+import React, { useEffect, useMemo, useState, } from "react";
+import { Pressable, TouchableOpacity} from "react-native";
 import { Image, Text, XStack, YStack } from "tamagui";
-import { CommentsSheet } from "../comments/commentsModal";
-
+import { CommentsSheet } from "../comments/commentsModal"; 
 import { LinearGradient } from "expo-linear-gradient";
 import BookmarkFoldersModal from "../ui/modals/BookmarkFoldersModal";
 import ConfirmReportModal from "../ui/modals/ConfirmReportModal";
@@ -14,6 +13,7 @@ import ReportReasonsModal from "../ui/modals/ReportReasonsModal";
 import ShareModal from "../ui/modals/ShareModal";
 import SuccessModal from "../ui/modals/successModal";
 import PostMedia from "./postcard/PostMedia";
+
 
 type Props = {
   post: Post;
@@ -85,6 +85,8 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
   useEffect(() => {
     setExpanded(false);
   }, [post.id]);
+
+ 
 
   const effectiveIsPlaying =
     post.type === "video" ? isPlaying && !manualPaused : isPlaying;

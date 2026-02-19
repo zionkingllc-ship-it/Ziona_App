@@ -35,7 +35,8 @@ export default function TabsLayout() {
  <Tabs.Screen
   name="feed"
   options={{
-    title: "Feed", 
+    title: "Home", 
+     freezeOnBlur: true,
     tabBarIcon: ({ focused }) => (
       <Image
         src={focused ? homeActive : homeInActive}
@@ -49,6 +50,7 @@ export default function TabsLayout() {
         name="discover"
         options={{
           title: "Discover",
+          freezeOnBlur: true,
           tabBarIcon: ({ focused }) => (
             <Image
               src={focused ? discoverActive : discoverInActive}

@@ -1,48 +1,108 @@
-import { YStack, Text } from 'tamagui'
-// import { LinearGradient } from 'expo-linear-gradient'
-import { TextPost } from '@/types'
-import { postBackgroundMap } from '@/utils/postBackground'
+// components/post/TextPostCard.tsx
 
-type Props = {
-  post: TextPost
+import colors from "@/constants/colors";
+import { Post } from "@/types/post";
+import React from "react";
+import { Image } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { runOnJS } from "react-native-reanimated";
+
+interface Props {
+  post: Post;
+  onTogglePlay?: () => void;
+  onLike?: () => void;
+  heartStyle: any;
+  triggerHeart: () => void;
 }
 
-export function TextPostCard({ post }: Props) {
-   const bg = postBackgroundMap[post.backgorund]
+export default function TextPostCard({
+  post,
+  onTogglePlay,
+  onLike,
+  heartStyle,
+  triggerHeart,
+}: Props) {
+  const likeIconActive = require("@/assets/images/likeIcon2.png");
 
-  const isGradient = typeof bg === 'object' && bg.type === 'gradient'
+  function resolveSource(source?: string | number) {
+    if (!source) return undefined;
 
-  //const Wrapper = isGradient ? LinearGradient : YStack
-  const Wrapper =  YStack
+    if (typeof source === "string") {
+      if (source.trim() === "") return undefined;
+      return { uri: source };
+    }
+
+    return source;
+  }
+
+  const handleLike = () => {
+    if (onLike) onLike();
+    triggerHeart();
+  };
+
+  const singleTap = Gesture.Tap()
+    .numberOfTaps(1)
+    .onEnd(() => {
+      if (onTogglePlay) runOnJS(onTogglePlay)();
+    });
+
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      runOnJS(handleLike)();
+    });
+
+  const gesture = Gesture.Exclusive(doubleTap, singleTap);
+
+  const bgSource = resolveSource(post.media?.backgroundImage);
 
   return (
-    <Wrapper
-      {...(isGradient
-        ? { colors: bg.colors }
-        : { backgroundColor: bg })}
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-      }}
-    >
-      <YStack
-        backgroundColor="rgba(255,255,255,0.15)"
-        padding="$5"
-        borderRadius="$4"
-        maxWidth="85%"
+    <GestureDetector gesture={gesture}>
+      <Animated.View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 24,
+          backgroundColor: colors.black,
+        }}
       >
-        <Text
-          color="white"
-          fontSize="$6"
-          fontWeight="600"
-          textAlign="center"
-          lineHeight="$6"
+        {bgSource && (
+          <Image
+            source={bgSource}
+            style={{
+              position: "absolute",
+              width: "115%",
+              height: "75%",
+              borderRadius: 10,
+            }}
+          />
+        )}
+
+        <Animated.Text
+          style={{
+            color: "white",
+            fontSize: 22,
+            textAlign: "center",
+            fontWeight: "600",
+          }}
         >
           {post.text}
-        </Text>
-      </YStack>
-    </Wrapper>
-  )
+        </Animated.Text>
+
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              alignSelf: "center",
+              top: "40%",
+            },
+            heartStyle,
+          ]}
+        >
+          <Animated.Image source={likeIconActive} />
+        </Animated.View>
+      </Animated.View>
+    </GestureDetector>
+  );
 }
