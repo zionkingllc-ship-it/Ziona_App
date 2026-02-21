@@ -54,7 +54,7 @@ export default function PostMedia({
           heartStyle={heartStyle}
           triggerHeart={triggerHeart}
         />
-      );
+      );  
 
     case "text":
       return (

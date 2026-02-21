@@ -20,6 +20,7 @@ import colors from "@/constants/colors";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
 import { Post } from "@/types/post"; // adjust path if needed
 import { useFocusEffect } from "@react-navigation/native";
+import { YStack } from "tamagui";
 
 export default function Feed() {
   const { height } = useWindowDimensions();
@@ -117,7 +118,16 @@ export default function Feed() {
   } else if (data.length === 0) {
     if (feedType === "following") {
       if (followsCount === 0) {
-        content = <FollowSuggestions />;
+        content = (
+          <YStack flex={1}  gap={15}> 
+            <FeedHeader
+              feedType={feedType}
+              onChangeFeedType={setFeedType}
+              emptyFollowing={feedType === "following" && followsCount === 0}
+            />
+            <FollowSuggestions />
+          </YStack>
+        );
       } else {
         content = (
           <CenteredMessage text="No posts yet from people you follow." />
@@ -128,7 +138,7 @@ export default function Feed() {
     }
   } else {
     content = (
-      <View style={{flex:1}}>
+      <View style={{ flex: 1 }}>
         {/* HEADER */}
         <FeedHeader
           feedType={feedType}

@@ -51,10 +51,10 @@ export default function VideoPostCard({
     videoRef.current.seek(newTime);
   };
 
-  const scrubAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: scrubOpacity.value,
-    transform: [{ scale: scrubScale.value }],
-  }));
+  // const scrbAnimatedStyle = useAnimatedStyle(() => ({
+  //   opacity: scrubOpacity.value,
+  //   transform: [{ scale: scrubScale.value }],
+  // }));
 
   const progressStyle = useAnimatedStyle(() => ({
     width: progress.value * (SCREEN_WIDTH * 0.9),
@@ -135,7 +135,7 @@ export default function VideoPostCard({
               width: SCREEN_WIDTH * 0.9,
               alignSelf: "center",
             },
-            scrubAnimatedStyle,
+            // scrubAnimatedStyle,
           ]}
         >
           <Animated.View

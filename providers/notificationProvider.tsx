@@ -14,16 +14,16 @@ Notifications.setNotificationHandler({
 export default function NotificationProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Listen to incoming notifications
-    const subscription = Notifications.addNotificationReceivedListener(notification => {
-      console.log("In-app notification:", notification);
-    });
+    // const subscription = Notifications.addNotificationReceivedListener(notification => {
+    //   console.log("In-app notification:", notification);
+    // });
 
     const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
       console.log("Notification tapped:", response);
     });
 
     return () => {
-      subscription.remove();
+//subscription.remove();
       responseSubscription.remove();
     };
   }, []);
