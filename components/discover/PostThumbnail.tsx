@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { View, Image, TouchableOpacity, Text, ImageBackground, StyleSheet } from "react-native";
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  Text,
+  ImageBackground,
+  StyleSheet,
+} from "react-native";
 import { Post } from "@/types/post";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "@/constants/colors";
 import { generateVideoThumbnail } from "@/helpers/thumbnailGenerator";
-
-const TEXT_BG = require("@/assets/images/textPostBackground1.png");
 
 interface Props {
   post: Post;
@@ -13,35 +18,108 @@ interface Props {
   onPress: () => void;
 }
 
-export default function PostThumbnail({ post, size, onPress }: Props) {
-  const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
+export default function PostThumbnail({
+  post,
+  size,
+  onPress,
+}: Props) {
+  const [thumbnailUri, setThumbnailUri] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function loadThumbnail() {
-      if (post.type === "video") {
-        // If backend already provides thumbnail, use it
-        if (post.media.thumbnailUrl) {
-          setVideoThumbnail(post.media.thumbnailUrl);
-        } else if (post.media.videoUrl) {
-          const generated = await generateVideoThumbnail(post.media.videoUrl);
-          if (generated) {
-            setVideoThumbnail(generated);
-          }
-        }
+      if (post.type !== "video") return;
+
+      // 1️⃣ Use backend thumbnail if available
+      if (post.media.thumbnailUrl) {
+        if (isMounted) setThumbnailUri(post.media.thumbnailUrl);
+        return;
+      }
+
+      // 2️⃣ Otherwise generate from video
+      const generated = await generateVideoThumbnail(
+        post.media.videoUrl
+      );
+
+      if (generated && isMounted) {
+        setThumbnailUri(generated);
       }
     }
 
     loadThumbnail();
+
+    return () => {
+      isMounted = false;
+    };
   }, [post]);
 
-  const getThumbnail = () => {
-    if (post.type === "image") return { uri: post.media.url };
-    if (post.type === "video" && videoThumbnail) return { uri: videoThumbnail };
-    if (post.type === "carousel") return { uri: post.media.items?.[0]?.url };
+  const renderMedia = () => {
+    // IMAGE
+    if (post.type === "image") {
+      return (
+        <Image
+          source={{ uri: post.media.url }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
+      );
+    }
+
+    // VIDEO
+    if (post.type === "video" && thumbnailUri) {
+      return (
+        <Image
+          source={{ uri: thumbnailUri }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
+      );
+    }
+
+    // CAROUSEL (first item)
+    if (post.type === "carousel") {
+      const firstItem = post.media.items[0];
+      return (
+        <Image
+          source={{ uri: firstItem.url }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
+      );
+    }
+
+    // TEXT
+    if (post.type === "text") {
+      return (
+        <ImageBackground
+          source={post.media.backgroundImage}
+          style={{ flex: 1, justifyContent: "center", padding: 10 }}
+          resizeMode="cover"
+        >
+          <View
+            style={{
+              ...StyleSheet.absoluteFillObject,
+              backgroundColor: "rgba(0,0,0,0.25)",
+            }}
+          />
+          <Text
+            numberOfLines={3}
+            style={{
+              color: "white",
+              fontSize: 12,
+              fontWeight: "600",
+              textAlign: "center",
+            }}
+          >
+            {post.text}
+          </Text>
+        </ImageBackground>
+      );
+    }
+
     return null;
   };
-
-  const thumbnail = getThumbnail();
 
   return (
     <TouchableOpacity
@@ -56,40 +134,7 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
         backgroundColor: colors.gray,
       }}
     >
-      {thumbnail && (
-        <Image
-          source={thumbnail}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
-      )}
-
-      {post.type === "text" && (
-        <ImageBackground
-          source={TEXT_BG}
-          style={{ flex: 1, justifyContent: "center", padding: 10 }}
-          resizeMode="cover"
-        >
-          <View
-            style={{
-              ...StyleSheet.absoluteFillObject,
-              backgroundColor: "rgba(0,0,0,0.25)",
-            }}
-          />
-          <Text
-            numberOfLines={3}
-            ellipsizeMode="tail"
-            style={{
-              color: "white",
-              fontSize: 12,
-              fontWeight: "600",
-              textAlign: "center",
-            }}
-          >
-            {post.text}
-          </Text>
-        </ImageBackground>
-      )}
+      {renderMedia()}
 
       {post.type === "video" && (
         <Ionicons

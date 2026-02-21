@@ -13,9 +13,11 @@ export const MOCK_POSTS: Post[] = [
       videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
       thumbnailUrl: "https://picsum.photos/800/1200?random=10",
     },
-    caption: `If you are willing to pray, there is always a God to answer If you are willing to pray, there is always a God to answerIf you are willing to pray, there is always a God to answerIf you are willing to pray, there is always a God to answer`,
+    caption: `If you are willing to pray, there is always a God to answer...`,
     liked: false,
     likesCount: 432,
+    bookmarked: false,
+    bookmarks: 18,
     createdAt: new Date().toISOString(),
   },
 
@@ -32,9 +34,13 @@ export const MOCK_POSTS: Post[] = [
       backgroundImage: require("@/assets/images/textPostBackground1.png"),
       thumbnailUrl: "https://picsum.photos/800/1200?random=10",
     },
-    caption: `Daily reflection Sometimes God calms the storm. Sometimes God calms the storm. Sometimes He lets the storm rage and calms His childSometimes He lets the storm rage and calms His childSometimes God calms the storm. Sometimes He lets the storm rage and calms His child`,
+    caption: `Daily reflection Sometimes God calms the storm...`,
     liked: false,
     likesCount: 87,
+
+    bookmarked: false,
+    bookmarks: 12,
+
     createdAt: new Date().toISOString(),
   },
 
@@ -68,9 +74,12 @@ export const MOCK_POSTS: Post[] = [
     caption: "Swipe to see more moments ✨",
     liked: false,
     likesCount: 214,
+
+    bookmarked: false,
+    bookmarks: 45,
+
     createdAt: new Date().toISOString(),
   },
-
   {
     id: "4",
     type: "video",
@@ -87,6 +96,8 @@ export const MOCK_POSTS: Post[] = [
     caption: "Faith grows when you trust God completely.",
     liked: false,
     likesCount: 120,
+    bookmarked: false,
+    bookmarks: 18,
     createdAt: new Date().toISOString(),
   },
 
@@ -105,6 +116,8 @@ export const MOCK_POSTS: Post[] = [
     caption: "Faith grows when you trust God completely.",
     liked: false,
     likesCount: 120,
+    bookmarked: false,
+    bookmarks: 18,
     createdAt: new Date().toISOString(),
   },
 ];

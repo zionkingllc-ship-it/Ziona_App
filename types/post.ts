@@ -1,4 +1,5 @@
 export type PostType = "image" | "video" | "carousel" | "text";
+
 export type CategoryId =
   | "all"
   | "love"
@@ -11,15 +12,18 @@ export interface BasePost {
   id: string;
   type: PostType;
   createdAt: string;
+
   liked: boolean;
   likesCount: number;
-  bookmarked:number;
-  bookmarks:string
+
+  // ✅ FIXED
+  bookmarked: boolean;
+  bookmarks: number;
 
   author: {
     id: string;
     name: string;
-    avatarUrl?: string; // allow require() for local assets
+    avatarUrl?: string | number; // allow require()
   };
 
   caption?: string;
@@ -39,8 +43,8 @@ export interface ImagePost extends BasePost {
 export interface VideoPost extends BasePost {
   type: "video";
   media: {
-    videoUrl: string;
-    thumbnailUrl: string;
+    videoUrl: string | number;
+    thumbnailUrl?: string;
   };
 }
 
@@ -63,10 +67,14 @@ export interface CarouselPost extends BasePost {
 export interface TextPost extends BasePost {
   type: "text";
   media: {
-    backgroundImage: string;
-    thumbnailUrl: any;
+    backgroundImage: string | number;
+    thumbnailUrl: string;
   };
   text: string;
 }
 
-export type Post = ImagePost | VideoPost | CarouselPost | TextPost;
+export type Post =
+  | ImagePost
+  | VideoPost
+  | CarouselPost
+  | TextPost;

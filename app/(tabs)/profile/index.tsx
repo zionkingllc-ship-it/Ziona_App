@@ -1,9 +1,8 @@
-// components/screens/ProfileScreen.tsx
-
 import CenteredMessage from "@/components/ui/CenteredMessage";
 import colors from "@/constants/colors";
+import { generateVideoThumbnail } from "@/helpers/thumbnailGenerator";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   Image,
@@ -12,44 +11,127 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { Text, XStack, YStack } from "tamagui";
 
 type Post = {
   id: string;
-  image: string;
+  type: "image" | "video";
+  url: string;
+  thumbnailUrl?: string;
 };
 
 const mockPosts: Post[] = [
-  { id: "1", image: "https://picsum.photos/300/300?1" },
-  { id: "2", image: "https://picsum.photos/300/300?2" },
-  { id: "3", image: "https://picsum.photos/300/300?3" },
-  { id: "4", image: "https://picsum.photos/300/300?4" },
-  { id: "5", image: "https://picsum.photos/300/300?5" },
-  { id: "6", image: "https://picsum.photos/300/300?6" },
+  { id: "1", type: "image", url: "https://picsum.photos/300/300?1" },
+  { id: "2", type: "image", url: "https://picsum.photos/300/300?2" },
+  {
+    id: "3",
+    type: "video",
+    url: "https://www.w3schools.com/html/mov_bbb.mp4",
+  },
+  { id: "4", type: "image", url: "https://picsum.photos/300/300?4" },
+  {
+    id: "5",
+    type: "video",
+    url: "https://www.w3schools.com/html/movie.mp4",
+  },
 ];
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
-
-  // Toggle between [] and mockPosts to test empty vs populated
   const [posts] = useState<Post[]>(mockPosts);
   const [activeTab, setActiveTab] = useState<"posts" | "videos">("posts");
+  const [videoThumbnails, setVideoThumbnails] = useState<
+    Record<string, string>
+  >({});
 
-  const renderPost = ({ item }: { item: Post }) => (
-    <Image
-      source={{ uri: item.image }}
-      style={{
-        width: width / 3 - 4,
-        height: width / 3 - 4,
-        margin: 2,
-        borderRadius: 6,
-      }}
-    />
-  );
+  const itemSize = width / 3 - 4;
+
+  //  Generate thumbnails once for video posts
+  useEffect(() => {
+    async function generateThumbnails() {
+      const updatedThumbnails: Record<string, string> = {};
+
+      for (const post of posts) {
+        if (post.type === "video") {
+          if (post.thumbnailUrl) {
+            updatedThumbnails[post.id] = post.thumbnailUrl;
+          } else {
+            const generated = await generateVideoThumbnail(post.url);
+            if (generated) {
+              updatedThumbnails[post.id] = generated;
+            }
+          }
+        }
+      }
+
+      setVideoThumbnails(updatedThumbnails);
+    }
+
+    generateThumbnails();
+  }, [posts]);
+
+  //  Filter posts based on tab
+  const filteredPosts = useMemo(() => {
+    if (activeTab === "videos") {
+      return posts.filter((post) => post.type === "video");
+    }
+    return posts;
+  }, [activeTab, posts]);
+
+  const renderPost = ({ item }: { item: Post }) => {
+    const imageSource =
+      item.type === "image"
+        ? { uri: item.url }
+        : videoThumbnails[item.id]
+        ? { uri: videoThumbnails[item.id] }
+        : undefined;
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() =>
+          router.push({
+            pathname: "/discover/[postId]",
+            params: { postId: item.id },
+          })
+        }
+        style={{
+          width: itemSize,
+          height: itemSize,
+          margin: 2,
+          borderRadius: 6,
+          overflow: "hidden",
+          backgroundColor: colors.gray,
+        }}
+      >
+        {imageSource && (
+          <Image
+            source={imageSource}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+        )}
+
+        {item.type === "video" && (
+          <Ionicons
+            name="videocam"
+            size={16}
+            color="white"
+            style={{
+              position: "absolute",
+              top: 6,
+              left: 6,
+            }}
+          />
+        )}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
-      {/* ---------------- HEADER ---------------- */}
+      {/* HEADER */}
       <XStack
         alignItems="center"
         justifyContent="space-between"
@@ -60,7 +142,7 @@ export default function ProfileScreen() {
         <Text>⚙️</Text>
       </XStack>
 
-      {/* ---------------- PROFILE INFO ---------------- */}
+      {/* PROFILE INFO */}
       <YStack alignItems="center" marginBottom="$4">
         <View
           style={{
@@ -79,7 +161,7 @@ export default function ProfileScreen() {
         </View>
 
         <Text fontSize={18} fontWeight="600">
-          Zion kay
+          Zion Kay
         </Text>
 
         {posts.length > 0 && (
@@ -98,7 +180,7 @@ export default function ProfileScreen() {
         <TouchableOpacity
           style={{
             marginTop: 12,
-            backgroundColor: "#eee",
+            backgroundColor: "#eeeeee",
             paddingHorizontal: 16,
             paddingVertical: 6,
             borderRadius: 20,
@@ -108,20 +190,22 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </YStack>
 
-      {/* ---------------- STATS ---------------- */}
+      {/* STATS */}
       <XStack justifyContent="space-around" marginBottom="$3">
         <YStack alignItems="center">
           <Text fontWeight="600">{posts.length}</Text>
           <Text fontSize={12} color={colors.gray}>
-            posts
+            Posts
           </Text>
         </YStack>
+
         <YStack alignItems="center">
           <Text fontWeight="600">20</Text>
           <Text fontSize={12} color={colors.gray}>
             Followers
           </Text>
         </YStack>
+
         <YStack alignItems="center">
           <Text fontWeight="600">9</Text>
           <Text fontSize={12} color={colors.gray}>
@@ -130,25 +214,31 @@ export default function ProfileScreen() {
         </YStack>
       </XStack>
 
-      {/* ---------------- TABS ---------------- */}
+      {/* TABS */}
       {posts.length > 0 && (
         <XStack justifyContent="center" gap="$6" marginBottom="$3">
           <TouchableOpacity onPress={() => setActiveTab("posts")}>
-            <Text color={activeTab === "posts" ? colors.black : colors.gray}>
+            <Text
+              color={activeTab === "posts" ? colors.black : colors.gray}
+              fontSize={18}
+            >
               ▦
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => setActiveTab("videos")}>
-            <Text color={activeTab === "videos" ? colors.black : colors.gray}>
+            <Text
+              color={activeTab === "videos" ? colors.black : colors.gray}
+              fontSize={18}
+            >
               🎥
             </Text>
           </TouchableOpacity>
         </XStack>
       )}
 
-      {/* ---------------- CONTENT ---------------- */}
-      {posts.length === 0 ? (
+      {/* CONTENT */}
+      {filteredPosts.length === 0 ? (
         <CenteredMessage
           text="Your message matters"
           subtitle="Create with intention. Post with purpose."
@@ -158,7 +248,7 @@ export default function ProfileScreen() {
         />
       ) : (
         <FlatList
-          data={posts}
+          data={filteredPosts}
           keyExtractor={(item) => item.id}
           renderItem={renderPost}
           numColumns={3}
