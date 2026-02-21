@@ -5410,6 +5410,11 @@ expo-modules-core@3.0.29:
   dependencies:
     invariant "^2.2.4"
 
+expo-network@~8.0.8:
+  version "8.0.8"
+  resolved "https://registry.npmjs.org/expo-network/-/expo-network-8.0.8.tgz#d8eb25b60a93b010e635192f343d3a955a763df5"
+  integrity sha512-dgrL8UHAmWofqeY4UEjWskCl/RoQAM0DG6PZR8xz2WZt+6aQEboQgFRXowCfhbKZ71d16sNuKXtwBEsp2DtdNw==
+
 expo-notifications@~0.32.16:
   version "0.32.16"
   resolved "https://registry.npmjs.org/expo-notifications/-/expo-notifications-0.32.16.tgz#1a1304b89efedd7cdeba92de39b21f09fb2db2c7"
@@ -5490,6 +5495,11 @@ expo-updates-interface@~2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/expo-updates-interface/-/expo-updates-interface-2.0.0.tgz#7721cb64c37bcb46b23827b2717ef451a9378749"
   integrity sha512-pTzAIufEZdVPKql6iMi5ylVSPqV1qbEopz9G6TSECQmnNde2nwq42PxdFBaUEd8IZJ/fdJLQnOT3m6+XJ5s7jg==
+
+expo-video-thumbnails@~10.0.8:
+  version "10.0.8"
+  resolved "https://registry.npmjs.org/expo-video-thumbnails/-/expo-video-thumbnails-10.0.8.tgz#a6313cea8e58dd0d5041d389a4fe4fa182eab176"
+  integrity sha512-nPUtP7ERLf5DY5V2A6gquRP5rP3Uvq6+FVkDwG9R3KKhFeTYkWZ5Ce1iQ7Yt5qDNQqcUcgEqmRpGCbJmn9ckKA==
 
 expo-video@~3.0.16:
   version "3.0.16"

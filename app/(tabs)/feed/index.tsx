@@ -20,7 +20,7 @@ import colors from "@/constants/colors";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
 import { Post } from "@/types/post"; // adjust path if needed
 import { useFocusEffect } from "@react-navigation/native";
-import { YStack } from "tamagui";
+import { YStack, XStack } from "tamagui";
 
 export default function Feed() {
   const { height } = useWindowDimensions();
@@ -119,12 +119,15 @@ export default function Feed() {
     if (feedType === "following") {
       if (followsCount === 0) {
         content = (
-          <YStack flex={1}  gap={15}> 
-            <FeedHeader
-              feedType={feedType}
-              onChangeFeedType={setFeedType}
-              emptyFollowing={feedType === "following" && followsCount === 0}
-            />
+          <YStack flex={1}>
+            <XStack marginBottom={40}>
+              <FeedHeader
+                feedType={feedType}
+                onChangeFeedType={setFeedType}
+                emptyFollowing={feedType === "following" && followsCount === 0}
+              />
+            </XStack>
+
             <FollowSuggestions />
           </YStack>
         );

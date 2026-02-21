@@ -105,7 +105,7 @@ export default function DiscoverScreen() {
 
           // Navigate to PostViewer
           router.push({
-            pathname: "[postId]",
+            pathname: "/(tabs)/discover/[postId]",
             params: {
               postId: item.id,
               feedKey,
