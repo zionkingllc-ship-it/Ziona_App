@@ -24,7 +24,7 @@ export default function FeedHeader({
   return (
     <XStack
       position="absolute"
-      top={30}
+      top={9}
       left={6}
       right={0}
       padding="$3"
