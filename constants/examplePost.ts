@@ -10,8 +10,7 @@ export const MOCK_POSTS: Post[] = [
       avatarUrl: require("@/assets/images/profile.png"),
     },
     media: {
-      videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
-      thumbnailUrl: "https://picsum.photos/800/1200?random=10",
+      videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", 
     },
     caption: `If you are willing to pray, there is always a God to answer...`,
     liked: false,
@@ -90,8 +89,7 @@ export const MOCK_POSTS: Post[] = [
     },
     media: {
       videoUrl:
-        "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4",
-      thumbnailUrl: "https://picsum.photos/800/1200?random=10",
+        "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4", 
     },
     caption: "Faith grows when you trust God completely.",
     liked: false,
@@ -110,8 +108,7 @@ export const MOCK_POSTS: Post[] = [
       avatarUrl: require("@/assets/images/profile.png"),
     },
     media: {
-      videoUrl: require("@/assets/videos/sample.mp4"),
-      thumbnailUrl: "https://picsum.photos/800/1200?random=10",
+      videoUrl: require("@/assets/videos/sample.mp4"), 
     },
     caption: "Faith grows when you trust God completely.",
     liked: false,

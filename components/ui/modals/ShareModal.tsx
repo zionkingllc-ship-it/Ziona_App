@@ -91,7 +91,13 @@ export default function ShareModal({ visible, onClose, post }: Props) {
           bottom={0}
           width="100%"
         >
-          <Text fontSize={18} fontWeight="600" marginBottom="$3" alignSelf="center">
+          <Text
+            fontSize={18}
+            fontFamily={"$body"}
+            fontWeight="600"
+            marginBottom="$3"
+            alignSelf="center"
+          >
             Share
           </Text>
 
@@ -105,11 +111,16 @@ export default function ShareModal({ visible, onClose, post }: Props) {
               <YStack alignItems="center" marginRight={16}>
                 <Image
                   source={item.avatar}
-                  width={56}
-                  height={56}
+                  width={55}
+                  height={55}
                   borderRadius={28}
                 />
-                <Text fontSize={12} marginTop={4} color={"#4E4252"}>
+                <Text
+                  fontSize={12}
+                  fontFamily={"$body"}
+                  marginTop={4}
+                  color={"#4E4252"}
+                >
                   {item.name}
                 </Text>
               </YStack>
@@ -123,10 +134,15 @@ export default function ShareModal({ visible, onClose, post }: Props) {
             scrollEnabled
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item.id}
-            style={{ marginTop: 20}}
+            style={{ marginTop: 20 }}
             renderItem={({ item }) => (
               <Pressable
-                style={{ flex: 1, alignItems: "center", marginBottom: 20, marginRight:20 }}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  marginBottom: 20,
+                  marginRight: 20,
+                }}
                 onPress={() =>
                   withHaptic(async () => {
                     await item.action();
@@ -134,8 +150,13 @@ export default function ShareModal({ visible, onClose, post }: Props) {
                   })
                 }
               >
-                <Image source={item.icon} width={48} height={48} />
-                <Text fontSize={12} marginTop={6} color={"#4E4252"}>
+                <Image source={item.icon} width={45} height={45} />
+                <Text
+                  fontSize={12}
+                  fontFamily={"$body"}
+                  marginTop={6}
+                  color={"#4E4252"}
+                >
                   {item.label}
                 </Text>
               </Pressable>

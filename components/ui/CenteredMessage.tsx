@@ -1,13 +1,13 @@
+import colors from "@/constants/colors";
 import React from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ViewStyle,
   StyleProp,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ViewStyle,
 } from "react-native";
-import colors from "@/constants/colors";
 
 type Props = {
   text: string;
@@ -18,7 +18,7 @@ type Props = {
 
   titleColor?: string;
   subtitleColor?: string;
-
+  fontFamily: any;
   fullScreen?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
 };
@@ -32,22 +32,22 @@ export default function CenteredMessage({
   subtitleColor = colors.gray,
   fullScreen = true,
   containerStyle,
+  fontFamily = "$body",
 }: Props) {
   return (
-    <View
-      style={[
-        styles.container,
-        fullScreen && { flex: 1 },
-        containerStyle,
-      ]}
-    >
-      <Text style={[styles.title, { color: titleColor }]}>
+    <View style={[styles.container, fullScreen && { flex: 1 }, containerStyle]}>
+      <Text
+        style={[styles.title, { color: titleColor, fontFamily: fontFamily }]}
+      >
         {text}
       </Text>
 
       {subtitle && (
         <Text
-          style={[styles.subtitle, { color: subtitleColor }]}
+          style={[
+            styles.subtitle,
+            { color: subtitleColor, fontFamily: fontFamily },
+          ]}
         >
           {subtitle}
         </Text>
@@ -59,7 +59,9 @@ export default function CenteredMessage({
           activeOpacity={0.85}
           onPress={onActionPress}
         >
-          <Text style={styles.buttonText}>{actionLabel}</Text>
+          <Text style={[styles.buttonText, { fontFamily: fontFamily }]}>
+            {actionLabel}
+          </Text>
         </TouchableOpacity>
       )}
     </View>

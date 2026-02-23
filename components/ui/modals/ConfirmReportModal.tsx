@@ -3,7 +3,8 @@
 import colors from "@/constants/colors";
 import { AlertCircle } from "@tamagui/lucide-icons";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, Text } from "tamagui";
 import BaseModal from "./BaseModal";
 
 interface Props {
@@ -21,18 +22,28 @@ export default function ConfirmReportModal({
     <BaseModal visible={visible} onClose={onClose}>
       <View style={styles.card}>
         <TouchableOpacity style={styles.close} onPress={onClose}>
-          <Text style={{ color: "#fff" }}>✕</Text>
+          <Text fontFamily={"$body"} style={{ color: "#fff" }}>
+            ✕
+          </Text>
         </TouchableOpacity>
-        <AlertCircle fill={colors.errorText} color={colors.white} size={24} alignSelf="center"/>
-        <Text style={styles.title}>
+        <Image alignSelf="center" width={52} height={52} source={require("@/assets/images/alertSpecialIcon.png")}/>
+
+        <Text fontFamily={"$body"} style={[styles.title]}>
           Are you sure you want to report this post ?
         </Text>
 
-        <Text style={styles.subtitle}>Reports are anonymous</Text>
+        <Text fontFamily={"$body"} style={styles.subtitle}>
+          Reports are anonymous
+        </Text>
 
-        <TouchableOpacity style={styles.button} onPress={onConfirm}>
-          <Text style={{ color: "#fff", fontWeight: "600" }}>Report</Text>
-        </TouchableOpacity>
+        <Pressable style={styles.button} onPress={onConfirm}>
+          <Text
+            fontFamily={"$body"}
+            style={{ color: colors.primary, fontWeight: "600", marginBottom:20 }}
+          >
+            Report
+          </Text>
+        </Pressable>
       </View>
     </BaseModal>
   );
@@ -42,11 +53,12 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     borderRadius: 26,
-    padding: 24,
-    margin: 20,
+    paddingTop: 24,
+    paddingHorizontal: 32,
+    margin: 40,
   },
   close: {
-    backgroundColor: "#7A2E8A",
+    backgroundColor: colors.closeBtn,
     width: 24,
     height: 24,
     borderRadius: 14,
@@ -63,16 +75,13 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: "center",
     marginVertical: 10,
-    fontWeight:"500",
+    fontWeight: "500",
     color: "#777",
   },
-  button: {
-    backgroundColor: "#7A2E8A",
-    paddingVertical: 12,
-    borderRadius: 20,
+  button: { 
+    paddingVertical: 12, 
     alignItems: "center",
-    alignSelf:"center",
-    marginTop: 21,
-    width:"80%"
+    alignSelf: "center",
+    marginTop: 10,
   },
 });

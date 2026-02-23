@@ -52,12 +52,12 @@ export default function Birthday() {
           />
 
           <YStack alignItems="center" marginTop="$6" gap="$3">
-            <Text fontSize="$5" fontWeight="600">
+            <Text fontSize="$5" fontFamily={"$body"} fontWeight="600">
               When is your birthday
             </Text>
           </YStack>
 
-          <Text fontSize="$3" color="$gray10" textAlign="center">
+          <Text fontSize="$3" fontFamily={"$body"} color="$gray10" textAlign="center">
             Used only for personalization. Not public.
           </Text>
 
@@ -86,6 +86,7 @@ export default function Birthday() {
                     fontSize={10}
                     color={colors.inputTitle}
                     marginBottom={2}
+                    fontFamily={"$body"}
                   >
                     Birthday
                   </Text>
@@ -93,6 +94,7 @@ export default function Birthday() {
 
                 <Text
                   fontSize="$3"
+                  fontFamily={"$body"}
                   color={formattedDate ? colors.black : colors.inputTitle}
                 >
                   {formattedDate ?? "Birthday"}

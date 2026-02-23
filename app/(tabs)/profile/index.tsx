@@ -1,91 +1,111 @@
+import { GradientBackground } from "@/components/layout/GradientBackground";
+import Header from "@/components/layout/header";
 import CenteredMessage from "@/components/ui/CenteredMessage";
 import colors from "@/constants/colors";
+import { MOCK_POSTS } from "@/constants/examplePost";
 import { generateVideoThumbnail } from "@/helpers/thumbnailGenerator";
+import { usePostActionsStore } from "@/store/usePostActionStore";
+import { Post } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
-  Image,
   TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { Text, XStack, YStack } from "tamagui";
-
-type Post = {
-  id: string;
-  type: "image" | "video";
-  url: string;
-  thumbnailUrl?: string;
-};
-
-const mockPosts: Post[] = [
-  { id: "1", type: "image", url: "https://picsum.photos/300/300?1" },
-  { id: "2", type: "image", url: "https://picsum.photos/300/300?2" },
-  {
-    id: "3",
-    type: "video",
-    url: "https://www.w3schools.com/html/mov_bbb.mp4",
-  },
-  { id: "4", type: "image", url: "https://picsum.photos/300/300?4" },
-  {
-    id: "5",
-    type: "video",
-    url: "https://www.w3schools.com/html/movie.mp4",
-  },
-];
+import { Image, Text, XStack, YStack } from "tamagui";
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
-  const [posts] = useState<Post[]>(mockPosts);
-  const [activeTab, setActiveTab] = useState<"posts" | "videos">("posts");
+  const itemSize = width / 3 - 4;
+
+  const [posts] = useState<Post[]>(MOCK_POSTS);
+  const [activeTab, setActiveTab] = useState<"posts" | "liked" | "bookmarks">(
+    "posts",
+  );
   const [videoThumbnails, setVideoThumbnails] = useState<
     Record<string, string>
   >({});
 
-  const itemSize = width / 3 - 4;
+  const likes = usePostActionsStore((state: any) => state.likes);
+  const bookmarks = usePostActionsStore((state: any) => state.bookmarks);
 
-  //  Generate thumbnails once for video posts
+  const postInActive = require("@/assets/images/postsIcon.png");
+  const postActive = require("@/assets/images/postIconActive.png");
+  const likedPostActive = require("@/assets/images/heartIconActive.png");
+  const likedPostInActive = require("@/assets/images/heartIcon.png");
+  const bookmarkPostActive = require("@/assets/images/postsIcon.png");
+  const bookmarkInActive = require("@/assets/images/bookmarkBlackIcon.png");
+  const settingIcon = require("@/assets/images/settingsIcon.png");
+  const profileShareIcon = require("@/assets/images/shareProfileIcon.png");
+
+  // Generate video thumbnails
   useEffect(() => {
     async function generateThumbnails() {
-      const updatedThumbnails: Record<string, string> = {};
+      const thumbnails: Record<string, string> = {};
 
       for (const post of posts) {
         if (post.type === "video") {
-          if (post.thumbnailUrl) {
-            updatedThumbnails[post.id] = post.thumbnailUrl;
-          } else {
-            const generated = await generateVideoThumbnail(post.url);
+          // Use backend thumbnail if available
+          if (post.media.thumbnailUrl) {
+            thumbnails[post.id] = post.media.thumbnailUrl;
+          } else if (post.media.videoUrl) {
+            const generated = await generateVideoThumbnail(
+              post.media.videoUrl.toString(),
+            );
             if (generated) {
-              updatedThumbnails[post.id] = generated;
+              thumbnails[post.id] = generated;
             }
           }
         }
       }
 
-      setVideoThumbnails(updatedThumbnails);
+      setVideoThumbnails(thumbnails);
     }
 
     generateThumbnails();
   }, [posts]);
 
-  //  Filter posts based on tab
+  // Filter posts by active tab
   const filteredPosts = useMemo(() => {
-    if (activeTab === "videos") {
-      return posts.filter((post) => post.type === "video");
+    if (activeTab === "liked") {
+      return posts.filter((post) => likes[post.id]);
     }
+
+    if (activeTab === "bookmarks") {
+      return posts.filter((post) => (bookmarks[post.id] || []).length > 0);
+    }
+
     return posts;
-  }, [activeTab, posts]);
+  }, [activeTab, posts, likes, bookmarks]);
+
+  // Get thumbnail for any post type
+  const getPostThumbnail = (post: Post) => {
+    switch (post.type) {
+      case "image":
+        return post.media.items?.[0]
+          ? { uri: post.media.items[0].url }
+          : undefined;
+      case "video":
+        return videoThumbnails[post.id]
+          ? { uri: videoThumbnails[post.id] }
+          : undefined;
+      case "carousel":
+        return post.media.items?.[0]
+          ? { uri: post.media.items[0].url }
+          : undefined;
+      case "text":
+        return { uri: post.media.thumbnailUrl };
+      default:
+        return undefined;
+    }
+  };
 
   const renderPost = ({ item }: { item: Post }) => {
-    const imageSource =
-      item.type === "image"
-        ? { uri: item.url }
-        : videoThumbnails[item.id]
-        ? { uri: videoThumbnails[item.id] }
-        : undefined;
+    const thumbnailSource = getPostThumbnail(item);
 
     return (
       <TouchableOpacity
@@ -100,14 +120,14 @@ export default function ProfileScreen() {
           width: itemSize,
           height: itemSize,
           margin: 2,
-          borderRadius: 6,
+          borderRadius: 2,
           overflow: "hidden",
           backgroundColor: colors.gray,
         }}
       >
-        {imageSource && (
+        {thumbnailSource && (
           <Image
-            source={imageSource}
+            source={thumbnailSource}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />
@@ -116,7 +136,7 @@ export default function ProfileScreen() {
         {item.type === "video" && (
           <Ionicons
             name="videocam"
-            size={16}
+            size={18}
             color="white"
             style={{
               position: "absolute",
@@ -125,136 +145,179 @@ export default function ProfileScreen() {
             }}
           />
         )}
+
+        {item.type === "carousel" ||
+          (item.type === "image" && (
+            <Ionicons
+              name="images"
+              size={18}
+              color="white"
+              style={{
+                position: "absolute",
+                top: 6,
+                left: 6,
+              }}
+            />
+          ))}
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
-      {/* HEADER */}
-      <XStack
-        alignItems="center"
-        justifyContent="space-between"
-        paddingHorizontal="$4"
-        marginBottom="$3"
-      >
-        <Text fontSize={16}>@ZionChild123</Text>
-        <Text>⚙️</Text>
-      </XStack>
+    <GradientBackground>
+      <SafeAreaView style={{ flex: 1, marginTop: 20 }}>
+        {/* HEADER */}
+        <Header
+          heading="@ZionChild123"
+          imageAfter2={settingIcon}
+          imageAfter={profileShareIcon}
+        />
 
-      {/* PROFILE INFO */}
-      <YStack alignItems="center" marginBottom="$4">
-        <View
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: "#C084FC",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 10,
-          }}
-        >
-          <Text color="white" fontWeight="600">
-            ZK
-          </Text>
-        </View>
+        {/* PROFILE INFO */}
 
-        <Text fontSize={18} fontWeight="600">
-          Zion Kay
-        </Text>
+        <YStack width={"100%"} padding={20}>
+          <XStack width={"100%"} justifyContent="space-between">
+            <YStack alignItems="center" alignSelf="flex-start">
+              <View
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 40,
+                  backgroundColor: "#C084FC",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 10,
+                }}
+              >
+                <Text
+                  fontFamily={"$body"}
+                  color="white"
+                  fontSize={"$4"}
+                  fontWeight="600"
+                >
+                  ZK
+                </Text>
+              </View>
 
-        {posts.length > 0 && (
+              <Text fontFamily={"$body"} fontSize={"$5"} fontWeight="600">
+                Zion Kay
+              </Text>
+            </YStack>
+            <TouchableOpacity
+              onPress={() => router.push("/profile/edit")}
+              style={{
+                marginTop: 12,
+                backgroundColor: "#eeeeee",
+                width: "30%",
+                height: "30%",
+                borderRadius: 99,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Text fontFamily={"$body"} fontSize={13} fontWeight={"400"}>
+                Edit profile
+              </Text>
+            </TouchableOpacity>
+          </XStack>
           <Text
+            fontFamily={"$body"}
             fontSize={13}
             color={colors.gray}
-            textAlign="center"
-            marginTop="$2"
-            paddingHorizontal="$4"
+            fontWeight={"400"}
           >
             Christian worshipper sharing moments of praise, reflection, and
-            growth. Here to connect with others.
-          </Text>
-        )}
-
-        <TouchableOpacity
-          style={{
-            marginTop: 12,
-            backgroundColor: "#eeeeee",
-            paddingHorizontal: 16,
-            paddingVertical: 6,
-            borderRadius: 20,
-          }}
-        >
-          <Text fontSize={12}>Edit profile</Text>
-        </TouchableOpacity>
-      </YStack>
-
-      {/* STATS */}
-      <XStack justifyContent="space-around" marginBottom="$3">
-        <YStack alignItems="center">
-          <Text fontWeight="600">{posts.length}</Text>
-          <Text fontSize={12} color={colors.gray}>
-            Posts
+            growth. Here to connect with others, grow in faith, and celebrate
+            worship as a daily lifestyle.
           </Text>
         </YStack>
-
-        <YStack alignItems="center">
-          <Text fontWeight="600">20</Text>
-          <Text fontSize={12} color={colors.gray}>
-            Followers
-          </Text>
-        </YStack>
-
-        <YStack alignItems="center">
-          <Text fontWeight="600">9</Text>
-          <Text fontSize={12} color={colors.gray}>
-            Following
-          </Text>
-        </YStack>
-      </XStack>
-
-      {/* TABS */}
-      {posts.length > 0 && (
-        <XStack justifyContent="center" gap="$6" marginBottom="$3">
-          <TouchableOpacity onPress={() => setActiveTab("posts")}>
-            <Text
-              color={activeTab === "posts" ? colors.black : colors.gray}
-              fontSize={18}
-            >
-              ▦
+        {/* STATS */}
+        <XStack width={"100%"} height={"11%"}>
+          <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
+            <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
+              {posts.length}
             </Text>
+            <Text fontFamily={"$body"} fontSize={13} color={colors.gray}>
+              Posts
+            </Text>
+          </YStack>
+
+          <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
+            <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
+              20
+            </Text>
+            <Text fontFamily={"$body"} fontSize={13} color={colors.gray}>
+              Followers
+            </Text>
+          </YStack>
+
+          <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
+            <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
+              9
+            </Text>
+            <Text fontFamily={"$body"} fontSize={"$3"} color={colors.gray}>
+              Following
+            </Text>
+          </YStack>
+        </XStack>
+
+        {/* TABS */}
+
+        <XStack
+          width={"50%"}
+          height={"6%"}
+          alignSelf="center"
+          justifyContent="center"
+          alignItems="center"
+          padding={10}
+        >
+          <TouchableOpacity
+            style={{ width: "33.33%", height: "100%" }}
+            onPress={() => setActiveTab("posts")}
+          >
+            <Image
+              source={activeTab === "posts" ? postActive : postInActive}
+              style={{ width: 24, height: 24, alignSelf: "flex-start" }}
+              resizeMode="cover"
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setActiveTab("videos")}>
-            <Text
-              color={activeTab === "videos" ? colors.black : colors.gray}
-              fontSize={18}
-            >
-              🎥
-            </Text>
+          <TouchableOpacity
+            style={{ width: "33.33%", height: "100%" }}
+            onPress={() => setActiveTab("liked")}
+          >
+            <Image
+              source={
+                activeTab === "liked" ? likedPostActive : likedPostInActive
+              }
+              style={{ width: 24, height: 24, alignSelf: "center" }}
+              resizeMode="cover"
+            />
           </TouchableOpacity>
         </XStack>
-      )}
 
-      {/* CONTENT */}
-      {filteredPosts.length === 0 ? (
-        <CenteredMessage
-          text="Your message matters"
-          subtitle="Create with intention. Post with purpose."
-          actionLabel="Create Post"
-          onActionPress={() => router.navigate("Create")}
-          fullScreen={false}
-        />
-      ) : (
-        <FlatList
-          data={filteredPosts}
-          keyExtractor={(item) => item.id}
-          renderItem={renderPost}
-          numColumns={3}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-    </SafeAreaView>
+        {/* CONTENT */}
+        {filteredPosts.length === 0 ? (
+          <YStack marginTop={"$7"}>
+            <CenteredMessage
+              fontFamily={"$body"}
+              text="Your message matters"
+              subtitle="Create with intention. Post with purpose."
+              actionLabel="Create Post"
+              onActionPress={() => router.navigate("/(tabs)/Create")}
+              fullScreen={false}
+            />
+          </YStack>
+        ) : (
+          <FlatList
+            data={filteredPosts}
+            keyExtractor={(item) => item.id}
+            renderItem={renderPost}
+            numColumns={3}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </SafeAreaView>
+    </GradientBackground>
   );
 }

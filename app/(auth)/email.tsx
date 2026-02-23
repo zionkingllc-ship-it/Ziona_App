@@ -57,7 +57,7 @@ export default function Email() {
         />
 
         <YStack alignItems="center" marginTop="$6" gap="$3">
-          <Text fontSize="$4" fontWeight="600">
+          <Text fontSize="$4" fontFamily={"$body"} fontWeight="600">
             Your email address
           </Text>
         </YStack>
@@ -82,6 +82,7 @@ export default function Email() {
               fontSize="$3"
               color={colors.errorText}
               alignSelf="flex-start"
+              fontFamily={"$body"}
               marginLeft={2}
               marginTop={"$2"}
             >

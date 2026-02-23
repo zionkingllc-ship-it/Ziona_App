@@ -54,10 +54,10 @@ export default function ForgotPassword() {
         />
 
         <YStack alignItems="center" gap="$2" padding={10}>
-          <Text fontSize="$4" fontWeight="600">
+          <Text fontSize="$4" fontFamily={"$body"} fontWeight="600">
             Verify your email
           </Text>
-          <Text fontSize="$3" color={colors.subHeader} textAlign="center">
+          <Text fontSize="$3" fontFamily={"$body"} color={colors.subHeader} textAlign="center">
             Enter your email address and we’ll send you a 6-digit OTP code
           </Text>
         </YStack>

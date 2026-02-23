@@ -7,6 +7,7 @@ type TwoButtonSwitchProps = {
   onChange: (value: "forYou" | "following") => void;
   width: number | string;
   emptyFollowing?: boolean;
+  fontFamily?:any
 };
 
 export default function TwoButtonSwitch({
@@ -14,6 +15,7 @@ export default function TwoButtonSwitch({
   onChange,
   width,
   emptyFollowing = false,
+  fontFamily ="$body"
 }: TwoButtonSwitchProps) {
   const isForYou = value === "forYou";
 
@@ -40,6 +42,7 @@ export default function TwoButtonSwitch({
         borderColor={isForYou ? "#E4C0F1" : "transparent"}
         color={isForYou ? activeText : inactiveText}
         fontSize={13}
+        fontFamily={fontFamily}
         fontWeight={"500"}
         onPress={() => onChange("forYou")}
       >
@@ -55,6 +58,7 @@ export default function TwoButtonSwitch({
         color={!isForYou ? activeText : inactiveText}
         fontSize={13}
         fontWeight={"500"}
+        fontFamily={fontFamily}
         onPress={() => onChange("following")}
       >
         Following

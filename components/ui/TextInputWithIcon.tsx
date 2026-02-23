@@ -20,6 +20,7 @@ type AppTextInputProps = TextInputProps & {
   endIconVisible?: boolean;
   headingText: string;
   onfocus: boolean;
+  fontFamily?:any;
 };
 
 export function TextInputWithIcon({
@@ -35,6 +36,7 @@ export function TextInputWithIcon({
   headingText,
   startImage,
   endImage,
+  fontFamily="$body",
   inputType = "alphanumeric",
   onEndIconPress,
   ...props
@@ -84,7 +86,7 @@ export function TextInputWithIcon({
 
       <YStack height={51} padding={8} width={"85%"}>
         {onfocus && (
-          <Text marginLeft={3} fontSize={10} color={headerColor}>
+          <Text marginLeft={3} fontFamily={"$body"} fontSize={10} color={headerColor}>
             {headingText}
           </Text>
         )}
@@ -97,6 +99,7 @@ export function TextInputWithIcon({
           backgroundColor="transparent"
           fontSize="$3"
           fontWeight="400"
+          fontFamily={fontFamily}
           color={colors.black}
           placeholderTextColor={colors.placeHolderText}
           keyboardType={inputType === "numeric" ? "numeric" : "default"}

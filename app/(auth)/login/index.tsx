@@ -1,10 +1,11 @@
+import { InlineUnderlineText } from "@/components/ui/InlineUnderlineText";
 import { MarqueeCarousel } from "@/components/ui/marquee";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import colors from "@/constants/colors";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, useWindowDimensions } from "react-native";
-import { Image, Text, YStack, View } from "tamagui";
+import { Image, Text, YStack } from "tamagui";
 
 const cards = [
   {
@@ -68,13 +69,13 @@ export default function LoginIndex() {
         <YStack marginTop={12}>
           <Text
             fontSize="$4"
+            fontFamily={"$body"}
             fontWeight="600"
             textAlign="center"
             color={colors.text}
           >
             Login to Ziona
           </Text>
-  
         </YStack>
 
         {/* Buttons */}
@@ -93,7 +94,7 @@ export default function LoginIndex() {
             textSize={13}
             textWeight="400"
             color={colors.white}
-            onPress={() =>{}}
+            onPress={() => {}}
             startIcon={<Image source={google} width={23} height={23} />}
           />
 
@@ -109,30 +110,43 @@ export default function LoginIndex() {
 
         {/* Footer */}
         <YStack gap="$15" alignItems="center">
-          <Text fontSize="$3" color={colors.termsText} textAlign="center">
-            By continuing, you agree to Ziona’s{" "}
-            <Text
+          <Text
+            fontSize="$3"
+            fontFamily={"$body"}
+            color={colors.termsText}
+            textAlign="center"
+          >
+            By continuing, you agree to Ziona’s{"  "}
+            <InlineUnderlineText
               color={colors.termsButton}
-              fontWeight="500"
-              textDecorationLine="underline"
+              weight="500"
+              fontFamily="$heading"
+              thickness={2}
+              offset={-2}
             >
               Terms of use
-            </Text>{" "}
+            </InlineUnderlineText>
+            {"    "}
             and confirm that you have read Ziona’s{" "}
-            <Text
+            <InlineUnderlineText
               color={colors.termsButton}
-              fontWeight="500"
-              textDecorationLine="underline"
+              weight="500"
+              fontFamily="$heading"
+              thickness={2}
+              offset={-2}
             >
               Privacy Policy
-            </Text>
+            </InlineUnderlineText>
           </Text>
           <YStack justifyContent="center" alignItems="center" marginTop={"$5"}>
-  
-            <Pressable onPress={() => router.back()} >
-              <Text fontSize="$3" >
+            <Pressable onPress={() => router.back()}>
+              <Text fontSize="$3" fontFamily={"$body"}>
                 Don't have an account?{" "}
-                <Text color={colors.primary} fontWeight="900">
+                <Text
+                  color={colors.primary}
+                  fontWeight="700"
+                  fontFamily={"$body"}
+                >
                   Signup
                 </Text>
               </Text>

@@ -31,13 +31,13 @@ export default function PostThumbnail({
     async function loadThumbnail() {
       if (post.type !== "video") return;
 
-      // 1️⃣ Use backend thumbnail if available
+      // 1️ Use backend thumbnail if available
       if (post.media.thumbnailUrl) {
         if (isMounted) setThumbnailUri(post.media.thumbnailUrl);
         return;
       }
 
-      // 2️⃣ Otherwise generate from video
+      // Otherwise generate from video
       const generated = await generateVideoThumbnail(
         post.media.videoUrl
       );
@@ -59,7 +59,7 @@ export default function PostThumbnail({
     if (post.type === "image") {
       return (
         <Image
-          source={{ uri: post.media.url }}
+          source={{ uri: post.media.items.url }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
@@ -129,7 +129,7 @@ export default function PostThumbnail({
         width: size,
         height: size,
         margin: 2,
-        borderRadius: 8,
+        borderRadius: 2,
         overflow: "hidden",
         backgroundColor: colors.gray,
       }}

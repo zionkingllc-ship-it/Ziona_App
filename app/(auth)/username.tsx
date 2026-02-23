@@ -50,11 +50,11 @@ export default function CreateUsername() {
         />
 
         <YStack alignItems="center" marginTop="$6" gap="$2">
-          <Text fontSize="$5" fontWeight="600">
+          <Text fontSize="$5" fontWeight="600" fontFamily={"$body"}>
             Create username
           </Text>
 
-          <Text fontSize="$3" color={colors.gray}>
+          <Text fontSize="$3" fontFamily={"$body"} color={colors.gray}>
             You can always change this later
           </Text>
         </YStack>
@@ -78,6 +78,7 @@ export default function CreateUsername() {
           <Text
             color={colors.errorText}
             fontSize="$3"
+            fontFamily={"$body"}
             alignSelf="flex-start"
             marginLeft={2}
           >
@@ -86,7 +87,7 @@ export default function CreateUsername() {
         )}
 
         <YStack gap="$2">
-          <Text fontSize="$3" color={colors.headerText}>
+          <Text fontSize="$3" fontFamily={"$body"} color={colors.headerText}>
             Suggestions:
           </Text>
           <XStack gap="$2" flexWrap="wrap">
@@ -97,6 +98,7 @@ export default function CreateUsername() {
                 <Text
                   key={name}
                   padding="$2"
+                  fontFamily={"$body"}
                   backgroundColor={colors.suggestionBackground}
                   borderRadius="$2"
                   borderWidth={isSelected ? 1 : 0}

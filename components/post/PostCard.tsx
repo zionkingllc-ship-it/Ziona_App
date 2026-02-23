@@ -1,11 +1,11 @@
 import colors from "@/constants/colors";
 import { useBookmarksStore } from "@/store/useBookmarkStore";
 import { Post } from "@/types/post";
-import React, { useEffect, useMemo, useState, } from "react";
-import { Pressable, TouchableOpacity} from "react-native";
-import { Image, Text, XStack, YStack } from "tamagui";
-import { CommentsSheet } from "../comments/commentsModal"; 
 import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useMemo, useState } from "react";
+import { Pressable, TouchableOpacity } from "react-native";
+import { Image, Text, XStack, YStack } from "tamagui";
+import { CommentsSheet } from "../comments/commentsModal";
 import BookmarkFoldersModal from "../ui/modals/BookmarkFoldersModal";
 import ConfirmReportModal from "../ui/modals/ConfirmReportModal";
 import CreateFolderModal from "../ui/modals/CreateFolderModal";
@@ -13,7 +13,7 @@ import ReportReasonsModal from "../ui/modals/ReportReasonsModal";
 import ShareModal from "../ui/modals/ShareModal";
 import SuccessModal from "../ui/modals/successModal";
 import PostMedia from "./postcard/PostMedia";
-
+import OtherReportModal from "../ui/modals/OtherReportModal";
 
 type Props = {
   post: Post;
@@ -43,6 +43,7 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
   const [createVisible, setCreateVisible] = useState(false);
   const [shareVisible, setShareVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [otherVisible, setOtherVisible] = useState(false);
 
   const { folders, toggleBookmark, getSavedFolderIds, createFolder } =
     useBookmarksStore();
@@ -55,7 +56,7 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
   const postImage: string = useMemo(() => {
     switch (post.type) {
       case "image":
-        return resolveToString(post.media.url);
+        return resolveToString(post.media.items.url);
 
       case "video":
         return resolveToString(post.media.thumbnailUrl);
@@ -85,8 +86,6 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
   useEffect(() => {
     setExpanded(false);
   }, [post.id]);
-
- 
 
   const effectiveIsPlaying =
     post.type === "video" ? isPlaying && !manualPaused : isPlaying;
@@ -128,7 +127,7 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
                   width={30}
                   height={30}
                 />
-                <Text color={colors.white} fontSize={16} fontWeight="500">
+                <Text color={colors.white} fontSize={16} fontFamily={"$body"} fontWeight="500">
                   {post.author.name}
                 </Text>
               </XStack>
@@ -144,7 +143,7 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
                   alignItems: "center",
                 }}
               >
-                <Text color={colors.white} fontSize={13} fontWeight="500">
+                <Text color={colors.white} fontSize={13} fontFamily={"$body"} fontWeight="500">
                   following
                 </Text>
               </TouchableOpacity>
@@ -154,6 +153,8 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
               <XStack maxWidth="80%" alignItems="flex-end">
                 <Text
                   color={colors.white}
+                  fontFamily={"$body"}
+                  fontWeight={"400"}
                   fontSize={16}
                   numberOfLines={expanded ? undefined : 3}
                 >
@@ -175,6 +176,7 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
                       color={colors.white}
                       fontSize={14}
                       fontWeight="600"
+                      fontFamily={"$body"}
                       alignSelf="flex-end"
                     >
                       {expanded ? "less" : "more"}
@@ -240,19 +242,33 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
       <ReportReasonsModal
         visible={reasonsVisible}
         onClose={() => setReasonsVisible(false)}
-        onSelectReason={() => {
+        onSelectReason={(reason) => {
           setReasonsVisible(false);
           setSuccessVisible(true);
         }}
+        onSelectOther={() => {
+          setReasonsVisible(false);
+          setOtherVisible(true);
+        }}
       />
+
+      <OtherReportModal
+        visible={otherVisible}
+        onClose={() => setOtherVisible(false)}
+        onSubmit={(reason) => {
+          setOtherVisible(false);
+          setSuccessVisible(true);
+        }}
+      />
+
       <ShareModal
         visible={shareVisible}
         onClose={() => setShareVisible(false)}
         post={post}
       />
       <SuccessModal
-        visible={successVisible}
-        iconImage={require("@/assets/images/xCircle.png")}
+        visible={successVisible} 
+        type="success"
         onClose={() => setSuccessVisible(false)}
         autoClose
         title="Thank you for reporting this post"
@@ -273,7 +289,7 @@ export function PostCard({ post, isPlaying, screenHeight }: Props) {
 
       <CreateFolderModal
         visible={createVisible}
-        coverImage={postImage}
+        post={post}
         onClose={() => setCreateVisible(false)}
         onSave={(name) => {
           createFolder(name, postImage, post.id);

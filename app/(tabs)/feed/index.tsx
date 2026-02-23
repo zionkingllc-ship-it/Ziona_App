@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Text,
   useWindowDimensions,
   View,
   ViewToken,
@@ -20,7 +19,7 @@ import colors from "@/constants/colors";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
 import { Post } from "@/types/post"; // adjust path if needed
 import { useFocusEffect } from "@react-navigation/native";
-import { YStack, XStack } from "tamagui";
+import { Text, XStack, YStack } from "tamagui";
 
 export default function Feed() {
   const { height } = useWindowDimensions();
@@ -110,6 +109,7 @@ export default function Feed() {
   } else if (query.isError) {
     content = (
       <CenteredMessage
+        fontFamily={"$body"}
         text="Something went wrong"
         actionLabel="Retry"
         onActionPress={() => query.refetch()}
@@ -133,11 +133,16 @@ export default function Feed() {
         );
       } else {
         content = (
-          <CenteredMessage text="No posts yet from people you follow." />
+          <CenteredMessage
+            fontFamily={"$body"}
+            text="No posts yet from people you follow."
+          />
         );
       }
     } else {
-      content = <CenteredMessage text="No posts available." />;
+      content = (
+        <CenteredMessage fontFamily={"$body"} text="No posts available." />
+      );
     }
   } else {
     content = (
@@ -204,7 +209,9 @@ export default function Feed() {
             zIndex: 20,
           }}
         >
-          <Text style={{ color: "#fff" }}>You're offline</Text>
+          <Text fontFamily={"$body"} style={{ color: "#fff" }}>
+            You're offline
+          </Text>
         </View>
       )}
 

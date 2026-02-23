@@ -10,6 +10,7 @@ type AppButtonProps = {
   textSize?: any;
   textWeight?: any;
   disabled?: boolean;
+  fontFamily?:any;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
 };
@@ -21,6 +22,7 @@ export function SimpleButton({
   textWeight = "600",
   onPress,
   color,
+  fontFamily ="$body",
   disabled = false,
   loading = false,
   style,
@@ -44,6 +46,7 @@ export function SimpleButton({
           <Text
             color={textColor ?? "black"}
             textAlign="center"
+            fontFamily={fontFamily}
             fontSize={textSize}
             fontWeight={textWeight}
           >

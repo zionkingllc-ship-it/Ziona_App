@@ -96,16 +96,16 @@ const resendCode = () => {
         />
 
         <YStack alignItems="center" gap="$2.5">
-          <Text fontSize="$4" fontWeight="600">
+          <Text fontFamily={"$body"} fontSize="$4" fontWeight="600">
             Enter your OTP
           </Text>
 
-          <Text fontSize="$3" color={colors.subHeader} textAlign="center">
+          <Text fontFamily={"$body"} fontSize="$3" color={colors.subHeader} textAlign="center">
             Please enter the 6-digit code sent to{"\n"}
-            <Text fontWeight="600" color={colors.black}>
+            <Text fontFamily={"$body"} fontWeight="600" color={colors.black}>
               {email}
             </Text>{" "}
-            <Text color={colors.primary} onPress={() => router.back()}>
+            <Text fontFamily={"$body"} color={colors.primary} onPress={() => router.back()}>
               Edit
             </Text>
           </Text>
@@ -139,6 +139,7 @@ const resendCode = () => {
                   borderColor: digit ? colors.primary : colors.borderColor,
                   backgroundColor: colors.borderBackground,
                   textAlign: "center",
+                  fontFamily:"$body",
                   fontSize: 18,
                   color: colors.black,
                 }}
@@ -149,13 +150,14 @@ const resendCode = () => {
 
         {/* RESEND */}
         <YStack alignItems="center" marginTop="$6">
-          <Text fontSize={16} color={colors.subHeader}>
+          <Text fontSize={16} fontFamily={"$body"} color={colors.subHeader}>
             Didn’t receive a code?
           </Text>
 
           {timer > 0 ? (
             <Text
               fontSize={16}
+              fontFamily={"$body"}
               color={colors.headerText}
               textDecorationLine="underline"
             >
@@ -174,8 +176,8 @@ const resendCode = () => {
         </YStack>
       </YStack>
             <SuccessModal
-              visible={successVisible}
-              iconImage={require("@/assets/images/xCircle.png")}
+              visible={successVisible} 
+              type="failed"
               duration={3000}
               onClose={() => setSuccessVisible(false)}
               autoClose

@@ -1,6 +1,6 @@
 // components/screens/DiscoverScreen.tsx
 import PostThumbnail from "@/components/discover/PostThumbnail";
-import { GradientBackground } from "@/components/layout/GradientBackground";
+import SearchHeader from "@/components/SearchHeader";
 import { useFeedStore } from "@/components/store/FeedStore";
 import colors from "@/constants/colors";
 import { MOCK_POSTS } from "@/constants/examplePost";
@@ -10,7 +10,6 @@ import React, { useCallback, useState } from "react";
 import {
   FlatList,
   Image,
-  TextInput,
   TouchableOpacity,
   useWindowDimensions,
   View,
@@ -138,7 +137,7 @@ export default function DiscoverScreen() {
           setViewType("posts");
         }}
       >
-        <Text fontWeight="600" fontSize={20}>
+        <Text fontWeight="600" fontFamily={"$heading"} fontSize={20}>
           {item.label}
         </Text>
         <Image
@@ -152,28 +151,11 @@ export default function DiscoverScreen() {
   );
 
   return (
-    <GradientBackground>
-      <SafeAreaView style={{ flex: 1 }}>
-        <YStack style={{ flex: 1 }}>
-          {/* Search Bar */}
-          <View
-            style={{
-              margin: 16,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: colors.gray,
-              paddingHorizontal: 12,
-            }}
-          >
-            <TextInput
-              placeholder="Search"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={{ height: 40 }}
-            />
-          </View>
-
-          {viewType === "categories" ? (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
+      <YStack style={{ flex: 1 }}>
+        {viewType === "categories" ? (
+          <YStack>
+            <SearchHeader value={searchQuery} onChangeText={setSearchQuery} />
             <FlatList
               data={mockCategories}
               keyExtractor={(item) => item.id}
@@ -182,48 +164,55 @@ export default function DiscoverScreen() {
               contentContainerStyle={{ paddingHorizontal: 8 }}
               showsVerticalScrollIndicator={false}
             />
-          ) : (
-            <View style={{ flex: 1 }}>
-              <XStack
-                style={{ paddingHorizontal: 16, marginBottom: 12 }}
-                gap="$2"
-              >
-                {(["all", "carousel", "video", "text"] as const).map((f) => (
-                  <TouchableOpacity
-                    key={f}
-                    onPress={() => setFilter(f)}
+          </YStack>
+        ) : (
+          <View style={{ flex: 1 }}>
+            <SearchHeader
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onBackPress={() => router.back()}
+            />
+            <XStack
+              style={{ paddingHorizontal: 16, marginBottom: 12 }}
+              gap="$2"
+            >
+              {(["all", "images", "video", "text"] as const).map((f) => (
+                <TouchableOpacity
+                  key={f}
+                  onPress={() => setFilter(f as any)}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 6,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    backgroundColor: filter === f ? "#181419" : "#f0f0f0",
+                    borderColor: filter === f ? "#181419" : "#EEEBEF",
+                  }}
+                >
+                  <Text
+                    fontFamily={"$body"}
                     style={{
-                      paddingHorizontal: 16,
-                      paddingVertical: 6,
-                      borderRadius: 6,
-                      backgroundColor:
-                        filter === f ? colors.primary : "#f0f0f0",
+                      color: filter === f ? colors.white : "#4E4252",
+                      fontWeight: "600",
                     }}
                   >
-                    <Text
-                      style={{
-                        color: filter === f ? colors.white : colors.primary,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {f.charAt(0).toUpperCase() + f.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </XStack>
+                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </XStack>
 
-              <FlatList
-                data={filteredPosts}
-                keyExtractor={(item) => item.id}
-                renderItem={renderPost}
-                numColumns={3}
-                contentContainerStyle={{ paddingHorizontal: 8 }}
-                showsVerticalScrollIndicator={false}
-              />
-            </View>
-          )}
-        </YStack>
-      </SafeAreaView>
-    </GradientBackground>
+            <FlatList
+              data={filteredPosts}
+              keyExtractor={(item) => item.id}
+              renderItem={renderPost}
+              numColumns={3}
+              contentContainerStyle={{ paddingHorizontal: 8 }}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        )}
+      </YStack>
+    </SafeAreaView>
   );
 }

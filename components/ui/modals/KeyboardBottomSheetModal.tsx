@@ -27,7 +27,7 @@ export default function KeyboardBottomSheetModal({
   visible,
   onClose,
   children,
-  maxHeightPercent = 0.7,
+  maxHeightPercent = 0.5,
 }: Props) {
   const keyboardHeight = useSharedValue(0);
 

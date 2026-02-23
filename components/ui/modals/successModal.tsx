@@ -1,8 +1,8 @@
-// components/modals/SuccessModal.tsx
-
+import colors from "@/constants/colors";
 import React, { useEffect } from "react";
-import { StyleSheet } from "react-native";
-import { Text, View, Image } from "tamagui";
+import { StyleProp, StyleSheet } from "react-native";
+import { Image, Text, View } from "tamagui";
+import { SimpleButtonWithStyle } from "../SimpleButtonWithStyle";
 import BaseModal from "./BaseModal";
 
 interface Props {
@@ -12,17 +12,33 @@ interface Props {
   message?: string;
   autoClose?: boolean;
   duration?: number; // ms
-  iconImage?:any
+  type?: "success" | "failed" | "warning" | "softwarning";
+  withButton?: boolean;
+  buttonText?: string;
+  buttonDisabled?: boolean;
+  buttonColor?: any;
+  buttonTextColor?: string;
+  buttonTextSize?: any;
+  onButtonPress?: () => void;
+  buttonStyle?: StyleProp<any>;
 }
 
 export default function SuccessModal({
   visible,
-  iconImage,
   onClose,
   title = "Thank you for reporting this post",
   message = "Your feedback is important to us, we’ll review the content of this post, you won’t see this user’s post on your feed again.",
   autoClose = true,
-  duration = 4000,
+  duration = 5000,
+  type = "success",
+  withButton = false,
+  buttonDisabled = false,
+  buttonColor = colors.primary,
+  buttonText = "submit",
+  buttonTextColor = colors.white,
+  buttonTextSize = 16,
+  onButtonPress,
+  buttonStyle,
 }: Props) {
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -37,21 +53,39 @@ export default function SuccessModal({
       if (timer) clearTimeout(timer);
     };
   }, [visible]);
+  const warnImage = require("@/assets/images/warningImage.png");
+  const successImage = require("@/assets/images/succesImage.png");
+  const failedImage = require("@/assets/images/failedImage.png");
+  const softWarnImage = require("@/assets/images/softWarningImage.png");
 
   return (
     <BaseModal visible={visible} onClose={onClose}>
       <View style={styles.card}>
         {/* Green Check Circle */}
-        {iconImage ? (
-          <Image source={iconImage} width={25} height={25} bottom={10}/>
+        {type === "success" ? (
+          <Image source={successImage} width={50} height={50} bottom={10} />
+        ) : type === "failed" ? (
+          <Image source={failedImage} width={50} height={50} bottom={10} />
+        ) : type === "warning" ? (
+          <Image source={warnImage} width={50} height={50} bottom={10} />
         ) : (
-          <View style={styles.iconWrapper}>
-            <Text style={styles.check}>✓</Text>
-          </View>
+          <Image source={softWarnImage} width={50} height={50} bottom={10} />
         )}
 
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.message}>{message}</Text>
+
+        {withButton && (
+          <SimpleButtonWithStyle
+            text={buttonText}
+            textColor={buttonTextColor}
+            textSize={buttonTextSize}
+            onPress={onButtonPress}
+            color={buttonColor}
+            disabled={buttonDisabled}
+            style={buttonStyle}
+          />
+        )}
       </View>
     </BaseModal>
   );
@@ -78,17 +112,20 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 22,
     fontWeight: "bold",
+    fontFamily: "$body",
   },
   title: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "600",
+    fontFamily: "$body",
     textAlign: "center",
     marginBottom: 6,
   },
   message: {
-    fontSize: 10,
+    fontSize: 16,
     textAlign: "center",
+    fontFamily: "$body",
     color: "#666",
-    lineHeight: 18,
+    marginBottom: 10,
   },
 });

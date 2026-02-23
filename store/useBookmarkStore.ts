@@ -13,8 +13,8 @@ interface BookmarkState {
 export const useBookmarksStore = create<BookmarkState>((set, get) => ({
   folders: [
     {
-      id: "1",
-      name: "Churches",
+      id: "1", 
+      name: "All",
       cover: "https://picsum.photos/200",
       createdAt: new Date().toISOString(),
     },

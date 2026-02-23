@@ -71,7 +71,7 @@ export default function Email() {
         />
 
         <YStack alignItems="center" marginTop="$6" gap="$3">
-          <Text fontSize="$4" fontWeight="600">
+          <Text fontSize="$4" fontFamily={"$body"} fontWeight="600">
             Your email address
           </Text>
         </YStack>
@@ -93,6 +93,7 @@ export default function Email() {
           {showInvalid && (
             <Text
               fontSize="$3"
+              fontFamily={"$body"}
               color={colors.errorText}
               alignSelf="flex-start"
               marginTop={"$2"}
@@ -125,6 +126,7 @@ export default function Email() {
           {showInvalid1 && (
             <Text
               fontSize="$3"
+              fontFamily={"$body"}
               color={colors.errorText}
               alignSelf="flex-start"
               marginTop={"$2"}
@@ -135,6 +137,7 @@ export default function Email() {
           <Pressable onPress={() => router.push("/(auth)/forgotPassword")}>
             <Text
               fontSize="$3"
+              fontFamily={"$body"}
               color={colors.forgotPassword}
               alignSelf="flex-end"
               marginTop={"$2"}

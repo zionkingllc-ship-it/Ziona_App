@@ -4,13 +4,12 @@ import React, { useState } from "react";
 import {
   FlatList,
   Image,
-  StyleSheet,
-  Text,
+  StyleSheet, 
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { YStack } from "tamagui";
+import { YStack, Text } from "tamagui";
 
 import CenteredMessage from "@/components/ui/CenteredMessage";
 
@@ -47,13 +46,14 @@ export default function FollowSuggestions() {
       <View style={styles.userRow}>
         <Image source={{ uri: item.avatar }} style={styles.avatar} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.userName}>{item.name}</Text>
+          <Text fontFamily={"$body"} style={styles.userName}>{item.name}</Text>
         </View>
         <TouchableOpacity
           style={[styles.followBtn, isFollowing && styles.followingBtn]}
           onPress={() => toggleFollow(item.id)}
         >
           <Text
+          fontFamily={"$body"}
             style={[
               styles.followBtnText,
               isFollowing && styles.followingBtnText,
@@ -72,11 +72,13 @@ export default function FollowSuggestions() {
         {/* Empty state */}
         {following.length === 0 && (
           <CenteredMessage
+          fontFamily={"$body"}
             text="You are currently not following anyone"
             subtitle="Follow users to see their posts here."
           />
         )}
         <Text
+        fontFamily={"$body"}
           style={{
             marginLeft: 18,
             fontSize: 16,

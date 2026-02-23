@@ -1,8 +1,8 @@
-import React from "react";
-import { FlatList, StyleSheet, TouchableOpacity, Image } from "react-native";
-import { View, Text, XStack } from "tamagui";
-import KeyboardBottomSheetModal from "./KeyboardBottomSheetModal";
 import { Folder } from "@/types/folder";
+import React from "react";
+import { FlatList, StyleSheet, TouchableOpacity } from "react-native";
+import { Image, Text, View, XStack } from "tamagui";
+import KeyboardBottomSheetModal from "./KeyboardBottomSheetModal";
 
 interface Props {
   visible: boolean;
@@ -21,13 +21,19 @@ export default function BookmarkFoldersModal({
   onToggleFolder,
   onCreateNew,
 }: Props) {
+  const bookmarkInactive = require("@/assets/images/bookmarkBlackIcon.png");
+  const bookmarkActive = require("@/assets/images/bookmarkIconActive.png");
   return (
     <KeyboardBottomSheetModal visible={visible} onClose={onClose}>
       <View style={styles.container}>
         <XStack justifyContent="space-between" alignItems="center">
-          <Text fontWeight="600">Folders</Text>
+          <Text fontFamily={"$body"} fontWeight="600">
+            Folders
+          </Text>
           <TouchableOpacity onPress={onCreateNew}>
-            <Text color="#7A2E8A">+ Create new folder</Text>
+            <Text fontFamily={"$body"} color="#7A2E8A">
+              + Create new folder
+            </Text>
           </TouchableOpacity>
         </XStack>
 
@@ -43,13 +49,24 @@ export default function BookmarkFoldersModal({
                 style={styles.row}
                 onPress={() => onToggleFolder(item.id)}
               >
-                <Image source={{ uri: item.cover }} style={styles.image} />
+                <Image
+                  source={
+                    item.cover && typeof item.cover === "string"
+                      ? { uri: item.cover }
+                      : require("@/assets/images/FolderBaner.png")
+                  }
+                  style={styles.image}
+                />
 
-                <Text flex={1}>{item.name}</Text>
-
-                <Text color={isSaved ? "#7A2E8A" : "#ccc"}>
-                  {isSaved ? "🔖" : "📑"}
+                <Text fontFamily={"$body"} flex={1}>
+                  {item.name}
                 </Text>
+
+                {isSaved ? (
+                  <Image source={bookmarkActive} height={24} width={24} />
+                ) : (
+                  <Image source={bookmarkInactive} height={24} width={24} />
+                )}
               </TouchableOpacity>
             );
           }}

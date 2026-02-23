@@ -3,6 +3,25 @@ import { themes, tokens } from "@tamagui/themes";
 import { createFont, createTamagui } from "tamagui";
 import colors from "./constants/colors";
 
+/* -----------------------------------------------------
+   Shared Font Sizes
+----------------------------------------------------- */
+
+const fontSizes = {
+  1: 12,
+  2: 14,
+  3: 16,
+  4: 18,
+  5: 20,
+  6: 24,
+  7: 30,
+  8: 36,
+};
+
+/* -----------------------------------------------------
+   App Tokens
+----------------------------------------------------- */
+
 const appTokens = {
   color: {
     primary: colors.primary,
@@ -13,10 +32,14 @@ const appTokens = {
     warning: colors.warning,
     danger: colors.danger,
   },
-  spacing: {
+  radius: {
     borderRadius: spacing.borderRadius,
   },
 };
+
+/* -----------------------------------------------------
+   App Themes
+----------------------------------------------------- */
 
 const appThemes = {
   light: {
@@ -33,61 +56,114 @@ const appThemes = {
   },
 };
 
+/* -----------------------------------------------------
+   Mona Sans (UI Font)
+----------------------------------------------------- */
+
 const monaSansFont = createFont({
   family: "MonaSans",
 
-  size: {
-    1: 12,
-    2: 14,
-    3: 16,
-    4: 18,
-    5: 20,
-    6: 24,
-    7: 30,
-    8: 36,
-  },
-
-  lineHeight: {
-    1: 16,
-    2: 20,
-    3: 24,
-    4: 26,
-    5: 28,
-    6: 32,
-    7: 38,
-    8: 44,
-  },
+  size: fontSizes,
 
   weight: {
     4: "400",
+    5: "500",
+    6: "600",
+    7: "700",
+  },
+
+  face: {
+    400: { normal: "MonaSans_400" },
+    500: { normal: "MonaSans_500" },
+    600: { normal: "MonaSans_600" },
+    700: { normal: "MonaSans_700" },
+  },
+});
+
+/* -----------------------------------------------------
+   EB Garamond (Serif / Scripture Font)
+   FIXED ITALIC
+----------------------------------------------------- */
+
+const ebGaramondFont = createFont({
+  family: "EBGaramond",
+
+  size: fontSizes,
+
+  weight: {
+    4: "400",
+    5: "500",
     6: "600",
   },
 
   face: {
     400: {
-      normal: "MonaSans",
+      normal: "EBGaramond_400",
+      italic: "EBGaramond_400_Italic",
+    },
+    500: {
+      normal: "EBGaramond_500",
     },
     600: {
-      normal: "MonaSans_SemiBold",
-      italic: "MonaSans_SemiBoldItalic",
+      normal: "EBGaramond_600",
     },
   },
 });
 
+/* -----------------------------------------------------
+   Merienda (Decorative Script)
+----------------------------------------------------- */
+
+const meriendaFont = createFont({
+  family: "Merienda",
+
+  size: fontSizes,
+
+  weight: {
+    4: "400",
+    5: "500",
+    6: "600",
+  },
+
+  face: {
+    400: { normal: "Merienda_400" },
+    500: { normal: "Merienda_500" },
+    600: { normal: "Merienda_600" },
+  },
+});
+
+/* -----------------------------------------------------
+   Create Tamagui Config
+----------------------------------------------------- */
+
 const config = createTamagui({
   tokens: {
     ...tokens,
-    ...appTokens,
+    color: {
+      ...tokens.color,
+      ...appTokens.color,
+    },
+    radius: {
+      ...tokens.radius,
+      ...appTokens.radius,
+    },
   },
+
   themes: {
     ...themes,
     ...appThemes,
   },
+
   fonts: {
     body: monaSansFont,
-    heading: monaSansFont,
+    heading: ebGaramondFont,
+    script: meriendaFont,
   },
 });
+
+/* -----------------------------------------------------
+   Types
+----------------------------------------------------- */
 
 export type AppConfig = typeof config;
 

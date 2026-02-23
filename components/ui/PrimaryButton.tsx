@@ -1,7 +1,7 @@
 import colors from "@/constants/colors";
 import { ReactNode } from "react";
 import { StyleProp, ViewStyle } from "react-native";
-import { Button, Text, View, XStack } from "tamagui";
+import { Button, Text, View, XStack } from "tamagui"; 
 
 type AppButtonProps = {
   text: string;
@@ -14,6 +14,7 @@ type AppButtonProps = {
   textWeight?: any;
   /** Size applied to icon container */
   iconSize?: number;
+  fontfamily?:any
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 };
@@ -29,6 +30,7 @@ export function PrimaryButton({
   endIcon,
   iconSize = 20,
   disabled = false,
+  fontfamily="$body",
   style,
 }: AppButtonProps) {
   return (
@@ -52,6 +54,7 @@ export function PrimaryButton({
           alignSelf="center"
           textAlign="center"
           fontSize={textSize}
+          fontFamily={fontfamily}
           fontWeight={textWeight}
         >
           {text}

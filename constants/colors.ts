@@ -1,5 +1,3 @@
-import { ButtonText } from "tamagui";
-
 // theme/colors.ts
 const colors = {
   primary: "#742092",
@@ -40,17 +38,19 @@ const colors = {
   errorBackground: "#FDEDED",
   subHeader: "#4E4252",
   placeHolderText: "#836F8B",
-  borderColor:"#EEEBEF",
-  borderBackground:"#FAF9FA",
+  borderColor: "#EEEBEF",
+  borderBackground: "#FAF9FA",
   termsText: "#836F8B",
   termsButton: "#4E4252",
   inputIconColor: "#4E4252",
   suggestionBackground: "#FAF9FA",
-  buttonText:"#F6EAFA",
-  spinner:"#F6EAFA",
-  inputTitle:"#836F8B",
-  bell:"#836F8B",
-  forgotPassword:"#836F8B",
+  buttonText: "#F6EAFA",
+  spinner: "#F6EAFA",
+  inputTitle: "#836F8B",
+  bell: "#836F8B",
+  forgotPassword: "#836F8B",
+  closeBtn: "#4E4252",
+  secondaryText: "#4E4252",
 };
 
 export default colors;

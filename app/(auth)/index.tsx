@@ -1,3 +1,4 @@
+import { InlineUnderlineText } from "@/components/ui/InlineUnderlineText";
 import { MarqueeCarousel } from "@/components/ui/marquee";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import colors from "@/constants/colors";
@@ -69,6 +70,7 @@ export default function AuthIndex() {
           <Text
             fontSize="$4"
             fontWeight="600"
+            fontFamily={"$body"}
             textAlign="center"
             color={colors.text}
           >
@@ -77,6 +79,7 @@ export default function AuthIndex() {
           <Text
             fontSize="$3"
             fontWeight="400"
+            fontFamily={"$body"}
             textAlign="center"
             color={colors.subHeader}
           >
@@ -101,7 +104,7 @@ export default function AuthIndex() {
             textSize={13}
             textWeight="400"
             color={colors.white}
-            onPress={() =>{}}
+            onPress={() => {}}
             startIcon={<Image source={google} width={23} height={23} />}
           />
 
@@ -117,15 +120,24 @@ export default function AuthIndex() {
 
         {/* Footer */}
         <YStack gap="$7" alignItems="center">
-          <Text fontSize="$3" color={colors.termsText} textAlign="center">
+          <Text
+            fontSize="$3"
+            fontWeight="400"
+            fontFamily={"$body"}
+            color={colors.termsText}
+            textAlign="center"
+          >
             By continuing, you agree to Ziona’s{" "}
-            <Text
+            <InlineUnderlineText
               color={colors.termsButton}
-              fontWeight="500"
-              textDecorationLine="underline"
+              weight="500"
+              fontFamily="$heading"
+              thickness={2}
+              offset={-2}
             >
               Terms of use
-            </Text>{" "}
+            </InlineUnderlineText>
+            {"     "}
             and confirm that you have read Ziona’s{" "}
             <Pressable
               onPress={() =>
@@ -134,13 +146,15 @@ export default function AuthIndex() {
                 )
               }
             >
-              <Text
+              <InlineUnderlineText
                 color={colors.termsButton}
-                fontWeight="500"
-                textDecorationLine="underline"
+                weight="500"
+                fontFamily="$heading"
+                thickness={2}
+                offset={-2}
               >
                 Privacy Policy
-              </Text>
+              </InlineUnderlineText>
             </Pressable>
           </Text>
           <YStack justifyContent="center" alignItems="center" marginTop={"$9"}>
@@ -154,20 +168,24 @@ export default function AuthIndex() {
               }}
               onPress={() => router.push("/(tabs)/feed")}
             >
-              <Text
+              <InlineUnderlineText
                 color={colors.text}
-                fontSize="$3"
-                fontWeight="600"
-                textDecorationLine="underline"
+                thickness={1.5}
+                offset={-1}
+                weight="400"
               >
                 Skip for now
-              </Text>
+              </InlineUnderlineText>
             </Pressable>
 
             <Pressable onPress={() => router.push("/(auth)/login")}>
-              <Text fontSize="$3">
+              <Text fontSize="$3" fontFamily={"$body"}>
                 Already have an account?{" "}
-                <Text color={colors.primary} fontWeight="900">
+                <Text
+                  color={colors.primary}
+                  fontWeight="700"
+                  fontFamily={"$body"}
+                >
                   Login
                 </Text>
               </Text>

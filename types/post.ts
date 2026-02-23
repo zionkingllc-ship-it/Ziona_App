@@ -16,7 +16,7 @@ export interface BasePost {
   liked: boolean;
   likesCount: number;
 
-  // ✅ FIXED
+  // FIXED
   bookmarked: boolean;
   bookmarks: number;
 
@@ -34,7 +34,12 @@ export interface BasePost {
 export interface ImagePost extends BasePost {
   type: "image";
   media: {
-    url: string;
+    items: {
+      id: string;
+      type: "image" | "video";
+      url: string;
+      thumbnailUrl?: string;
+    }[];
   };
 }
 
