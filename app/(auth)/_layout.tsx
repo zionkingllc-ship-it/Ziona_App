@@ -1,18 +1,13 @@
 import { GradientBackground } from "@/components/layout/GradientBackground";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { AppScreen } from "@/components/layout/AppScreen";
 
 export default function AuthLayout() {
   return (
     <GradientBackground>
       <StatusBar style="dark" translucent />
-      <SafeAreaView
-        style={{
-          flex: 1,
-          backgroundColor: "transparent",
-        }}
-      >
+      <AppScreen>
         <Stack
           screenOptions={{
             headerShown: false,
@@ -22,7 +17,7 @@ export default function AuthLayout() {
             },
           }}
         />
-      </SafeAreaView>
+      </AppScreen>
     </GradientBackground>
   );
 }

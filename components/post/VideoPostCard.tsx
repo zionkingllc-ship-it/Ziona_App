@@ -1,19 +1,12 @@
-// components/post/VideoPostCard.tsx
-
 import colors from "@/constants/colors";
 import { Post } from "@/types/post";
 import { Play } from "@tamagui/lucide-icons";
 import React, { useRef, useState } from "react";
-import { Dimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import Video from "react-native-video";
 import { View } from "tamagui";
+import { useScreenDimensions } from "@/context/ScreenDimensionsContext";
 
 interface Props {
   post: Post;
@@ -22,9 +15,9 @@ interface Props {
   onLike?: () => void;
   heartStyle: any;
   triggerHeart: () => void;
+  screenWidth: number;
+  screenHeight: number;
 }
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function VideoPostCard({
   post,
@@ -33,45 +26,31 @@ export default function VideoPostCard({
   onLike,
   heartStyle,
   triggerHeart,
+  screenWidth,
+  screenHeight,
 }: Props) {
   const videoRef = useRef<any>(null);
-
+  const { wp, hp } = useScreenDimensions();
+  
   const [videoDuration, setVideoDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
-
   const progress = useSharedValue(0);
-  const scrubOpacity = useSharedValue(1);
-  const scrubScale = useSharedValue(1);
 
   const likeIconActive = require("@/assets/images/likeIcon2.png");
 
-  const handleSeek = (newTime: number) => {
-    if (!videoRef.current) return;
-    videoRef.current.seek(newTime);
-  };
-
-  // const scrbAnimatedStyle = useAnimatedStyle(() => ({
-  //   opacity: scrubOpacity.value,
-  //   transform: [{ scale: scrubScale.value }],
-  // }));
-
   const progressStyle = useAnimatedStyle(() => ({
-    width: progress.value * (SCREEN_WIDTH * 0.9),
+    width: progress.value * (screenWidth * 0.9),
   }));
 
-  const singleTap = Gesture.Tap()
-    .numberOfTaps(1)
-    .onEnd(() => {
-      if (onTogglePlay) runOnJS(onTogglePlay)();
-    });
+  const singleTap = Gesture.Tap().numberOfTaps(1).onEnd(() => {
+    if (onTogglePlay) runOnJS(onTogglePlay)();
+  });
 
-  const doubleTap = Gesture.Tap()
-    .numberOfTaps(2)
-    .onEnd(() => {
-      if (onLike) runOnJS(onLike)();
-      runOnJS(triggerHeart)();
-    });
+  const doubleTap = Gesture.Tap().numberOfTaps(2).onEnd(() => {
+    if (onLike) runOnJS(onLike)();
+    runOnJS(triggerHeart)();
+  });
 
   const longPress = Gesture.LongPress()
     .minDuration(250)
@@ -80,12 +59,15 @@ export default function VideoPostCard({
 
   const videoGesture = Gesture.Exclusive(doubleTap, singleTap, longPress);
 
+  const playButtonSize = Math.min(50, wp(12));
+  const scrubBarBottom = hp(8);
+
   return (
     <GestureDetector gesture={videoGesture}>
-      <Animated.View style={{ flex: 1 }}>
+      <Animated.View style={{ flex: 1, width: screenWidth, height: screenHeight }}>
         <Video
           ref={videoRef}
-          source={{ uri: post.media.videoUrl }}
+          source={{ uri: post.media?.videoUrl }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
           repeat
@@ -94,65 +76,44 @@ export default function VideoPostCard({
           onLoad={(d) => setVideoDuration(d.duration)}
           onProgress={(d) => {
             setCurrentTime(d.currentTime);
-            if (videoDuration > 0) {
-              progress.value = d.currentTime / videoDuration;
-            }
+            if (videoDuration > 0) progress.value = d.currentTime / videoDuration;
           }}
+          onError={(error) => console.error("Video playback error:", error)}
         />
 
-        {/* HEART */}
-        <Animated.View
-          style={[
-            { position: "absolute", alignSelf: "center", top: "40%" },
-            heartStyle,
-          ]}
-        >
-          <Animated.Image source={likeIconActive} />
+        <Animated.View style={[{ position: "absolute", alignSelf: "center", top: screenHeight * 0.4 }, heartStyle]}>
+          <Animated.Image source={likeIconActive} style={{ width: 80, height: 80 }} />
         </Animated.View>
 
-        {/* PLAY ICON */}
         <View
-          width={50}
-          height={50}
-          borderRadius={99}
-          backgroundColor={"#FFF1DB"}
+          width={playButtonSize}
+          height={playButtonSize}
+          borderRadius={playButtonSize / 2}
+          backgroundColor="#FFF1DB"
           position="absolute"
           justifyContent="center"
           alignItems="center"
           alignSelf="center"
-          marginVertical={"100%"}
+          top={screenHeight * 0.45}
           opacity={isPlaying ? 0 : 1}
+          pointerEvents="none"
         >
-          <Play size={24} color={colors.black} fill={colors.black} />
+          <Play size={playButtonSize * 0.5} color={colors.black} fill={colors.black} />
         </View>
 
-        {/* SCRUB BAR */}
         <Animated.View
-          style={[
-            {
-              position: "absolute",
-              bottom: 70,
-              width: SCREEN_WIDTH * 0.9,
-              alignSelf: "center",
-            },
-            // scrubAnimatedStyle,
-          ]}
+          style={{
+            position: "absolute",
+            bottom: scrubBarBottom,
+            width: wp(90),
+            alignSelf: "center",
+            height: 7,
+            backgroundColor: "rgba(255,255,255,0.3)",
+            borderRadius: 3.5,
+            overflow: "hidden",
+          }}
         >
-          <Animated.View
-            style={{
-              height: 7,
-              backgroundColor: colors.white,
-              overflow: "hidden",
-              top: 36,
-            }}
-          >
-            <Animated.View
-              style={[
-                { height: "100%", backgroundColor: colors.secondary },
-                progressStyle,
-              ]}
-            />
-          </Animated.View>
+          <Animated.View style={[{ height: "100%", backgroundColor: colors.secondary }, progressStyle]} />
         </Animated.View>
       </Animated.View>
     </GestureDetector>

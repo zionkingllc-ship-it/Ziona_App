@@ -28487,7 +28487,8 @@
             "normal": "EBGaramond"
           },
           "400": {
-            "normal": "EBGaramond_400"
+            "normal": "EBGaramond_400",
+            "italic": "EBGaramond_400_Italic"
           },
           "500": {
             "normal": "EBGaramond_500"

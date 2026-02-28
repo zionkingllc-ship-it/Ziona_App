@@ -6,8 +6,10 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TamaguiProvider } from "tamagui";
 
+import { ScreenDimensionsProvider } from "@/context/ScreenDimensionsContext";
 import NotificationProvider from "@/providers/notificationProvider";
 import config from "@/tamagui.config";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -26,7 +28,6 @@ export default function RootLayout() {
     EBGaramond_500: require("../assets/fonts/EBGaramond-Medium.ttf"),
     EBGaramond_600: require("../assets/fonts/EBGaramond-SemiBold.ttf"),
     EBGaramond_400_Italic: require("../assets/fonts/EBGaramond-Italic.ttf"),
-
     Merienda_400: require("../assets/fonts/Merienda-Regular.ttf"),
     Merienda_500: require("../assets/fonts/Merienda-Medium.ttf"),
     Merienda_600: require("../assets/fonts/Merienda-SemiBold.ttf"),
@@ -43,18 +44,22 @@ export default function RootLayout() {
   }
 
   return (
-    <TamaguiProvider config={config} defaultTheme={scheme} disableInjectCSS>
-      <StatusBar style="dark" />
-      <NotificationProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <QueryClientProvider client={queryClient}>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="(auth)" />
-            </Stack>
-          </QueryClientProvider>
-        </GestureHandlerRootView>
-      </NotificationProvider>
-    </TamaguiProvider>
+    <SafeAreaProvider>
+      <ScreenDimensionsProvider>
+        <TamaguiProvider config={config} defaultTheme={scheme} disableInjectCSS>
+          <StatusBar style="dark" />
+          <NotificationProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <QueryClientProvider client={queryClient}>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="(auth)" />
+                </Stack>
+              </QueryClientProvider>
+            </GestureHandlerRootView>
+          </NotificationProvider>
+        </TamaguiProvider>
+      </ScreenDimensionsProvider>
+    </SafeAreaProvider>
   );
 }

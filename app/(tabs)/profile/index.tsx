@@ -73,14 +73,10 @@ export default function ProfileScreen() {
   const filteredPosts = useMemo(() => {
     if (activeTab === "liked") {
       return posts.filter((post) => likes[post.id]);
-    }
-
-    if (activeTab === "bookmarks") {
-      return posts.filter((post) => (bookmarks[post.id] || []).length > 0);
-    }
+    } 
 
     return posts;
-  }, [activeTab, posts, likes, bookmarks]);
+  }, [activeTab, posts, likes, ]);
 
   // Get thumbnail for any post type
   const getPostThumbnail = (post: Post) => {

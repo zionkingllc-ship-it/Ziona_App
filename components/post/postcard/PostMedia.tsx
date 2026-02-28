@@ -15,6 +15,8 @@ interface Props {
   isPlaying: boolean;
   onTogglePlay?: () => void;
   onLike?: () => void;
+  screenWidth: number;
+  screenHeight: number;
 }
 
 export default function PostMedia({
@@ -22,6 +24,8 @@ export default function PostMedia({
   isPlaying,
   onTogglePlay,
   onLike,
+  screenWidth,
+  screenHeight,
 }: Props) {
   const heartScale = useSharedValue(0);
   const heartOpacity = useSharedValue(0);
@@ -53,6 +57,8 @@ export default function PostMedia({
           onLike={onLike}
           heartStyle={heartStyle}
           triggerHeart={triggerHeart}
+          screenWidth={screenWidth}
+          screenHeight={screenHeight}
         />
       );  
 
@@ -64,6 +70,8 @@ export default function PostMedia({
           onLike={onLike}
           heartStyle={heartStyle}
           triggerHeart={triggerHeart}
+          screenWidth={screenWidth}
+          screenHeight={screenHeight}
         />
       );
 
@@ -74,6 +82,8 @@ export default function PostMedia({
           onLike={onLike}
           heartStyle={heartStyle}
           triggerHeart={triggerHeart}
+          screenWidth={screenWidth}
+          screenHeight={screenHeight}
         />
       );
 

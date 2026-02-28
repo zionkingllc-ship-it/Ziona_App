@@ -64,7 +64,7 @@ export default function AuthIndex() {
         <MarqueeCarousel animationType="loop" cards={cards} />
       </YStack>
       {/* ================= CONTENT ================= */}
-      <YStack padding="$5" gap="$4" justifyContent="space-between">
+      <YStack flex={1} top={16} gap={"$4"} paddingHorizontal={16} justifyContent="space-between">
         {/* Title */}
         <YStack gap="$2">
           <Text
@@ -119,7 +119,7 @@ export default function AuthIndex() {
         </YStack>
 
         {/* Footer */}
-        <YStack gap="$7" alignItems="center">
+        <YStack>
           <Text
             fontSize="$3"
             fontWeight="400"
@@ -137,7 +137,7 @@ export default function AuthIndex() {
             >
               Terms of use
             </InlineUnderlineText>
-            {"     "}
+            {"   "}
             and confirm that you have read Ziona’s{" "}
             <Pressable
               onPress={() =>
@@ -157,40 +157,44 @@ export default function AuthIndex() {
               </InlineUnderlineText>
             </Pressable>
           </Text>
-          <YStack justifyContent="center" alignItems="center" marginTop={"$9"}>
-            <Pressable
-              style={{
-                width: "50%",
-                justifyContent: "center",
-                alignItems: "center",
-                padding: 10,
-                borderRadius: 8,
-              }}
-              onPress={() => router.push("/(tabs)/feed")}
+        </YStack>
+        <YStack
+          justifyContent="flex-end"
+          alignItems="center" 
+          height={"20%"}
+          paddingBottom={20}
+        >
+          <Pressable
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 10,
+              borderRadius: 8,
+            }}
+            onPress={() => router.push("/(tabs)/feed")}
+          >
+            <InlineUnderlineText
+              color={colors.text}
+              thickness={1.5}
+              offset={-1}
+              weight="400"
             >
-              <InlineUnderlineText
-                color={colors.text}
-                thickness={1.5}
-                offset={-1}
-                weight="400"
-              >
-                Skip for now
-              </InlineUnderlineText>
-            </Pressable>
+              Skip for now
+            </InlineUnderlineText>
+          </Pressable>
 
-            <Pressable onPress={() => router.push("/(auth)/login")}>
-              <Text fontSize="$3" fontFamily={"$body"}>
-                Already have an account?{" "}
-                <Text
-                  color={colors.primary}
-                  fontWeight="700"
-                  fontFamily={"$body"}
-                >
-                  Login
-                </Text>
+          <Pressable onPress={() => router.push("/(auth)/login")}>
+            <Text fontSize="$3" fontFamily={"$body"}>
+              Already have an account?{" "}
+              <Text
+                color={colors.primary}
+                fontWeight="700"
+                fontFamily={"$body"}
+              >
+                Login
               </Text>
-            </Pressable>
-          </YStack>
+            </Text>
+          </Pressable>
         </YStack>
       </YStack>
     </YStack>
