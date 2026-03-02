@@ -1,15 +1,18 @@
 // components/ui/InlineUnderlineText.tsx
-import { Text, XStack, YStack } from "tamagui";
-import { ReactNode } from "react";
+
+import { Text, YStack } from "tamagui"
+import { ReactNode } from "react"
+import { useResponsive } from "@/hooks/useResponsive"
 
 type Props = {
-  children: ReactNode;
-  color: string;
-  thickness?: number;
-  offset?: number;
-  weight?: any;
-  fontFamily?: any;
-};
+  children: ReactNode
+  color: string
+  thickness?: number
+  offset?: number
+  weight?: any
+  fontFamily?: any
+  fontSize?: number
+}
 
 export function InlineUnderlineText({
   children,
@@ -18,23 +21,23 @@ export function InlineUnderlineText({
   offset = 2,
   weight = "500",
   fontFamily = "$body",
+  fontSize,
 }: Props) {
-  return (
-    <YStack alignSelf="flex-start">
-      <Text
-        color={color}
-        fontWeight={weight}
-        fontFamily={fontFamily}
-      >
-        {children}
-      </Text>
+  const { fs, hp } = useResponsive()
 
-      <YStack
-        height={thickness}
-        backgroundColor={color}
-        borderRadius={thickness}
-        marginTop={offset}
-      />
-    </YStack>
-  );
-}     
+  const scaledThickness = hp(0.25) * (thickness / 2)
+  const scaledOffset = hp(0.4) * (offset / 2)
+
+  return (
+    <Text
+      color={color}
+      fontWeight={weight}
+      fontFamily={fontFamily}
+      fontSize={fontSize ? fs(fontSize) : undefined}
+      textDecorationLine="underline"
+      textDecorationColor={color}
+    >
+      {children}
+    </Text>
+  )
+}

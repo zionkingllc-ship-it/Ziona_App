@@ -1,179 +1,178 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react"
 import {
   Animated,
   Easing,
   PanResponder,
-  useWindowDimensions,
-} from "react-native";
-import { Image, Text, YStack } from "tamagui";
+} from "react-native"
+import { Image, Text, YStack } from "tamagui"
+import { useResponsive } from "@/hooks/useResponsive"
 
 type Card = {
-  id: string;
-  image: any;
-  text: string;
-};
+  id: string
+  image: any
+  text: string
+}
 
 type Props = {
-  cards: Card[];
-  heightRatio?: number;
-  speed?: number;
-  animationType?: "continuous" | "snap" | "loop";
-};
+  cards: Card[]
+  heightRatio?: number
+  speed?: number
+  animationType?: "continuous" | "snap" | "loop"
+}
 
 export function MarqueeCarousel({
   cards,
-  heightRatio = 0.28,
-  speed = 2600000,
+  heightRatio = 30, // percentage of viewport height
+  speed = 26000,
   animationType = "continuous",
 }: Props) {
-  const { width, height } = useWindowDimensions();
+  const { wp, hp, fs } = useResponsive()
 
-  const CARD_WIDTH = Math.min(width * 0.7, 240);
-  const CARD_HEIGHT = height * heightRatio;
-  const GAP = 16;
+  const CARD_WIDTH = Math.min(wp(70), 380)
+  const CARD_HEIGHT = hp(heightRatio)
+  const GAP = wp(4)
 
-  const ITEM_WIDTH = CARD_WIDTH + GAP;
-  const TOTAL_WIDTH = ITEM_WIDTH * cards.length;
+  const ITEM_WIDTH = CARD_WIDTH + GAP
+  const TOTAL_WIDTH = ITEM_WIDTH * cards.length
 
-  const translateX = useRef(new Animated.Value(0)).current;
-  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+  const translateX = useRef(new Animated.Value(0)).current
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null)
 
-  const direction = useRef<-1 | 1>(-1);
-  const lastOffset = useRef(0);
-  const currentIndex = useRef(0);
+  const direction = useRef<-1 | 1>(-1)
+  const lastOffset = useRef(0)
+  const currentIndex = useRef(0)
 
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused] = useState(false)
 
-  /* ==================================================
+  /* ===============================
      CONTINUOUS (Ping-Pong)
-  =================================================== */
+  =============================== */
   const startContinuous = () => {
-    animationRef.current?.stop();
+    animationRef.current?.stop()
 
     animationRef.current = Animated.timing(translateX, {
       toValue: direction.current === -1 ? -TOTAL_WIDTH : 0,
       duration: speed,
       easing: Easing.linear,
       useNativeDriver: true,
-    });
+    })
 
     animationRef.current.start(({ finished }) => {
       if (finished && !paused) {
-        direction.current = direction.current === -1 ? 1 : -1;
-        startContinuous();
+        direction.current = direction.current === -1 ? 1 : -1
+        startContinuous()
       }
-    });
-  };
+    })
+  }
 
-  /* ==================================================
-     SNAP (Card-by-card with reverse)
-  =================================================== */
+  /* ===============================
+     SNAP
+  =============================== */
   const startSnap = () => {
-    if (paused) return;
+    if (paused) return
 
-    animationRef.current?.stop();
+    animationRef.current?.stop()
 
     const nextIndex =
       direction.current === -1
         ? currentIndex.current + 1
-        : currentIndex.current - 1;
+        : currentIndex.current - 1
 
     if (nextIndex >= cards.length || nextIndex < 0) {
-      direction.current = direction.current === -1 ? 1 : -1;
-      startSnap();
-      return;
+      direction.current = direction.current === -1 ? 1 : -1
+      startSnap()
+      return
     }
 
-    currentIndex.current = nextIndex;
+    currentIndex.current = nextIndex
 
     animationRef.current = Animated.timing(translateX, {
       toValue: -currentIndex.current * ITEM_WIDTH,
       duration: 350,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-    });
+    })
 
     animationRef.current.start(({ finished }) => {
       if (finished && !paused) {
-        setTimeout(startSnap, 1200);
+        setTimeout(startSnap, 1200)
       }
-    });
-  };
+    })
+  }
 
-  /* ==================================================
-     LOOP (Card-by-card, reset to start)
-  =================================================== */
+  /* ===============================
+     LOOP
+  =============================== */
   const startLoop = () => {
-    if (paused) return;
+    if (paused) return
 
-    animationRef.current?.stop();
+    animationRef.current?.stop()
 
-    const nextIndex = currentIndex.current + 1;
+    const nextIndex = currentIndex.current + 1
 
     if (nextIndex >= cards.length) {
-      currentIndex.current = 0;
-      translateX.setValue(0);
-
-      setTimeout(startLoop, 800);
-      return;
+      currentIndex.current = 0
+      translateX.setValue(0)
+      setTimeout(startLoop, 800)
+      return
     }
 
-    currentIndex.current = nextIndex;
+    currentIndex.current = nextIndex
 
     animationRef.current = Animated.timing(translateX, {
       toValue: -currentIndex.current * ITEM_WIDTH,
       duration: 350,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-    });
+    })
 
     animationRef.current.start(({ finished }) => {
       if (finished && !paused) {
-        setTimeout(startLoop, 1200);
+        setTimeout(startLoop, 1200)
       }
-    });
-  };
+    })
+  }
 
-  /* ==================================================
+  /* ===============================
      EFFECT
-  =================================================== */
+  =============================== */
   useEffect(() => {
-    if (paused) return;
+    if (paused) return
 
     if (animationType === "continuous") {
-      startContinuous();
+      startContinuous()
     } else if (animationType === "snap") {
-      startSnap();
+      startSnap()
     } else if (animationType === "loop") {
-      startLoop();
+      startLoop()
     }
 
-    return () => animationRef.current?.stop();
-  }, [paused, animationType]);
+    return () => animationRef.current?.stop()
+  }, [paused, animationType, TOTAL_WIDTH])
 
-  /* ==================================================
+  /* ===============================
      DRAG SUPPORT
-  =================================================== */
+  =============================== */
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        setPaused(true);
-        animationRef.current?.stop();
+        setPaused(true)
+        animationRef.current?.stop()
         translateX.stopAnimation((value) => {
-          lastOffset.current = value;
-        });
+          lastOffset.current = value
+        })
       },
       onPanResponderMove: (_, gesture) => {
-        const next = lastOffset.current + gesture.dx;
-        translateX.setValue(Math.max(-TOTAL_WIDTH, Math.min(0, next)));
+        const next = lastOffset.current + gesture.dx
+        translateX.setValue(Math.max(-TOTAL_WIDTH, Math.min(0, next)))
       },
       onPanResponderRelease: () => {
         const snappedIndex = Math.round(
-          Math.abs(lastOffset.current) / ITEM_WIDTH,
-        );
+          Math.abs(lastOffset.current) / ITEM_WIDTH
+        )
 
-        currentIndex.current = snappedIndex;
+        currentIndex.current = snappedIndex
 
         Animated.timing(translateX, {
           toValue: -snappedIndex * ITEM_WIDTH,
@@ -181,14 +180,14 @@ export function MarqueeCarousel({
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }).start(() => {
-          setPaused(false);
-        });
+          setPaused(false)
+        })
       },
-    }),
-  ).current;
+    })
+  ).current
 
   return (
-    <YStack height={CARD_HEIGHT + 40} overflow="hidden">
+    <YStack height={CARD_HEIGHT + hp(5)} overflow="hidden">
       {/* BACKGROUND */}
       {cards.map((card, index) => {
         const opacity = translateX.interpolate({
@@ -199,7 +198,7 @@ export function MarqueeCarousel({
           ],
           outputRange: [0, 0.5, 0],
           extrapolate: "clamp",
-        });
+        })
 
         return (
           <Animated.Image
@@ -215,13 +214,13 @@ export function MarqueeCarousel({
                 {
                   translateX: translateX.interpolate({
                     inputRange: [-TOTAL_WIDTH, 0],
-                    outputRange: [-60, 0],
+                    outputRange: [-wp(12), 0],
                   }),
                 },
               ],
             }}
           />
-        );
+        )
       })}
 
       {/* FOREGROUND */}
@@ -229,28 +228,28 @@ export function MarqueeCarousel({
         {...panResponder.panHandlers}
         style={{
           flexDirection: "row",
-          paddingHorizontal: 24,
-          paddingTop: 24,
+          paddingHorizontal: wp(6),
+          paddingTop: hp(3),
           transform: [{ translateX }],
         }}
       >
         {cards.map((card, index) => {
           const position = Animated.add(
             translateX,
-            new Animated.Value(index * ITEM_WIDTH),
-          );
+            new Animated.Value(index * ITEM_WIDTH)
+          )
 
           const scale = position.interpolate({
             inputRange: [-CARD_WIDTH, 0, CARD_WIDTH, CARD_WIDTH * 2],
-            outputRange: [0.88, 1, 0.88, 0.85],
+            outputRange: [0.9, 1, 0.9, 0.85],
             extrapolate: "clamp",
-          });
+          })
 
           const opacity = position.interpolate({
             inputRange: [-CARD_WIDTH, 0, CARD_WIDTH, CARD_WIDTH * 2],
             outputRange: [0.6, 1, 0.6, 0.4],
             extrapolate: "clamp",
-          });
+          })
 
           return (
             <Animated.View
@@ -259,19 +258,29 @@ export function MarqueeCarousel({
                 width: CARD_WIDTH,
                 height: CARD_HEIGHT,
                 marginRight: GAP,
-                borderRadius: 20,
+                borderRadius: wp(5),
                 overflow: "hidden",
                 backgroundColor: "#000",
                 transform: [{ scale }],
                 opacity,
               }}
             >
-              <Image source={card.image} width="100%" height="100%" />
+              <Image
+                source={card.image}
+                width="100%"
+                height="100%"
+                resizeMode="cover"
+              />
 
-              <YStack position="absolute" bottom={16} left={16} right={16}>
+              <YStack
+                position="absolute"
+                bottom={hp(2)}
+                left={wp(4)}
+                right={wp(4)}
+              >
                 <Text
                   color="white"
-                  fontSize="$3"
+                  fontSize={fs(15)}
                   fontWeight="400"
                   textAlign="center"
                 >
@@ -279,9 +288,9 @@ export function MarqueeCarousel({
                 </Text>
               </YStack>
             </Animated.View>
-          );
+          )
         })}
       </Animated.View>
     </YStack>
-  );
+  )
 }

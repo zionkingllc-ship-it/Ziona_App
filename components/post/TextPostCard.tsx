@@ -25,40 +25,16 @@ export default function TextPostCard({
   screenHeight,
 }: Props) {
   const likeIconActive = require("@/assets/images/likeIcon2.png");
-
-  // ======= ADVANCED RESPONSIVE SYSTEM =======
-
-  const BASE_WIDTH = 375;
-
-  const scale = screenWidth / BASE_WIDTH;
+  const flapImage = require("@/assets/images/jonalFlap.png");
 
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max);
 
-  const fs = (size: number, min?: number, max?: number) => {
-    const scaled = size * scale;
-    if (min !== undefined && max !== undefined) {
-      return clamp(scaled, min, max);
-    }
-    return scaled;
-  };
-
   const wp = (percent: number) => screenWidth * (percent / 100);
   const hp = (percent: number) => screenHeight * (percent / 100);
+  const fs = (size: number) => size * (screenWidth / 375);
 
-  // Optional: limit readable content width on tablets
-  const contentMaxWidth = clamp(screenWidth * 0.9, 0, 650);
-
-  // ==========================================
-
-  function resolveSource(source?: string | number) {
-    if (!source) return undefined;
-    if (typeof source === "string") {
-      if (source.trim() === "") return undefined;
-      return { uri: source };
-    }
-    return source;
-  }
+  const contentWidth = clamp(screenWidth * 0.9, 0, 650);
 
   const handleLike = () => {
     if (onLike) onLike();
@@ -79,10 +55,6 @@ export default function TextPostCard({
 
   const gesture = Gesture.Exclusive(doubleTap, singleTap);
 
-  const bgSource = resolveSource(
-    require("@/assets/images/textPostBackground1.png"),
-  );
-
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View
@@ -95,104 +67,120 @@ export default function TextPostCard({
           backgroundColor: colors.black,
         }}
       >
-        {bgSource && (
-          <Image
-            source={bgSource}
-            style={{
-              position: "absolute",
-              width: screenWidth,
-              height: screenHeight,
-              opacity: 0.12,
-            }}
-            resizeMode="cover"
-          />
-        )}
-
-        <YStack width="100%" maxWidth={contentMaxWidth} padding={hp(4)}>
-          {/* HEADER */}
-          <YStack
-            paddingBottom={hp(1.5)}
-            marginBottom={hp(2.5)}
-            borderBottomWidth={1}
-            borderColor="#62292E"
-          >
-            <Text
-              fontFamily="$script"
-              fontWeight="600"
-              fontSize={fs(18, 16, 22)}
-              color={colors.white}
-            >
-              Love
-            </Text>
-
-            <XStack justifyContent="space-between" alignItems="center">
-              <Text
-                fontFamily="$script"
-                fontWeight="600"
-                fontSize={fs(16, 14, 20)}
-                color={colors.white}
-              >
-                John 3:16
-              </Text>
-
-              <View
-                borderWidth={1}
-                borderColor="#836F8B"
-                borderRadius={wp(2)}
-                paddingHorizontal={wp(2)}
-                paddingVertical={hp(0.5)}
-              >
-                <Text
-                  fontFamily="$body"
-                  fontWeight="600"
-                  fontSize={fs(12, 11, 14)}
-                  color="#836F8B"
-                >
-                  KJV
-                </Text>
-              </View>
-            </XStack>
-          </YStack>
-
-          {/* VERSE */}
+        <XStack width={contentWidth} position="relative" overflow="visible" minHeight={533}>
+          {/* Flap */}
           <View
-            borderLeftWidth={3}
-            borderLeftColor="#62292E"
-            paddingLeft={wp(4)}
-            marginBottom={hp(3)}
+            position="absolute"
+            left={-wp(2)}
+            bottom={-hp(5)}
+            pointerEvents="none"
           >
-            <Text
-              fontFamily="$heading"
-              fontWeight="400"
-              fontSize={fs(20, 18, 26)}
-              fontStyle="italic"
-              marginLeft={hp(2)}
-              color={colors.white}
-              lineHeight={fs(28, 24, 34)}
-            >
-              “For God so loved the world, that he gave his only begotten Son,
-              that whosoever believeth in him should not perish, but have
-              everlasting life”
-            </Text>
+            <Image
+              source={flapImage}
+              width={wp(14)}
+              height={hp(12)}
+              resizeMode="contain"
+            />
           </View>
 
-          {/* DESCRIPTION */}
-          <Text
-            fontFamily="$heading"
-            fontWeight="400"
-            fontSize={fs(17, 15, 22)}
-            color={colors.white}
-            lineHeight={fs(24, 20, 30)}
+          {/* Card */}
+          <XStack
+            flex={1}
+            backgroundColor={"#D9C0A0"}
+            padding={hp(1.5)}
+            borderRadius={wp(1.5)}
           >
-            In quiet seasons and loud storms, God remains constant. When doors
-            close, trust His direction. When answers delay, trust His timing.
-            Faith is not denial of pain; it is confidence in His promises. Stay
-            rooted in prayer, anchored in love, and courageous in obedience. He
-            is working, even now.
-          </Text>
-        </YStack>
+            {/* Decorative Strip */}
+            <YStack
+              width={wp(3)}
+              height={"110%"}
+              marginTop={-wp(3)}
+              backgroundColor={"#573f2114"}
+            />
 
-        {/* HEART ANIMATION */}
+            {/* Content */}
+            <YStack flex={1} padding={hp(1)}>
+              {/* Header */}
+              <YStack
+                paddingBottom={hp(1.5)}
+                borderBottomWidth={1}
+                borderColor="#62292E"
+                marginBottom={hp(2)}
+              >
+                <Text
+                  fontFamily="$script"
+                  fontWeight="600"
+                  fontSize={fs(15)}
+                  color={colors.black}
+                >
+                  Love
+                </Text>
+
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text
+                    fontFamily="$script"
+                    fontWeight="600"
+                    fontSize={fs(15)}
+                    color={colors.black}
+                  >
+                    John 3:16
+                  </Text>
+
+                  <View
+                    borderWidth={1}
+                    borderColor="#836F8B"
+                    borderRadius={wp(2)}
+                    paddingHorizontal={wp(3)}
+                    paddingVertical={hp(0.6)}
+                  >
+                    <Text
+                      fontFamily="$body"
+                      fontWeight="600"
+                      fontSize={fs(11)}
+                      color="#836F8B"
+                    >
+                      KJV
+                    </Text>
+                  </View>
+                </XStack>
+              </YStack>
+
+              {/* Verse */}
+              <View
+                borderLeftWidth={3}
+                borderLeftColor="#62292E"
+                paddingLeft={wp(4)}
+                marginBottom={hp(2)}
+              >
+                <Text
+                  fontFamily="$heading"
+                  fontWeight="400"
+                  fontSize={fs(17)}
+                  fontStyle="italic"
+                  color={colors.black}
+                  lineHeight={fs(25)}
+                >
+                  “Jesus wept.”
+                </Text>
+              </View>
+
+              {/* Description */}
+              <Text
+                fontFamily="$heading"
+                fontWeight="400"
+                fontSize={fs(17)}
+                color={colors.black}
+                lineHeight={fs(25)}
+              >
+                In quiet seasons and loud storms, God remains constant. When
+                doors close, trust His direction. When answers delay, trust His
+                timing.
+              </Text>
+            </YStack>
+          </XStack>
+        </XStack>
+
+        {/* Heart */}
         <Animated.View
           style={[
             {
@@ -206,8 +194,8 @@ export default function TextPostCard({
           <Animated.Image
             source={likeIconActive}
             style={{
-              width: clamp(wp(20), 80, 160),
-              height: clamp(wp(20), 80, 160),
+              width: clamp(wp(22), 90, 170),
+              height: clamp(wp(22), 90, 170),
             }}
             resizeMode="contain"
           />

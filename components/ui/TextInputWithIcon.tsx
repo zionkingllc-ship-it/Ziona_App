@@ -1,4 +1,5 @@
 import colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 import { ReactNode } from "react";
 import { Image, Pressable, TextInputProps } from "react-native";
 import { Input, Text, XStack, YStack } from "tamagui";
@@ -20,7 +21,7 @@ type AppTextInputProps = TextInputProps & {
   endIconVisible?: boolean;
   headingText: string;
   onfocus: boolean;
-  fontFamily?:any;
+  fontFamily?: any;
 };
 
 export function TextInputWithIcon({
@@ -36,11 +37,13 @@ export function TextInputWithIcon({
   headingText,
   startImage,
   endImage,
-  fontFamily="$body",
+  fontFamily = "$body",
   inputType = "alphanumeric",
   onEndIconPress,
   ...props
 }: AppTextInputProps) {
+  const { wp, hp, fs } = useResponsive();
+
   const borderColor =
     isValid === false
       ? colors.errorBorderColor
@@ -62,42 +65,46 @@ export function TextInputWithIcon({
         ? colors.successText
         : colors.inputTitle;
 
+  const INPUT_HEIGHT = hp(6.5);
+  const ICON_SIZE = wp(5);
+
   return (
     <XStack
       alignItems="center"
-      justifyContent="space-between"
-      padding={10}
-      height={51}
-      width={"100%"}
+      paddingHorizontal={wp(4)}
+      paddingVertical={wp(2)}
+      height={INPUT_HEIGHT}
+      width="100%"
       borderColor={borderColor}
       backgroundColor={backgroundColor}
       borderWidth={1}
-      borderRadius={8}
+      borderRadius={wp(2.5)}
     >
-      {startIcon && <YStack>{startIcon}</YStack>}
+      {startIcon && <YStack marginRight={wp(2)}>{startIcon}</YStack>}
 
       {startImage && (
         <Image
           source={startImage}
-          style={{ width: 20, height: 20 }}
+          style={{ width: ICON_SIZE, height: ICON_SIZE }}
           resizeMode="contain"
         />
       )}
 
-      <YStack height={51} padding={8} width={"85%"}>
+      <YStack flex={1} justifyContent="center">
         {onfocus && (
-          <Text marginLeft={3} fontFamily={"$body"} fontSize={10} color={headerColor}>
+          <Text fontSize={fs(11)} color={headerColor} marginBottom={hp(0.3)}>
             {headingText}
           </Text>
         )}
+
         <Input
           flex={1}
           value={value}
           placeholder={placeholder}
           borderWidth={0}
-          padding={2}
+          padding={0}
           backgroundColor="transparent"
-          fontSize="$3"
+          fontSize={fs(16)}
           fontWeight="400"
           fontFamily={fontFamily}
           color={colors.black}
@@ -113,14 +120,19 @@ export function TextInputWithIcon({
           {...props}
         />
       </YStack>
+
       {((endIcon && endIconVisible) || (endImage && endIconVisible)) &&
         onEndIconPress && (
-          <Pressable onPress={onEndIconPress} hitSlop={10}>
+          <Pressable
+            onPress={onEndIconPress}
+            hitSlop={10}
+            style={{ marginLeft: wp(2) }}
+          >
             {endIcon && <YStack>{endIcon}</YStack>}
             {endImage && (
               <Image
                 source={endImage}
-                style={{ width: 20, height: 20 }}
+                style={{ width: ICON_SIZE, height: ICON_SIZE }}
                 resizeMode="contain"
               />
             )}

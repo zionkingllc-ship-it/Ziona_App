@@ -1,29 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  View,
-  ViewToken,
-} from "react-native";
 import { useScreenDimensions } from "@/context/ScreenDimensionsContext";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, View, ViewToken } from "react-native";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
-import FollowSuggestions from "@/components/following/FollowingSuggestions";
-import { PostCard } from "@/components/post/PostCard";
-import CenteredMessage from "@/components/ui/CenteredMessage";
 import FeedHeader from "@/components/feedHeader";
+import  {PostCard}  from "@/components/post/PostCard";
 import colors from "@/constants/colors";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
 import { Post } from "@/types/post";
 import { useFocusEffect } from "@react-navigation/native";
-import { Text, XStack, YStack } from "tamagui";
 
 export default function Feed() {
   const { topInset } = useScreenDimensions();
+  const tabBarHeight = useBottomTabBarHeight();
 
   const flatListRef = useRef<FlatList<Post>>(null);
+
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [feedType, setFeedType] = useState<"forYou" | "following">("forYou");
   const [containerHeight, setContainerHeight] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   const forYouQuery = useForYouFeed();
   const followingQuery = useFollowingFeed();
@@ -31,12 +27,11 @@ export default function Feed() {
 
   const pages = query.data?.pages ?? [];
   const data: Post[] = pages.flatMap((page) => page.posts ?? []);
-  const followsCount = followingQuery.data?.pages?.[0]?.followsCount ?? 0;
 
   useFocusEffect(
     useCallback(() => {
       return () => setActivePostId(null);
-    }, [])
+    }, []),
   );
 
   useEffect(() => {
@@ -54,7 +49,7 @@ export default function Feed() {
       if (viewableItems.length > 0 && viewableItems[0].item?.id) {
         setActivePostId(viewableItems[0].item.id);
       }
-    }
+    },
   ).current;
 
   const renderItem = useCallback(
@@ -63,10 +58,11 @@ export default function Feed() {
         post={item}
         isPlaying={item.id === activePostId}
         screenHeight={containerHeight}
-        screenWidth={undefined as any} // not needed for snap anymore
+        screenWidth={containerWidth}
+        tabBarHeight={tabBarHeight}
       />
     ),
-    [activePostId, containerHeight]
+    [activePostId, containerHeight, containerWidth, tabBarHeight],
   );
 
   if (query.isLoading) {
@@ -78,24 +74,36 @@ export default function Feed() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.black, paddingTop: topInset }}>
-      <FeedHeader
-        feedType={feedType}
-        onChangeFeedType={setFeedType}
-        emptyFollowing={false}
-      />
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.black,
+        paddingTop: topInset,
+      }}
+    >
+      <View style={{ width: "100%" }}>
+        <FeedHeader
+          feedType={feedType}
+          onChangeFeedType={setFeedType}
+          emptyFollowing={false}
+        />
+      </View>
 
-      {/* 👇 THIS is the only height that matters */}
       <View
         style={{ flex: 1 }}
         onLayout={(e) => {
-          const height = e.nativeEvent.layout.height;
+          const { height, width } = e.nativeEvent.layout;
+
           if (height !== containerHeight) {
             setContainerHeight(height);
           }
+
+          if (width !== containerWidth) {
+            setContainerWidth(width);
+          }
         }}
       >
-        {containerHeight > 0 && (
+        {containerHeight > 0 && containerWidth > 0 && (
           <FlatList<Post>
             ref={flatListRef}
             data={data}

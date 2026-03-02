@@ -1,4 +1,5 @@
 import colors from "@/constants/colors";
+import { useResponsiveSize } from "@/hooks/useResponsiveSize";
 import { useBookmarksStore } from "@/store/useBookmarkStore";
 import { Post } from "@/types/post";
 import { LinearGradient } from "expo-linear-gradient";
@@ -9,18 +10,18 @@ import { CommentsSheet } from "../comments/commentsModal";
 import BookmarkFoldersModal from "../ui/modals/BookmarkFoldersModal";
 import ConfirmReportModal from "../ui/modals/ConfirmReportModal";
 import CreateFolderModal from "../ui/modals/CreateFolderModal";
+import OtherReportModal from "../ui/modals/OtherReportModal";
 import ReportReasonsModal from "../ui/modals/ReportReasonsModal";
 import ShareModal from "../ui/modals/ShareModal";
 import SuccessModal from "../ui/modals/successModal";
 import PostMedia from "./postcard/PostMedia";
-import OtherReportModal from "../ui/modals/OtherReportModal";
-import { useScreenDimensions } from "@/context/ScreenDimensionsContext";
 
 type Props = {
   post: Post;
   isPlaying: boolean;
   screenHeight: number;
   screenWidth: number;
+  tabBarHeight: number;
 };
 
 const likeIcon = require("@/assets/images/likeIcon.png");
@@ -31,7 +32,14 @@ const bookmarkIconActive = require("@/assets/images/bookmarkIconActive.png");
 const shareIcon = require("@/assets/images/shareIcon.png");
 const flagIcon = require("@/assets/images/flagIcon.png");
 
-export function PostCard({ post, isPlaying, screenHeight, screenWidth }: Props) {
+export function PostCard({
+  post,
+  isPlaying,
+  screenHeight,
+  screenWidth,
+    tabBarHeight,
+}: Props) {
+  /* ================= STATE ================= */
   const [liked, setLiked] = useState(post.liked);
   const [manualPaused, setManualPaused] = useState(false);
   const [commentsVisible, setCommentsVisible] = useState(false);
@@ -44,12 +52,16 @@ export function PostCard({ post, isPlaying, screenHeight, screenWidth }: Props) 
   const [expanded, setExpanded] = useState(false);
   const [otherVisible, setOtherVisible] = useState(false);
 
-  const { folders, toggleBookmark, getSavedFolderIds, createFolder } = useBookmarksStore();
+  const { folders, toggleBookmark, getSavedFolderIds, createFolder } =
+    useBookmarksStore();
+
   const savedFolderIds = getSavedFolderIds(post.id);
   const isBookmarked = savedFolderIds.length > 0;
-  
-  const { wp, hp } = useScreenDimensions();
 
+  // Use responsive sizing hooks
+  const { getIconSize, getAvatarSize, getFontSize, hp } = useResponsiveSize();
+
+  /* ================= DERIVED ================= */
   const postImage: string = useMemo(() => {
     switch (post.type) {
       case "image":
@@ -69,29 +81,43 @@ export function PostCard({ post, isPlaying, screenHeight, screenWidth }: Props) 
     return typeof source === "string" ? source : "";
   }
 
+  /* ================= SYNC LOGIC ================= */
   useEffect(() => {
-    if (!isPlaying) setManualPaused(false);
+    if (!isPlaying) {
+      setManualPaused(false);
+    }
   }, [isPlaying]);
 
   useEffect(() => {
     setExpanded(false);
   }, [post.id]);
 
-  const effectiveIsPlaying = post.type === "video" ? isPlaying && !manualPaused : isPlaying;
+  const effectiveIsPlaying =
+    post.type === "video" ? isPlaying && !manualPaused : isPlaying;
 
+  /* ================= HANDLERS ================= */
   const handleTogglePlay = () => {
-    if (post.type === "video") setManualPaused((prev) => !prev);
+    if (post.type === "video") {
+      setManualPaused((prev) => !prev);
+    }
   };
 
-  const handleLikeFromMedia = () => setLiked(true);
+  const handleLikeFromMedia = () => {
+    setLiked(true);
+  };
 
-  // Responsive sizing using context helpers
-  const avatarSize = Math.min(30, wp(8));
-  const iconSize = Math.min(24, wp(6));
-  const bottomPadding = hp(4);
+  // Responsive calculations using hooks
+  const avatarSize = getAvatarSize(30);
+  const iconSize = getIconSize(24);
+  const bottomPadding = hp(4); // 4% of screen height
+  const fontSizeName = getFontSize(16);
+  const fontSizeCaption = getFontSize(16);
+  const fontSizeMore = getFontSize(14);
+  const fontSizeButton = getFontSize(13);
 
   return (
     <YStack height={screenHeight} width="100%" backgroundColor="black">
+      {/* MEDIA */}
       <PostMedia
         post={post}
         isPlaying={effectiveIsPlaying}
@@ -99,20 +125,31 @@ export function PostCard({ post, isPlaying, screenHeight, screenWidth }: Props) 
         onLike={handleLikeFromMedia}
         screenWidth={screenWidth}
         screenHeight={screenHeight}
+        tabBarHeight={tabBarHeight}
       />
 
+      {/* OVERLAY */}
       <YStack position="absolute" bottom={bottomPadding} width="100%">
         <XStack padding="$4" alignItems="flex-end">
           <YStack flex={1} gap="$2">
             <XStack gap="$4" alignItems="center" flexWrap="wrap">
               <XStack gap="$2" alignItems="center">
                 <Image
-                  source={post.author?.avatarUrl ? { uri: post.author.avatarUrl } : require("@/assets/images/profile.png")}
+                  source={
+                    post.author?.avatarUrl
+                      ? { uri: post.author.avatarUrl }
+                      : require("@/assets/images/profile.png")
+                  }
                   width={avatarSize}
                   height={avatarSize}
                   borderRadius={avatarSize / 2}
                 />
-                <Text color={colors.white} fontSize={Math.min(16, wp(4))} fontFamily="$body" fontWeight="500">
+                <Text
+                  color={colors.white}
+                  fontSize={fontSizeName}
+                  fontFamily={"$body"}
+                  fontWeight="500"
+                >
                   {post.author?.name || "Unknown"}
                 </Text>
               </XStack>
@@ -123,12 +160,17 @@ export function PostCard({ post, isPlaying, screenHeight, screenWidth }: Props) 
                   borderColor: colors.white,
                   height: Math.max(22, hp(3)),
                   borderRadius: 8,
-                  paddingHorizontal: Math.min(6, wp(2)),
+                  paddingHorizontal: Math.min(6, screenWidth * 0.02),
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Text color={colors.white} fontSize={Math.min(13, wp(3.5))} fontFamily="$body" fontWeight="500">
+                <Text
+                  color={colors.white}
+                  fontSize={fontSizeButton}
+                  fontFamily={"$body"}
+                  fontWeight="500"
+                >
                   following
                 </Text>
               </TouchableOpacity>
@@ -138,20 +180,32 @@ export function PostCard({ post, isPlaying, screenHeight, screenWidth }: Props) 
               <XStack maxWidth={`${screenWidth * 0.8}px`} alignItems="flex-end">
                 <Text
                   color={colors.white}
-                  fontFamily="$body"
-                  fontWeight="400"
-                  fontSize={Math.min(16, wp(4))}
+                  fontFamily={"$body"}
+                  fontWeight={"400"}
+                  fontSize={fontSizeCaption}
                   numberOfLines={expanded ? undefined : 3}
                 >
                   {post.caption}
                 </Text>
+
                 {post.caption.length > 90 && (
                   <Pressable onPress={() => setExpanded((p) => !p)}>
                     <LinearGradient
                       colors={["transparent", "rgba(55, 55, 55, 0.6)"]}
-                      style={{ position: "absolute", bottom: 0, height: 24, width: "100%" }}
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        height: 24,
+                        width: "100%",
+                      }}
                     />
-                    <Text color={colors.white} fontSize={Math.min(14, wp(3.5))} fontWeight="600" fontFamily="$body">
+                    <Text
+                      color={colors.white}
+                      fontSize={fontSizeMore}
+                      fontWeight="600"
+                      fontFamily={"$body"}
+                      alignSelf="flex-end"
+                    >
                       {expanded ? "less" : "more"}
                     </Text>
                   </Pressable>
@@ -161,18 +215,35 @@ export function PostCard({ post, isPlaying, screenHeight, screenWidth }: Props) 
           </YStack>
 
           <YStack gap="$4" alignItems="center">
+            {/* LIKE */}
             <Pressable onPress={() => setLiked((p) => !p)}>
-              <Image source={liked ? likeIconActive : likeIcon} width={iconSize} height={iconSize} />
+              <Image
+                source={liked ? likeIconActive : likeIcon}
+                width={iconSize}
+                height={iconSize}
+              />
             </Pressable>
+
+            {/* COMMENT */}
             <Pressable onPress={() => setCommentsVisible(true)}>
               <Image source={commentIcon} width={iconSize} height={iconSize} />
             </Pressable>
+
+            {/* BOOKMARK */}
             <Pressable onPress={() => setFoldersVisible(true)}>
-              <Image source={isBookmarked ? bookmarkIconActive : bookmarkIcon} width={iconSize} height={iconSize} />
+              <Image
+                source={isBookmarked ? bookmarkIconActive : bookmarkIcon}
+                width={iconSize}
+                height={iconSize}
+              />
             </Pressable>
+
+            {/* SHARE */}
             <Pressable onPress={() => setShareVisible(true)}>
               <Image source={shareIcon} width={iconSize} height={iconSize} />
             </Pressable>
+
+            {/* REPORT */}
             <Pressable onPress={() => setConfirmVisible(true)}>
               <Image source={flagIcon} width={iconSize} height={iconSize} />
             </Pressable>
@@ -180,14 +251,79 @@ export function PostCard({ post, isPlaying, screenHeight, screenWidth }: Props) 
         </XStack>
       </YStack>
 
-      <CommentsSheet visible={commentsVisible} onClose={() => setCommentsVisible(false)} />
-      <ConfirmReportModal visible={confirmVisible} onClose={() => setConfirmVisible(false)} onConfirm={() => { setConfirmVisible(false); setReasonsVisible(true); }} />
-      <ReportReasonsModal visible={reasonsVisible} onClose={() => setReasonsVisible(false)} onSelectReason={() => { setReasonsVisible(false); setSuccessVisible(true); }} onSelectOther={() => { setReasonsVisible(false); setOtherVisible(true); }} />
-      <OtherReportModal visible={otherVisible} onClose={() => setOtherVisible(false)} onSubmit={() => { setOtherVisible(false); setSuccessVisible(true); }} />
-      <ShareModal visible={shareVisible} onClose={() => setShareVisible(false)} post={post} />
-      <SuccessModal visible={successVisible} type="success" onClose={() => setSuccessVisible(false)} autoClose title="Thank you for reporting this post" message="Your feedback is important to us." />
-      <BookmarkFoldersModal visible={foldersVisible} folders={folders} savedFolderIds={savedFolderIds} onClose={() => setFoldersVisible(false)} onToggleFolder={(folderId) => toggleBookmark(post.id, folderId)} onCreateNew={() => { setFoldersVisible(false); setCreateVisible(true); }} />
-      <CreateFolderModal visible={createVisible} post={post} onClose={() => setCreateVisible(false)} onSave={(name) => { createFolder(name, postImage, post.id); setCreateVisible(false); }} />
+      {/* MODALS */}
+      <CommentsSheet
+        visible={commentsVisible}
+        onClose={() => setCommentsVisible(false)}
+      />
+
+      <ConfirmReportModal
+        visible={confirmVisible}
+        onClose={() => setConfirmVisible(false)}
+        onConfirm={() => {
+          setConfirmVisible(false);
+          setReasonsVisible(true);
+        }}
+      />
+
+      <ReportReasonsModal
+        visible={reasonsVisible}
+        onClose={() => setReasonsVisible(false)}
+        onSelectReason={(reason) => {
+          setReasonsVisible(false);
+          setSuccessVisible(true);
+        }}
+        onSelectOther={() => {
+          setReasonsVisible(false);
+          setOtherVisible(true);
+        }}
+      />
+
+      <OtherReportModal
+        visible={otherVisible}
+        onClose={() => setOtherVisible(false)}
+        onSubmit={(reason) => {
+          setOtherVisible(false);
+          setSuccessVisible(true);
+        }}
+      />
+
+      <ShareModal
+        visible={shareVisible}
+        onClose={() => setShareVisible(false)}
+        post={post}
+      />
+
+      <SuccessModal
+        visible={successVisible}
+        type="success"
+        onClose={() => setSuccessVisible(false)}
+        autoClose
+        title="Thank you for reporting this post"
+        message="Your feedback is important to us. While we review this content, you won't see this user's posts again."
+      />
+
+      <BookmarkFoldersModal
+        visible={foldersVisible}
+        folders={folders}
+        savedFolderIds={savedFolderIds}
+        onClose={() => setFoldersVisible(false)}
+        onToggleFolder={(folderId) => toggleBookmark(post.id, folderId)}
+        onCreateNew={() => {
+          setFoldersVisible(false);
+          setCreateVisible(true);
+        }}
+      />
+
+      <CreateFolderModal
+        visible={createVisible}
+        post={post}
+        onClose={() => setCreateVisible(false)}
+        onSave={(name) => {
+          createFolder(name, postImage, post.id);
+          setCreateVisible(false);
+        }}
+      />
     </YStack>
   );
 }

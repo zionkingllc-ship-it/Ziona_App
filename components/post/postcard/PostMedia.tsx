@@ -17,6 +17,7 @@ interface Props {
   onLike?: () => void;
   screenWidth: number;
   screenHeight: number;
+  tabBarHeight: number;
 }
 
 export default function PostMedia({
@@ -26,6 +27,7 @@ export default function PostMedia({
   onLike,
   screenWidth,
   screenHeight,
+  tabBarHeight,
 }: Props) {
   const heartScale = useSharedValue(0);
   const heartOpacity = useSharedValue(0);
@@ -38,7 +40,6 @@ export default function PostMedia({
   const triggerHeart = () => {
     heartScale.value = 0;
     heartOpacity.value = 1;
-
     heartScale.value = withTiming(1.2, { duration: 180 }, () => {
       heartScale.value = withTiming(1, { duration: 100 }, () => {
         heartScale.value = withTiming(0, { duration: 200 });
@@ -59,8 +60,9 @@ export default function PostMedia({
           triggerHeart={triggerHeart}
           screenWidth={screenWidth}
           screenHeight={screenHeight}
+          tabBarHeight={tabBarHeight}
         />
-      );  
+      );
 
     case "text":
       return (
@@ -75,7 +77,7 @@ export default function PostMedia({
         />
       );
 
-    case "carousel":
+    case "image":
       return (
         <CarouselPostCard
           post={post}
