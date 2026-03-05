@@ -1,3 +1,4 @@
+// app/_layout.tsx
 import { queryClient } from "@/lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
@@ -8,16 +9,19 @@ import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TamaguiProvider } from "tamagui";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ScreenDimensionsProvider } from "@/context/ScreenDimensionsContext";
 import NotificationProvider from "@/providers/notificationProvider";
 import config from "@/tamagui.config";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useAuthStore } from "@/store/useAuthStore";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const scheme = useColorScheme() ?? "light";
+  const initializeAuth = useAuthStore((s) => s.initializeAuth);
+  const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
 
   const [fontsLoaded] = useFonts({
     MonaSans_400: require("../assets/fonts/MonaSans-Regular.ttf"),
@@ -35,11 +39,17 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded) {
-      SplashScreen.hideAsync();
+      initializeAuth();
     }
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) {
+  useEffect(() => {
+    if (fontsLoaded && !isBootstrapping) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, isBootstrapping]);
+
+  if (!fontsLoaded || isBootstrapping) {
     return null;
   }
 

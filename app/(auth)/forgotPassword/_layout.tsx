@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-export default function forgotLayout() {
+export default function ForgotLayout() {
   return (
     <>
       <StatusBar style="dark" translucent /> 

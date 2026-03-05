@@ -1,5 +1,5 @@
 import { router } from 'expo-router'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '@/store/useAuthStore'
 
 export function useRequireAuth() {
   const { isAuthenticated } = useAuthStore()

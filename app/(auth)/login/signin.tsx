@@ -3,53 +3,98 @@ import Header from "@/components/layout/header";
 import { TextInputWithIcon } from "@/components/ui/TextInputWithIcon";
 import { SimpleButton } from "@/components/ui/centerTextButton";
 import colors from "@/constants/colors";
-import { isPasswordValid } from "@/utils/passwordRules";
-import { Eye, EyeClosed } from "@tamagui/lucide-icons";
+import { useResponsive } from "@/hooks/useResponsive";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable } from "react-native";
 import { Image, Text, YStack } from "tamagui";
+import { EyeClosed, Eye } from "@tamagui/lucide-icons";
+
+import { useAsyncStore } from "@/store/useAsyncStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import { authApi } from "@/services/api/authApi";
+import { isLoginPasswordValid } from "@/utils/passwordRules";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function Email() {
+export default function SignIn() {
+  const { wp, hp, fs } = useResponsive();
+
+  const setAuth = useAuthStore((s) => s.setAuth);
+
+  const start = useAsyncStore((s) => s.start);
+  const stop = useAsyncStore((s) => s.stop);
+  const isLoading = useAsyncStore((s) => s.isLoading("signin"));
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isFocus, setIsFocus] = useState(false);
-  const [isFocus1, setIsFocus1] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isFocusEmail, setIsFocusEmail] = useState(false);
+  const [isFocusPassword, setIsFocusPassword] = useState(false);
   const [show, setShow] = useState(false);
 
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [passwordClientError, setPasswordClientError] = useState<string | null>(null);
+
   const isValidEmail = emailRegex.test(email);
-  const Xspecial = require("@/assets/images/closeSquare.png");
-  const showInvalid = isFocus && email.length > 0 && !isValidEmail;
+  const passwordIsValid = isLoginPasswordValid(password);
 
-  const passwordIsValid = isPasswordValid(password);
-  const showInvalid1 = isFocus1 && password.length > 0 && !passwordIsValid;
-
-  const visualValidEmail: boolean | undefined = !isFocus
+  const visualValidEmail: boolean | undefined = !isFocusEmail
     ? undefined
-    : showInvalid
-      ? false
-      : true;
-  const visualValidPassword: boolean | undefined = !isFocus1
+    : isValidEmail
+    ? true
+    : false;
+
+  const visualValidPassword: boolean | undefined = !isFocusPassword
     ? undefined
-    : showInvalid1
-      ? false
-      : true;
+    : passwordIsValid
+    ? true
+    : false;
 
-  const handleNext = () => {
-    if (!isValidEmail || loading) return;
+  const handleNext = async () => {
+    if (!isValidEmail || !passwordIsValid || isLoading) return;
 
-    setLoading(true);
+    try {
+      setAuthError(null);
+      setPasswordClientError(null);
 
-    // Allow spinner to render before navigation
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        router.push("/(tabs)/feed");
-      }, 120);
-    });
+      start("signin");
+
+      const response = await authApi.signIn({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (response.requiresOtp) {
+        router.push({
+          pathname: "/(auth)/otp",
+          params: { email: email.trim().toLowerCase() },
+        });
+        return;
+      }
+
+      if (response.user && response.tokens) {
+        setAuth(response.user, response.tokens);
+        router.replace("/(tabs)/feed");
+      }
+    } catch {
+      setAuthError("Email or password incorrect");
+    } finally {
+      stop("signin");
+    }
   };
+
+  const handlePasswordBlur = () => {
+    setIsFocusPassword(false);
+
+    if (password.length > 0 && !passwordIsValid) {
+      setPasswordClientError("Enter a valid password");
+    } else {
+      setPasswordClientError(null);
+    }
+  };
+
+  const mailIcon = require("@/assets/images/mailWithBoder.png");
+  const Xspecial = require("@/assets/images/closeSquare.png");
 
   return (
     <KeyboardAvoidingWrapper>
@@ -57,103 +102,113 @@ export default function Email() {
 
       <YStack
         flex={1}
-        padding="$4"
-        gap="$4"
+        paddingHorizontal={wp(6)}
+        gap={hp(2)}
         alignItems="center"
-        marginTop="$10"
+        marginTop={hp(8)}
         width="100%"
       >
         <Image
-          source={require("@/assets/images/mailWithBoder.png")}
-          width="$7"
-          height="$7"
-          borderRadius="$6"
+          source={mailIcon}
+          width={wp(18)}
+          height={wp(18)}
+          borderRadius={wp(2)}
         />
 
-        <YStack alignItems="center" marginTop="$6" gap="$3">
-          <Text fontSize="$4" fontFamily={"$body"} fontWeight="600">
-            Your email address
+        <YStack alignItems="center" marginTop={hp(3)} gap={hp(1.5)}>
+          <Text fontSize={fs(22)} fontWeight="600" textAlign="center">
+            Sign in
           </Text>
         </YStack>
-        <YStack width={"100%"}>
+
+        {/* EMAIL */}
+        <YStack width="100%" gap={hp(1)}>
           <TextInputWithIcon
             value={email}
-            onfocus={isFocus}
-            placeholder="Username/Email"
-            headingText="Email address"
+            onfocus={isFocusEmail}
+            placeholder="Email address"
+            headingText="Email"
             onChangeText={setEmail}
             keyboardType="email-address"
-            endIconVisible={isFocus}
+            endIconVisible={isFocusEmail}
             isValid={visualValidEmail}
-            onFocus={() => setIsFocus(true)}
-            onBlur={() => setIsFocus(false)}
-            endIcon={<Image src={Xspecial} width="$1.5" />}
+            onFocus={() => setIsFocusEmail(true)}
+            onBlur={() => setIsFocusEmail(false)}
+            endIcon={<Image source={Xspecial} width={wp(5)} height={wp(5)} />}
             onEndIconPress={() => setEmail("")}
           />
-          {showInvalid && (
-            <Text
-              fontSize="$3"
-              fontFamily={"$body"}
-              color={colors.errorText}
-              alignSelf="flex-start"
-              marginTop={"$2"}
-            >
-              This username/email does not exist
-            </Text>
-          )}
         </YStack>
-        <YStack width={"100%"}>
+
+        {/* PASSWORD */}
+        <YStack width="100%" gap={hp(1)}>
           <TextInputWithIcon
             value={password}
             placeholder="Enter password"
-            endIconVisible={password.length > 0 && isFocus1}
-            onChangeText={setPassword}
-            onfocus={isFocus1}
             headingText="Password"
+            onfocus={isFocusPassword}
             isValid={visualValidPassword}
-            onFocus={() => setIsFocus1(true)}
-            onBlur={() => setIsFocus1(false)}
+            onFocus={() => setIsFocusPassword(true)}
+            onBlur={handlePasswordBlur}
+            onChangeText={setPassword}
+            secureTextEntry={!show}
+            endIconVisible={password.length > 0 && isFocusPassword}
             endIcon={
               show ? (
-                <Eye size={24} color={colors.inputIconColor} />
+                <Eye size={wp(5)} color={colors.inputIconColor} />
               ) : (
-                <EyeClosed size={24} color={colors.inputIconColor} />
+                <EyeClosed size={wp(5)} color={colors.inputIconColor} />
               )
             }
-            secureTextEntry={!show}
             onEndIconPress={() => setShow((prev) => !prev)}
           />
-          {showInvalid1 && (
+
+          {passwordClientError && (
             <Text
-              fontSize="$3"
-              fontFamily={"$body"}
+              fontSize={fs(13)}
               color={colors.errorText}
               alignSelf="flex-start"
-              marginTop={"$2"}
+              marginTop={hp(0.5)}
             >
-              You have entered an incorrect password
+              {passwordClientError}
             </Text>
           )}
+
           <Pressable onPress={() => router.push("/(auth)/forgotPassword")}>
             <Text
-              fontSize="$3"
-              fontFamily={"$body"}
+              fontSize={fs(13)}
               color={colors.forgotPassword}
               alignSelf="flex-end"
-              marginTop={"$2"}
+              marginTop={hp(0.5)}
             >
               Forgot password?
             </Text>
           </Pressable>
         </YStack>
+
+        {authError && (
+          <Text
+            fontSize={fs(13)}
+            color={colors.errorText}
+            alignSelf="flex-start"
+            marginTop={hp(1)}
+          >
+            {authError}
+          </Text>
+        )}
+
         <SimpleButton
           text="Next"
           textColor={colors.buttonText}
           color={colors.primaryButton}
-          disabled={!isValidEmail || !passwordIsValid}
-          loading={loading}
+          disabled={!isValidEmail || !passwordIsValid || isLoading}
+          loading={isLoading}
           onPress={handleNext}
-          style={{ width: "100%", marginTop: 20 }}
+          style={{
+            width: "100%",
+            marginTop: hp(3),
+            height: hp(6.5),
+          }}
+          textSize={fs(16)}
         />
       </YStack>
     </KeyboardAvoidingWrapper>

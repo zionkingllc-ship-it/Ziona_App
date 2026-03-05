@@ -5,8 +5,8 @@ import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { router } from "expo-router";
 import { Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Image, Text, YStack } from "tamagui";
+import { useGoogleAuth } from "@/services/auth/useGoogleAuth";
 
 const cards = [
   {
@@ -29,149 +29,163 @@ const cards = [
 export default function AuthIndex() {
   const { wp, hp, fs } = useResponsive();
 
+  const { promptAsync, request } = useGoogleAuth();
+
+const handleGoogleSignIn = () => {
+  console.log("Google login pressed");
+  promptAsync();
+};
+
   const facebook = require("@/assets/images/facebook.png");
   const google = require("@/assets/images/google.png");
   const mail = require("@/assets/images/maiIcon.png");
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <YStack flex={1}>
-        {/* ================= CAROUSEL ================= */}
-        <MarqueeCarousel cards={cards} heightRatio={30} animationType="loop" />
+    <YStack flex={1}>
+      {/* ================= CAROUSEL ================= */}
+      <MarqueeCarousel cards={cards} heightRatio={30} animationType="loop" />
 
-        {/* ================= CONTENT ================= */}
-        <YStack
-          flex={1}
-          justifyContent="space-between"
-          paddingHorizontal={wp(6)}
-          paddingTop={hp(2)}
-          paddingBottom={hp(2)}
-        >
-          {/* -------- Title Section -------- */}
-          <YStack gap={hp(1.5)}>
-            <Text
-              fontSize={fs(22)}
-              fontWeight="600"
-              textAlign="center"
-              color={colors.text}
-            >
-              Sign up for Ziona
-            </Text>
-
-            <Text
-              fontSize={fs(15)}
-              fontWeight="400"
-              textAlign="center"
-              color={colors.subHeader}
-              lineHeight={fs(20)}
-            >
-              Create a profile, follow worshippers, share worship moments, and
-              join a global community of faith.
-            </Text>
-          </YStack>
-
-          {/* -------- Buttons -------- */}
-          <YStack gap={hp(1.5)} paddingVertical={hp(1.5)}>
-            <PrimaryButton
-              text="Continue with Email"
-              color={colors.white}
-              textSize={fs(15)}
-              textWeight="400"
-              onPress={() => router.push("/(auth)/email")}
-              startIcon={<Image source={mail} width={wp(6)} height={wp(6)} />}
-            />
-
-            <PrimaryButton
-              text="Continue with Google"
-              color={colors.white}
-              textSize={fs(15)}
-              textWeight="400"
-              onPress={() => {}}
-              startIcon={<Image source={google} width={wp(6)} height={wp(6)} />}
-            />
-
-            <PrimaryButton
-              text="Continue with Facebook"
-              color={colors.white}
-              textSize={fs(15)}
-              textWeight="400"
-              onPress={() => {}}
-              startIcon={
-                <Image source={facebook} width={wp(6)} height={wp(6)} />
-              }
-            />
-          </YStack>
-
-          {/* -------- Footer -------- */}
-          <YStack
-            paddingVertical={hp(1.5)}
-            gap={hp(9)}
-            alignItems="center"
-            justifyContent="space-between"
+      {/* ================= CONTENT ================= */}
+      <YStack
+        flex={1}
+        justifyContent="space-between"
+        paddingHorizontal={wp(6)}
+        paddingTop={hp(2)}
+        paddingBottom={hp(2)}
+      >
+        {/* -------- Title Section -------- */}
+        <YStack gap={hp(1.5)}>
+          <Text
+            fontSize={fs(22)}
+            fontWeight="600"
+            fontFamily={"$body"}
+            textAlign="center"
+            color={colors.text}
           >
-            <Text
-              fontSize={fs(13)}
-              textAlign="center"
-              color={colors.termsText}
-              lineHeight={fs(18)}
+            Sign up for Ziona
+          </Text>
+
+          <Text
+            fontSize={fs(15)}
+            fontWeight="400"
+            textAlign="center"
+            fontFamily={"$body"}
+            color={colors.subHeader}
+            lineHeight={fs(20)}
+          >
+            Create a profile, follow worshippers, share worship moments, and
+            join a global community of faith.
+          </Text>
+        </YStack>
+
+        {/* -------- Buttons -------- */}
+        <YStack gap={hp(1.5)} paddingVertical={hp(1.5)}>
+          <PrimaryButton
+            text="Continue with Email"
+            color={colors.white}
+            textSize={fs(15)}
+            textWeight="400"
+            onPress={() => router.push("/(auth)/email")}
+            startIcon={<Image source={mail} width={wp(6)} height={wp(6)} />}
+          />
+
+          <PrimaryButton
+            text="Continue with Google"
+            color={colors.white}
+            textSize={fs(15)}
+            textWeight="400"
+            onPress={handleGoogleSignIn}
+            startIcon={<Image source={google} width={wp(6)} height={wp(6)} />}
+          />
+
+          <PrimaryButton
+            text="Continue with Facebook"
+            color={colors.white}
+            textSize={fs(15)}
+            textWeight="400"
+            onPress={() => {}}
+            startIcon={<Image source={facebook} width={wp(6)} height={wp(6)} />}
+          />
+        </YStack>
+
+        {/* -------- Footer -------- */}
+        <YStack
+          paddingVertical={hp(1.5)}
+          gap={hp(9)}
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Text
+            fontSize={fs(13)}
+            textAlign="center"
+            fontFamily={"$body"}
+            fontWeight={"400"}
+            color={colors.termsText}
+            lineHeight={fs(18)}
+          >
+            By continuing, you agree to Ziona’s{" "}
+            <InlineUnderlineText
+              color={colors.termsButton}
+              fontFamily={"$body"}
+              weight="500"
+              thickness={1.5}
+              offset={-1}
             >
-              By continuing, you agree to Ziona’s{" "}
+              Terms of use
+            </InlineUnderlineText>{" "}
+            and confirm that you have read Ziona’s{" "}
+            <Pressable
+              onPress={() =>
+                router.push(
+                  "https://www.privacypolicies.com/live/db459a7c-78ec-4d12-8d82-cf20f7e716a6",
+                )
+              }
+            >
               <InlineUnderlineText
                 color={colors.termsButton}
+                fontFamily={"$body"}
                 weight="500"
-                thickness={1.5}
+                thickness={1}
                 offset={-1}
               >
-                Terms of use
-              </InlineUnderlineText>{" "}
-              and confirm that you have read Ziona’s{" "}
-              <Pressable
-                onPress={() =>
-                  router.push(
-                    "https://www.privacypolicies.com/live/db459a7c-78ec-4d12-8d82-cf20f7e716a6",
-                  )
-                }
+                Privacy Policy
+              </InlineUnderlineText>
+            </Pressable>
+          </Text>
+          <YStack alignItems="center">
+            <Pressable
+              style={{
+                paddingVertical: hp(1),
+                paddingHorizontal: wp(4),
+              }}
+              onPress={() => router.push("/(tabs)/feed")}
+            >
+              <InlineUnderlineText
+                color={colors.text}
+                thickness={1.5}
+                fontFamily={"$body"}
+                offset={-1}
+                weight="400"
               >
-                <InlineUnderlineText
-                  color={colors.termsButton}
-                  weight="500"
-                  thickness={1}
-                  offset={-1}
-                >
-                  Privacy Policy
-                </InlineUnderlineText>
-              </Pressable>
-            </Text>
-            <YStack alignItems="center">
-              <Pressable
-                style={{
-                  paddingVertical: hp(1),
-                  paddingHorizontal: wp(4),
-                }}
-                onPress={() => router.push("/(tabs)/feed")}
-              >
-                <InlineUnderlineText
-                  color={colors.text}
-                  thickness={1.5}
-                  offset={-1}
-                  weight="400"
-                >
-                  Skip for now
-                </InlineUnderlineText>
-              </Pressable>
+                Skip for now
+              </InlineUnderlineText>
+            </Pressable>
 
-              <Pressable onPress={() => router.push("/(auth)/login")}>
-                <Text fontSize={fs(14)}>
-                  Already have an account?{" "}
-                  <Text color={colors.primary} fontWeight="700">
-                    Login
-                  </Text>
+            <Pressable onPress={() => router.push("/(auth)/login")}>
+              <Text fontSize={fs(14)}>
+                Already have an account?{" "}
+                <Text
+                  color={colors.primary}
+                  fontFamily={"$body"}
+                  fontWeight="400"
+                >
+                  Login
                 </Text>
-              </Pressable>
-            </YStack>
+              </Text>
+            </Pressable>
           </YStack>
         </YStack>
       </YStack>
-    </SafeAreaView>
+    </YStack>
   );
 }

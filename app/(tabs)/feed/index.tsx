@@ -1,17 +1,16 @@
-import { useScreenDimensions } from "@/context/ScreenDimensionsContext";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, View, ViewToken } from "react-native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, ViewToken } from "react-native";
+import { View } from "tamagui";
 
 import FeedHeader from "@/components/feedHeader";
-import  {PostCard}  from "@/components/post/PostCard";
+import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
 import { Post } from "@/types/post";
 import { useFocusEffect } from "@react-navigation/native";
 
 export default function Feed() {
-  const { topInset } = useScreenDimensions();
   const tabBarHeight = useBottomTabBarHeight();
 
   const flatListRef = useRef<FlatList<Post>>(null);
@@ -38,6 +37,8 @@ export default function Feed() {
     setActivePostId(null);
     flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [feedType]);
+  console.log("containerHeight", containerHeight);
+  console.log("tabBarHeight", tabBarHeight);
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 80,
@@ -77,11 +78,9 @@ export default function Feed() {
     <View
       style={{
         flex: 1,
-        backgroundColor: colors.black,
-        paddingTop: topInset,
       }}
     >
-      <View style={{ width: "100%" }}>
+      <View width={"100%"} marginTop={35}>
         <FeedHeader
           feedType={feedType}
           onChangeFeedType={setFeedType}
@@ -123,7 +122,7 @@ export default function Feed() {
             onViewableItemsChanged={onViewableItemsChanged}
             windowSize={3}
             initialNumToRender={2}
-            maxToRenderPerBatch={2}
+            maxToRenderPerBatch={2} 
             removeClippedSubviews
           />
         )}

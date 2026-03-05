@@ -72,7 +72,7 @@ export default function VideoPostCard({
   const videoGesture = Gesture.Exclusive(doubleTap, singleTap, longPress);
 
   // 🔥 SCRUB BAR POSITION — ALWAYS ABOVE TAB BAR
-  const scrubBottom = tabBarHeight;
+  const scrubBottom = 0;
 
   const scrubWidth = screenWidth * 0.9;
   const scrubHeight = 7;

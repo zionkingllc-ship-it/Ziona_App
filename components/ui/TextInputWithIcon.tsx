@@ -65,14 +65,14 @@ export function TextInputWithIcon({
         ? colors.successText
         : colors.inputTitle;
 
-  const INPUT_HEIGHT = hp(6.5);
+  const INPUT_HEIGHT = hp(7);
   const ICON_SIZE = wp(5);
 
   return (
     <XStack
       alignItems="center"
-      paddingHorizontal={wp(4)}
-      paddingVertical={wp(2)}
+      paddingHorizontal={wp(3)}
+      paddingVertical={wp(1.5)}
       height={INPUT_HEIGHT}
       width="100%"
       borderColor={borderColor}
@@ -92,7 +92,7 @@ export function TextInputWithIcon({
 
       <YStack flex={1} justifyContent="center">
         {onfocus && (
-          <Text fontSize={fs(11)} color={headerColor} marginBottom={hp(0.3)}>
+          <Text fontSize={fs(10)} color={headerColor} marginBottom={hp(0.3)}>
             {headingText}
           </Text>
         )}

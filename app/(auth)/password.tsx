@@ -3,6 +3,8 @@ import { KeyboardAvoidingWrapper } from "@/components/layout/KeyboardAvoidingWra
 import { SimpleButton } from "@/components/ui/centerTextButton";
 import { TextInputWithIcon } from "@/components/ui/TextInputWithIcon";
 import colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
+import { useSignupStore } from "@/store/useSignupStore";
 import { isPasswordValid, passwordRules } from "@/utils/passwordRules";
 import { Eye, EyeClosed } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
@@ -10,11 +12,13 @@ import { useState } from "react";
 import { Image, Text, YStack } from "tamagui";
 
 export default function CreatePassword() {
+  const { wp, hp, fs } = useResponsive();
+
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [isFocus, setIsFocus] = useState(false);
-  const [loading, setLoading] = useState(false);
-  
+
+  const setPasswordStore = useSignupStore((s) => s.setPassword);
 
   const checks = {
     length: passwordRules.minLength(password),
@@ -29,70 +33,108 @@ export default function CreatePassword() {
   const visualValidity: boolean | undefined = !isFocus
     ? undefined
     : showInvalid
-      ? false
-      : true;
+    ? false
+    : true;
 
-  const handleSubmit = () => {
-    //setLoading(true);
-    router.push("/(auth)/username");
+  const handleNext = () => {
+    if (!passwordIsValid) return;
+
+    setPasswordStore(password);
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        router.push("/(auth)/username");
+      }, 120);
+    });
   };
+
+  const lockIcon = require("@/assets/images/lockIcon.png");
+
   return (
     <KeyboardAvoidingWrapper>
       <Header />
-      <YStack flex={1} padding="$4" gap="$4" marginTop="$10" width="100%">
+
+      <YStack
+        flex={1}
+        paddingHorizontal={wp(6)}
+        gap={hp(2)}
+        alignItems="center"
+        marginTop={hp(8)}
+        width="100%"
+      >
         <Image
-          source={require("@/assets/images/lockIcon.png")}
-          width="$7"
-          height="$7"
-          borderRadius="$6"
+          source={lockIcon}
+          width={wp(18)}
+          height={wp(18)}
+          borderRadius={wp(9)}
           alignSelf="center"
         />
 
-        <YStack alignItems="center" marginTop="$6" gap="$3">
-          <Text fontSize="$4" fontWeight="600" fontFamily={"$body"}>
+        <YStack alignItems="center" marginTop={hp(3)} gap={hp(1.5)}>
+          <Text fontSize={fs(22)} fontWeight="600" textAlign="center">
             Create password
           </Text>
         </YStack>
 
-        <TextInputWithIcon
-          value={password}
-          placeholder="Enter password"
-          endIconVisible={password.length > 0 && isFocus}
-          onChangeText={setPassword}
-          onfocus={isFocus}
-          headingText="Password"
-          isValid={visualValidity}
-          onFocus={() => setIsFocus(true)}
-          onBlur={() => setIsFocus(false)}
-          endIcon={show ? <Eye size={24} color={colors.inputIconColor}/> : <EyeClosed size={24} color={colors.inputIconColor}/>}
-          secureTextEntry={!show}
-          onEndIconPress={() => setShow((prev) => !prev)}
-        />
+        <YStack width="100%" gap={hp(1)}>
+          <TextInputWithIcon
+            value={password}
+            placeholder="Enter password"
+            onfocus={isFocus}
+            headingText="Password"
+            isValid={visualValidity}
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+            onChangeText={setPassword}
+            secureTextEntry={!show}
+            endIconVisible={password.length > 0 && isFocus}
+            endIcon={
+              show ? (
+                <Eye size={wp(5)} color={colors.inputIconColor} />
+              ) : (
+                <EyeClosed size={wp(5)} color={colors.inputIconColor} />
+              )
+            }
+            onEndIconPress={() => setShow((prev) => !prev)}
+          />
+        </YStack>
 
-        <YStack gap="$2" marginLeft={5}>
-          <Text fontSize={"$4"} fontFamily={"$body"} fontWeight={"500"} color={colors.headerText}>Your password must have at least:</Text>
-          <Rule ok={checks.length} text="8 characters (20 max)" />
-          <Rule ok={checks.letterNumber} text="1 letter and 1 number" />
-          <Rule ok={checks.special} text="1 special character (e.g. ! @ &)" />
+        <YStack width="100%" gap={hp(0.8)} marginTop={hp(1)}>
+          <Rule ok={checks.length} text="8 characters (20 max)" fs={fs} />
+          <Rule ok={checks.letterNumber} text="1 letter and 1 number" fs={fs} />
+          <Rule ok={checks.special} text="1 special character (e.g. ! @ &)" fs={fs} />
         </YStack>
 
         <SimpleButton
           text="Next"
-          loading={loading}
           textColor={colors.white}
           color={colors.primary}
           disabled={!passwordIsValid}
-          onPress={handleSubmit}
+          onPress={handleNext}
+          style={{
+            width: "100%",
+            marginTop: hp(3),
+            height: hp(6.5),
+          }}
+          textSize={fs(16)}
         />
       </YStack>
     </KeyboardAvoidingWrapper>
   );
 }
 
-function Rule({ ok, text }: { ok: boolean; text: string }) {
+function Rule({
+  ok,
+  text,
+  fs,
+}: {
+  ok: boolean;
+  text: string;
+  fs: (size: number) => number;
+}) {
   return (
-    <Text  fontFamily={"$body"} fontSize={"$4"} color={ok ? colors.SUCCESS_GREEN : colors.subHeader}>
-      {ok ? "✓" : "✓"} {text}
+    <Text fontSize={fs(14)} color={ok ? colors.SUCCESS_GREEN : colors.subHeader}>
+      ✓ {text}
     </Text>
   );
 }

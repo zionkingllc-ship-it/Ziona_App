@@ -1,8 +1,7 @@
+import { AppScreen } from "@/components/layout/AppScreen";
 import { GradientBackground } from "@/components/layout/GradientBackground";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { AppScreen } from "@/components/layout/AppScreen";
-
 export default function AuthLayout() {
   return (
     <GradientBackground>

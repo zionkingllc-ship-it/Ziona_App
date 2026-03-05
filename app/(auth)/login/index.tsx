@@ -2,9 +2,10 @@ import { InlineUnderlineText } from "@/components/ui/InlineUnderlineText";
 import { MarqueeCarousel } from "@/components/ui/marquee";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
-import { Animated, Easing, Pressable, useWindowDimensions } from "react-native";
+import { Animated, Easing, Pressable } from "react-native";
 import { Image, Text, YStack } from "tamagui";
 
 const cards = [
@@ -26,11 +27,11 @@ const cards = [
 ];
 
 export default function LoginIndex() {
-  const { width, height } = useWindowDimensions();
+  const { wp, hp, fs } = useResponsive();
 
-  const CARD_WIDTH = Math.min(width * 0.7, 350);
-  const CARD_HEIGHT = height * 0.28;
-  const GAP = 16;
+  const CARD_WIDTH = Math.min(wp(70), 350);
+  const CARD_HEIGHT = hp(28);
+  const GAP = wp(4);
 
   const TOTAL_WIDTH = (CARD_WIDTH + GAP) * cards.length;
 
@@ -40,9 +41,6 @@ export default function LoginIndex() {
   const google = require("@/assets/images/google.png");
   const mail = require("@/assets/images/maiIcon.png");
 
-  /* --------------------------------------------------
-     Continuous marquee animation
-  --------------------------------------------------- */
   useEffect(() => {
     const start = () => {
       translateX.setValue(0);
@@ -59,98 +57,122 @@ export default function LoginIndex() {
   }, [TOTAL_WIDTH]);
 
   return (
-    <YStack flex={1}>
+    <YStack flex={1} >
+      {/* -------- Marquee Section -------- */}
       <YStack>
-        <MarqueeCarousel cards={cards} />
+        <MarqueeCarousel cards={cards} heightRatio={30} animationType="loop" />
       </YStack>
-      {/* ================= CONTENT ================= */}
-      <YStack padding="$5" gap="$4" justifyContent="space-between">
+
+      {/* -------- Content Section -------- */}
+      <YStack
+        flex={1} 
+        gap={hp(2)}
+        paddingHorizontal={wp(6)}
+        paddingTop={hp(2)}
+        paddingBottom={hp(2)} 
+      >
         {/* Title */}
-        <YStack marginTop={12}>
-          <Text
-            fontSize="$4"
-            fontFamily={"$body"}
-            fontWeight="600"
-            textAlign="center"
-            color={colors.text}
-          >
-            Login to Ziona
-          </Text>
-        </YStack>
+
+        <Text
+          fontSize={fs(22)}
+          fontWeight="600"
+          fontFamily={"$body"}
+          textAlign="center"
+          color={colors.text} 
+        >
+          Login to Ziona
+        </Text>
 
         {/* Buttons */}
-        <YStack gap={"$3"}>
+          <YStack gap={hp(1.5)}  >
           <PrimaryButton
             text="Continue with Username/Email"
             color={colors.white}
-            textSize={13}
+            textSize={fs(14)}
             textWeight="400"
             onPress={() => router.push("/(auth)/login/signin")}
-            startIcon={<Image source={mail} width={24} height={24} />}
+            startIcon={<Image source={mail} width={wp(6)} height={wp(6)} />}
+            style={{
+              height: hp(6.5),
+            }}
           />
 
           <PrimaryButton
             text="Continue with Google"
-            textSize={13}
+            textSize={fs(14)}
             textWeight="400"
             color={colors.white}
             onPress={() => {}}
-            startIcon={<Image source={google} width={23} height={23} />}
+            startIcon={<Image source={google} width={wp(6)} height={wp(6)} />}
+            style={{
+              height: hp(6.5),
+            }}
           />
 
           <PrimaryButton
             text="Continue with Facebook"
-            textSize={13}
+            textSize={fs(14)}
             textWeight="400"
             color={colors.white}
             onPress={() => {}}
-            startIcon={<Image source={facebook} width={23} height={23} />}
+            startIcon={<Image source={facebook} width={wp(6)} height={wp(6)} />}
+            style={{
+              height: hp(6.5),
+            }}
           />
         </YStack>
 
         {/* Footer */}
-        <YStack gap="$15" alignItems="center">
+        <YStack
+          paddingVertical={hp(1.5)}
+          gap={hp(9)}
+          alignItems="center"
+          justifyContent="space-between"
+        >
           <Text
-            fontSize="$3"
-            fontFamily={"$body"}
-            color={colors.termsText}
+            fontSize={fs(13)}
             textAlign="center"
+            fontFamily={"$body"}
+            fontWeight={"400"}
+            color={colors.termsText}
+            lineHeight={fs(18)}
           >
-            By continuing, you agree to Ziona’s{"  "}
+            By continuing, you agree to Ziona’s{" "}
             <InlineUnderlineText
               color={colors.termsButton}
+              fontFamily={"$body"}
               weight="500"
-              fontFamily="$heading"
-              thickness={2}
-              offset={-2}
+              thickness={1.5}
+              offset={-1}
             >
               Terms of use
-            </InlineUnderlineText>
-            {"    "}
+            </InlineUnderlineText>{" "}
             and confirm that you have read Ziona’s{" "}
             <InlineUnderlineText
               color={colors.termsButton}
+              fontFamily={"$body"}
               weight="500"
-              fontFamily="$heading"
-              thickness={2}
-              offset={-2}
+              thickness={1}
+              offset={-1}
             >
               Privacy Policy
             </InlineUnderlineText>
           </Text>
-          <YStack justifyContent="center" alignItems="center" marginTop={"$5"}>
-            <Pressable onPress={() => router.back()}>
-              <Text fontSize="$3" fontFamily={"$body"}>
-                Don't have an account?{" "}
+
+          <YStack alignItems="center" >
+            <Text fontSize={fs(14)}>
+              Don't have an account?{" "}
+              <Pressable onPress={() => router.back()}>
                 <Text
                   color={colors.primary}
-                  fontWeight="700"
                   fontFamily={"$body"}
+                  fontWeight="400"
+                  top={fs(3)}
                 >
                   Signup
                 </Text>
-              </Text>
-            </Pressable>
+              </Pressable>
+            </Text>
           </YStack>
         </YStack>
       </YStack>

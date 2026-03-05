@@ -7,30 +7,55 @@ import { KeyboardAvoidingWrapper } from "@/components/layout/KeyboardAvoidingWra
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { TextInputWithIcon } from "@/components/ui/TextInputWithIcon";
 import colors from "@/constants/colors";
+import { authApi } from "@/services/api/authApi";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const isValidEmail = emailRegex.test(email);
   const [isFocus, setIsFocus] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    const showInvalid = isFocus && email.length > 0 && !isValidEmail;
+  const isValidEmail = emailRegex.test(email);
+
+  const showInvalid = isFocus && email.length > 0 && !isValidEmail;
 
   const visualValidity: boolean | undefined = !isFocus
     ? undefined
     : showInvalid
-      ? false
-      : true;
+    ? false
+    : true;
 
-  const handleSendCode = () => {
-    if (!isValidEmail) return;
+  const handleSendCode = async () => {
+    if (!isValidEmail || loading) return;
 
-    // backend later
-    router.push({
-      pathname: "/(auth)/forgotPassword/verifyOtp",
-      params: { email },
-    });
+    try {
+      setLoading(true);
+
+      console.log("PASSWORD RESET REQUEST");
+      console.log("Email:", email);
+
+      const response = await authApi.requestPasswordReset(
+        email.trim().toLowerCase()
+      );
+
+      console.log("PASSWORD RESET RESPONSE:", response);
+
+      router.push({
+        pathname: "/(auth)/verifyOtp",
+        params: {
+          email: email.trim().toLowerCase(),
+          flow: "reset-password",
+        },
+      });
+    } catch (error: any) {
+      console.error(
+        "PASSWORD RESET FAILED:",
+        error?.response?.data || error
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,20 +79,27 @@ export default function ForgotPassword() {
         />
 
         <YStack alignItems="center" gap="$2" padding={10}>
-          <Text fontSize="$4" fontFamily={"$body"} fontWeight="600">
+          <Text fontSize="$4" fontFamily="$body" fontWeight="600">
             Verify your email
           </Text>
-          <Text fontSize="$3" fontFamily={"$body"} color={colors.subHeader} textAlign="center">
+
+          <Text
+            fontSize="$3"
+            fontFamily="$body"
+            color={colors.subHeader}
+            textAlign="center"
+          >
             Enter your email address and we’ll send you a 6-digit OTP code
           </Text>
         </YStack>
 
-        <YStack width="100%" gap="$2" >
+        <YStack width="100%" gap="$2">
           <TextInputWithIcon
             value={email}
             onfocus={isFocus}
             headingText="Email"
             onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
             placeholder="Email"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -86,7 +118,7 @@ export default function ForgotPassword() {
           text="Send code"
           color={colors.primary}
           textColor={colors.white}
-          disabled={!isValidEmail}
+          disabled={!isValidEmail || loading}
           onPress={handleSendCode}
           style={{ width: "100%", marginTop: 20 }}
         />

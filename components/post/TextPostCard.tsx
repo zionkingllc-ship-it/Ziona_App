@@ -67,7 +67,12 @@ export default function TextPostCard({
           backgroundColor: colors.black,
         }}
       >
-        <XStack width={contentWidth} position="relative" overflow="visible" minHeight={533}>
+        <XStack
+          width={contentWidth}
+          position="relative"
+          overflow="visible"
+          minHeight={501}
+        >
           {/* Flap */}
           <View
             position="absolute"
