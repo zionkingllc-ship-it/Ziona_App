@@ -80,66 +80,66 @@ export default function VerifyOtp() {
   /* ---------------- SUBMIT OTP ---------------- */
 
   const submitOtp = async (code: string) => {
-  if (hasSubmitted.current) return;
+    if (hasSubmitted.current) return;
 
-  hasSubmitted.current = true;
-  Keyboard.dismiss();
+    hasSubmitted.current = true;
+    Keyboard.dismiss();
 
-  line();
-  log("Submitting OTP");
-  log("Code:", code);
-  log("Email:", email);
-  log("Flow:", flow);
-  line();
+    line();
+    log("Submitting OTP");
+    log("Code:", code);
+    log("Email:", email);
+    log("Flow:", flow);
+    line();
 
-  try {
-    const response = await authApi.verifyOtp({
-      email,
-      code,
-    });
+    try {
+      /* ---------------- SIGNUP / SIGNIN VERIFY ---------------- */
 
-    log("OTP verification success");
-    log("Backend response:", response);
+      if (flow === "signup" || flow === "signin") {
+        const response = await authApi.verifyOtp({
+          email,
+          code,
+        });
 
-    /* ---------------- SIGNUP / SIGNIN ---------------- */
+        log("OTP verification success");
+        log("Backend response:", response);
 
-    if (flow === "signup" || flow === "signin") {
-      if (response.user && response.tokens) {
-        log("Saving auth tokens");
-        setAuth(response.user, response.tokens);
+        if (response.user && response.tokens) {
+          log("Saving auth tokens");
+          setAuth(response.user, response.tokens);
+        }
+
+        log("Routing to feed");
+        router.replace("/(tabs)/feed");
+        return;
       }
 
-      log("Routing to feed");
-      router.replace("/(tabs)/feed");
-      return;
+      /* ---------------- PASSWORD RESET ---------------- */
+
+      if (flow === "reset-password") {
+        log("OTP verified for password reset");
+
+        router.replace({
+          pathname: "/(auth)/forgotPassword/newPassword",
+          params: {
+            email,
+            otp: code,
+          },
+        });
+
+        return;
+      }
+    } catch (error: any) {
+      console.error(
+        "OTP verification failed:",
+        error?.response?.data || error
+      );
+
+      hasSubmitted.current = false;
+      setErrorVisible(true);
     }
+  };
 
-    /* ---------------- PASSWORD RESET ---------------- */
-
-    if (flow === "reset-password") {
-      log("OTP verified for password reset");
-
-      router.replace({
-        pathname: "/(auth)/forgotPassword/newPassword",
-        params: {
-          email,
-          otp: code,
-        },
-      });
-
-      return;
-    }
-
-  } catch (error: any) {
-    console.error(
-      "OTP verification failed:",
-      error?.response?.data || error
-    );
-
-    hasSubmitted.current = false;
-    setErrorVisible(true);
-  }
-};
   /* ---------------- HANDLE INPUT ---------------- */
 
   const handleChange = (value: string, index: number) => {
@@ -177,16 +177,22 @@ export default function VerifyOtp() {
     line();
     log("Resend OTP requested");
     log("Email:", email);
-    setTimer(50);  
-    setOtp(Array(OTP_LENGTH).fill(""))
+
+    setTimer(50);
+    setOtp(Array(OTP_LENGTH).fill(""));
+
     try {
       const response = await authApi.resendOtp(email);
+
       log("Resend success:", response);
-      setOtp(Array(OTP_LENGTH).fill(""));
+
       hasSubmitted.current = false;
-      inputsRef.current[0]?.focus(); 
+      inputsRef.current[0]?.focus();
     } catch (error: any) {
-      console.error("Resend OTP failed:", error?.response?.data || error);
+      console.error(
+        "Resend OTP failed:",
+        error?.response?.data || error
+      );
       setErrorVisible(true);
     }
 

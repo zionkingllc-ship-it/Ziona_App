@@ -10,7 +10,7 @@
     "ios": {
       "bundleIdentifier": "com.zionking.ziona",
       "associatedDomains": [
-        "applinks:ziona.app" 
+        "applinks:ziona.app"
       ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -43,7 +43,7 @@
       "expo-router",
       "expo-video",
       "expo-audio",
-      "react-native-video", 
+      "react-native-video",
       [
         "expo-splash-screen",
         {
@@ -55,7 +55,8 @@
             "backgroundColor": "#ffffff"
           }
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "router": {},
