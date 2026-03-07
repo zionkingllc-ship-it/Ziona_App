@@ -1,4 +1,3 @@
-// store/useAuthStore.ts
 import { authApi } from "@/services/api/authApi";
 import { clearAuthTokens, setAuthTokens } from "@/services/api/client";
 import { AuthState, AuthTokens, User } from "@/types";
@@ -8,6 +7,8 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 type AuthStore = AuthState & {
   isBootstrapping: boolean;
+  isInitializing: boolean;
+
   setAuth: (user: User, tokens: AuthTokens) => void;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
@@ -20,7 +21,11 @@ export const useAuthStore = create<AuthStore>()(
       tokens: null,
       isAuthenticated: false,
       mode: "unauthenticated",
+
       isBootstrapping: true,
+      isInitializing: false,
+
+      /* -------- LOGIN SUCCESS -------- */
 
       setAuth: (user, tokens) => {
         setAuthTokens({
@@ -35,6 +40,8 @@ export const useAuthStore = create<AuthStore>()(
           mode: "authenticated",
         });
       },
+
+      /* -------- LOGOUT -------- */
 
       logout: async () => {
         try {
@@ -51,14 +58,27 @@ export const useAuthStore = create<AuthStore>()(
         });
       },
 
+      /* -------- APP START AUTH CHECK -------- */
+
       initializeAuth: async () => {
-        const { tokens } = get();
+        const state = get();
+
+        /* prevent double initialization */
+        if (state.isInitializing) return;
+
+        set({ isInitializing: true });
+
+        const tokens = state.tokens;
 
         if (!tokens?.accessToken) {
-          set({ isBootstrapping: false });
+          set({
+            isBootstrapping: false,
+            isInitializing: false,
+          });
           return;
         }
 
+        /* restore axios tokens */
         setAuthTokens({
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
@@ -72,22 +92,22 @@ export const useAuthStore = create<AuthStore>()(
             isAuthenticated: true,
             mode: "authenticated",
             isBootstrapping: false,
+            isInitializing: false,
           });
         } catch (err) {
-          console.log("getMe failed — keeping persisted session");
+          console.log("Auth verification failed, keeping stored session");
 
+          /* do NOT logout automatically */
           set({
             isAuthenticated: true,
             mode: "authenticated",
             isBootstrapping: false,
+            isInitializing: false,
           });
         }
-        // catch {
-        //   await get().logout();
-        //   set({ isBootstrapping: false });
-        // }
       },
     }),
+
     {
       name: "auth-storage",
       storage: createJSONStorage(() => AsyncStorage),
@@ -98,19 +118,6 @@ export const useAuthStore = create<AuthStore>()(
         isAuthenticated: state.isAuthenticated,
         mode: state.mode,
       }),
-
-      onRehydrateStorage: () => (state) => {
-        console.log("🟦 Auth store rehydrated");
-
-        if (state?.tokens?.accessToken) {
-          setAuthTokens({
-            accessToken: state.tokens.accessToken,
-            refreshToken: state.tokens.refreshToken,
-          });
-        }
-
-        state?.initializeAuth();
-      },
     },
   ),
 );

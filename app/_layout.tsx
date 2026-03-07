@@ -1,29 +1,26 @@
 import { queryClient } from "@/lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
-import { Stack, router, useSegments } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TamaguiProvider } from "tamagui";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as NavigationBar from "expo-navigation-bar";
 
 import { ScreenDimensionsProvider } from "@/context/ScreenDimensionsContext";
 import NotificationProvider from "@/providers/notificationProvider";
-import { useAuthStore } from "@/store/useAuthStore";
 import config from "@/tamagui.config";
+
+import AuthGate from "@/components/auth/AuthGate";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const scheme = useColorScheme() ?? "light";
-  const segments = useSegments();
-
-  const initializeAuth = useAuthStore((s) => s.initializeAuth);
-  const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const [fontsLoaded] = useFonts({
     MonaSans_400: require("../assets/fonts/MonaSans-Regular.ttf"),
@@ -39,30 +36,22 @@ export default function RootLayout() {
     Merienda_600: require("../assets/fonts/Merienda-SemiBold.ttf"),
   });
 
+  /* -------- FORCE BLACK ANDROID NAVIGATION BAR -------- */
 
   useEffect(() => {
-    if (fontsLoaded && !isBootstrapping) {
+    NavigationBar.setBackgroundColorAsync("#000000");
+    NavigationBar.setButtonStyleAsync("light");
+  }, []);
+
+  /* -------- HIDE SPLASH AFTER FONTS -------- */
+
+  useEffect(() => {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, isBootstrapping]);
+  }, [fontsLoaded]);
 
-  /* -------- AUTH REDIRECT GUARD -------- */
-
-  useEffect(() => {
-    if (isBootstrapping) return;
-
-    const inAuthGroup = segments[0] === "(auth)";
-
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace("/(auth)");
-    }
-
-    if (isAuthenticated && inAuthGroup) {
-      router.replace("/(tabs)/feed");
-    }
-  }, [isAuthenticated, isBootstrapping, segments]);
-
-  if (!fontsLoaded || isBootstrapping) {
+  if (!fontsLoaded) {
     return null;
   }
 
@@ -71,13 +60,16 @@ export default function RootLayout() {
       <ScreenDimensionsProvider>
         <TamaguiProvider config={config} defaultTheme={scheme} disableInjectCSS>
           <StatusBar style="dark" />
+
           <NotificationProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <QueryClientProvider client={queryClient}>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="(auth)" />
-                </Stack>
+                <AuthGate>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="(auth)" />
+                  </Stack>
+                </AuthGate>
               </QueryClientProvider>
             </GestureHandlerRootView>
           </NotificationProvider>
@@ -85,4 +77,4 @@ export default function RootLayout() {
       </ScreenDimensionsProvider>
     </SafeAreaProvider>
   );
-}
+} 
