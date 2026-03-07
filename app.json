@@ -10,7 +10,7 @@
 
     "androidNavigationBar": {
       "backgroundColor": "#ffffff",
-      "barStyle": "light-content"
+      "barStyle": "dark-content"
     },
 
     "ios": {

@@ -33,10 +33,18 @@ export default function AuthIndex() {
 
   const { signInWithGoogle } = useGoogleAuth();
 
-  const handleGoogleSignIn = async () => {
+ const handleGoogleSignIn = async () => {
+  try {
     console.log("Google login pressed");
+
     await signInWithGoogle();
-  };
+
+    // after successful login
+    router.replace("/(tabs)/feed");
+  } catch (err) {
+    console.log("Google login failed", err);
+  }
+};
 
   const facebook = require("@/assets/images/facebook.png");
   const google = require("@/assets/images/google.png");

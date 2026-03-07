@@ -2,6 +2,7 @@ import colors from "@/constants/colors";
 import { useResponsiveSize } from "@/hooks/useResponsiveSize";
 import { useBookmarksStore } from "@/store/useBookmarkStore";
 import { Post } from "@/types/post";
+import { MoreHorizontal } from "@tamagui/lucide-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, TouchableOpacity } from "react-native";
@@ -34,7 +35,7 @@ const commentIcon = require("@/assets/images/commentIcon.png");
 const bookmarkIcon = require("@/assets/images/bookmarkIcon.png");
 const bookmarkIconActive = require("@/assets/images/bookmarkIconActive.png");
 const shareIcon = require("@/assets/images/shareIcon.png");
-const flagIcon = require("@/assets/images/flagIcon.png");
+const flagIcon = require("@/assets/images/moreIcon2.png");
 
 export function PostCard({
   post,
@@ -124,11 +125,7 @@ export function PostCard({
       />
 
       {/* OVERLAY */}
-      <YStack
-        position="absolute"
-        bottom={OVERLAY_BOTTOM}
-        width="100%"
-      >
+      <YStack position="absolute" bottom={OVERLAY_BOTTOM} width="100%">
         <XStack padding="$4" alignItems="flex-end">
           {/* LEFT SIDE (PROFILE + CAPTION) */}
           <YStack flex={1} gap="$2">
@@ -237,21 +234,79 @@ export function PostCard({
             </Pressable>
 
             <Pressable onPress={() => setConfirmVisible(true)}>
-              <Image source={flagIcon} width={iconSize} height={iconSize} />
+              <MoreHorizontal size={iconSize + 5} color={colors.white} />
+              {/* <Image source={flagIcon} width={iconSize} height={iconSize} /> */}
             </Pressable>
           </YStack>
         </XStack>
       </YStack>
 
       {/* ALL MODALS (unchanged) */}
-      <CommentsSheet visible={commentsVisible} onClose={() => setCommentsVisible(false)} />
-      <ConfirmReportModal visible={confirmVisible} onClose={() => setConfirmVisible(false)} onConfirm={() => { setConfirmVisible(false); setReasonsVisible(true); }} />
-      <ReportReasonsModal visible={reasonsVisible} onClose={() => setReasonsVisible(false)} onSelectReason={() => { setReasonsVisible(false); setSuccessVisible(true); }} onSelectOther={() => { setReasonsVisible(false); setOtherVisible(true); }} />
-      <OtherReportModal visible={otherVisible} onClose={() => setOtherVisible(false)} onSubmit={() => { setOtherVisible(false); setSuccessVisible(true); }} />
-      <ShareModal visible={shareVisible} onClose={() => setShareVisible(false)} post={post} />
-      <SuccessModal visible={successVisible} type="success" onClose={() => setSuccessVisible(false)} autoClose title="Thank you for reporting this post" message="Your feedback is important to us. While we review this content, you won't see this user's posts again." />
-      <BookmarkFoldersModal visible={foldersVisible} folders={folders} savedFolderIds={savedFolderIds} onClose={() => setFoldersVisible(false)} onToggleFolder={(folderId) => toggleBookmark(post.id, folderId)} onCreateNew={() => { setFoldersVisible(false); setCreateVisible(true); }} />
-      <CreateFolderModal visible={createVisible} post={post} onClose={() => setCreateVisible(false)} onSave={(name) => { createFolder(name, postImage, post.id); setCreateVisible(false); }} />
+      <CommentsSheet
+        visible={commentsVisible}
+        onClose={() => setCommentsVisible(false)}
+      />
+      <ConfirmReportModal
+        visible={confirmVisible}
+        onClose={() => setConfirmVisible(false)}
+        onConfirm={() => {
+          setConfirmVisible(false);
+          setReasonsVisible(true);
+        }}
+      />
+      <ReportReasonsModal
+        visible={reasonsVisible}
+        onClose={() => setReasonsVisible(false)}
+        onSelectReason={() => {
+          setReasonsVisible(false);
+          setSuccessVisible(true);
+        }}
+        onSelectOther={() => {
+          setReasonsVisible(false);
+          setOtherVisible(true);
+        }}
+      />
+      <OtherReportModal
+        visible={otherVisible}
+        onClose={() => setOtherVisible(false)}
+        onSubmit={() => {
+          setOtherVisible(false);
+          setSuccessVisible(true);
+        }}
+      />
+      <ShareModal
+        visible={shareVisible}
+        onClose={() => setShareVisible(false)}
+        post={post}
+      />
+      <SuccessModal
+        visible={successVisible}
+        type="success"
+        onClose={() => setSuccessVisible(false)}
+        autoClose
+        title="Thank you for reporting this post"
+        message="Your feedback is important to us. While we review this content, you won't see this user's posts again."
+      />
+      <BookmarkFoldersModal
+        visible={foldersVisible}
+        folders={folders}
+        savedFolderIds={savedFolderIds}
+        onClose={() => setFoldersVisible(false)}
+        onToggleFolder={(folderId) => toggleBookmark(post.id, folderId)}
+        onCreateNew={() => {
+          setFoldersVisible(false);
+          setCreateVisible(true);
+        }}
+      />
+      <CreateFolderModal
+        visible={createVisible}
+        post={post}
+        onClose={() => setCreateVisible(false)}
+        onSave={(name) => {
+          createFolder(name, postImage, post.id);
+          setCreateVisible(false);
+        }}
+      />
     </YStack>
   );
 }

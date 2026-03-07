@@ -64,7 +64,7 @@ export default function TextPostCard({
           alignItems: "center",
           paddingHorizontal: wp(8),
           paddingVertical: hp(6),
-          backgroundColor: colors.black,
+          backgroundColor: "#271C0C",
         }}
       >
         <XStack

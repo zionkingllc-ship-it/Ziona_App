@@ -33,8 +33,15 @@ export default function LoginIndex() {
   const { signInWithGoogle } = useGoogleAuth();
 
   const handleGoogleSignIn = async () => {
-    console.log("Google login pressed");
-    await signInWithGoogle();
+    try {
+      console.log("Google login pressed");
+
+      await signInWithGoogle();
+
+      router.replace("/(tabs)/feed");
+    } catch (err) {
+      console.log("Google login failed", err);
+    }
   };
 
   const CARD_WIDTH = Math.min(wp(70), 350);
@@ -185,4 +192,3 @@ export default function LoginIndex() {
     </YStack>
   );
 }
- 
