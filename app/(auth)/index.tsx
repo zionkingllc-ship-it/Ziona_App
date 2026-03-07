@@ -3,10 +3,10 @@ import { MarqueeCarousel } from "@/components/ui/marquee";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
+import { useGoogleAuth } from "@/services/auth/useGoogleAuth";
 import { router } from "expo-router";
 import { Pressable } from "react-native";
 import { Image, Text, YStack } from "tamagui";
-import { useGoogleAuth } from "@/services/auth/useGoogleAuth";
 
 const cards = [
   {
@@ -28,13 +28,13 @@ const cards = [
 
 export default function AuthIndex() {
   const { wp, hp, fs } = useResponsive();
+ 
+  const { signInWithGoogle, request } = useGoogleAuth();
 
-  const { promptAsync, request } = useGoogleAuth();
-
-const handleGoogleSignIn = () => {
-  console.log("Google login pressed");
-  promptAsync();
-};
+  const handleGoogleSignIn = () => {
+    console.log("Google login pressed");
+    signInWithGoogle();
+  };
 
   const facebook = require("@/assets/images/facebook.png");
   const google = require("@/assets/images/google.png");
@@ -95,6 +95,7 @@ const handleGoogleSignIn = () => {
             textSize={fs(15)}
             textWeight="400"
             onPress={handleGoogleSignIn}
+            disabled={!request}
             startIcon={<Image source={google} width={wp(6)} height={wp(6)} />}
           />
 

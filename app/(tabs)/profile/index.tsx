@@ -164,7 +164,7 @@ export default function ProfileScreen() {
       <SafeAreaView style={{ flex: 1, marginTop: 20 }}>
         {/* HEADER */}
         <Header
-          heading="@ZionChild123"
+          heading="@EmmanuelAkinyemi"
           imageAfter2={settingIcon}
           imageAfter={profileShareIcon}
         />
