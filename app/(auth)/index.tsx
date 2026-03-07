@@ -4,7 +4,9 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useGoogleAuth } from "@/services/auth/useGoogleAuth";
+import { useAuthStore } from "@/store/useAuthStore";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { Pressable } from "react-native";
 import { Image, Text, YStack } from "tamagui";
 
@@ -39,6 +41,14 @@ export default function AuthIndex() {
   const facebook = require("@/assets/images/facebook.png");
   const google = require("@/assets/images/google.png");
   const mail = require("@/assets/images/maiIcon.png");
+
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/(tabs)/feed");
+    }
+  }, [isAuthenticated]);
 
   return (
     <YStack flex={1}>
