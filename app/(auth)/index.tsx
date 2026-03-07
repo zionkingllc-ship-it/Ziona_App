@@ -28,12 +28,12 @@ const cards = [
 
 export default function AuthIndex() {
   const { wp, hp, fs } = useResponsive();
- 
-  const { signInWithGoogle, request } = useGoogleAuth();
 
-  const handleGoogleSignIn = () => {
+  const { signInWithGoogle } = useGoogleAuth();
+
+  const handleGoogleSignIn = async () => {
     console.log("Google login pressed");
-    signInWithGoogle();
+    await signInWithGoogle();
   };
 
   const facebook = require("@/assets/images/facebook.png");
@@ -95,7 +95,6 @@ export default function AuthIndex() {
             textSize={fs(15)}
             textWeight="400"
             onPress={handleGoogleSignIn}
-            disabled={!request}
             startIcon={<Image source={google} width={wp(6)} height={wp(6)} />}
           />
 
@@ -153,6 +152,7 @@ export default function AuthIndex() {
               </InlineUnderlineText>
             </Pressable>
           </Text>
+
           <YStack alignItems="center">
             <Pressable
               style={{

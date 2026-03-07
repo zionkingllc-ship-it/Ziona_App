@@ -3,6 +3,7 @@ import { MarqueeCarousel } from "@/components/ui/marquee";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
+import { useGoogleAuth } from "@/services/auth/useGoogleAuth";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable } from "react-native";
@@ -29,10 +30,16 @@ const cards = [
 export default function LoginIndex() {
   const { wp, hp, fs } = useResponsive();
 
+  const { signInWithGoogle } = useGoogleAuth();
+
+  const handleGoogleSignIn = async () => {
+    console.log("Google login pressed");
+    await signInWithGoogle();
+  };
+
   const CARD_WIDTH = Math.min(wp(70), 350);
   const CARD_HEIGHT = hp(28);
   const GAP = wp(4);
-
   const TOTAL_WIDTH = (CARD_WIDTH + GAP) * cards.length;
 
   const translateX = useRef(new Animated.Value(0)).current;
@@ -57,7 +64,7 @@ export default function LoginIndex() {
   }, [TOTAL_WIDTH]);
 
   return (
-    <YStack flex={1} >
+    <YStack flex={1}>
       {/* -------- Marquee Section -------- */}
       <YStack>
         <MarqueeCarousel cards={cards} heightRatio={30} animationType="loop" />
@@ -65,26 +72,25 @@ export default function LoginIndex() {
 
       {/* -------- Content Section -------- */}
       <YStack
-        flex={1} 
+        flex={1}
         gap={hp(2)}
         paddingHorizontal={wp(6)}
         paddingTop={hp(2)}
-        paddingBottom={hp(2)} 
+        paddingBottom={hp(2)}
       >
         {/* Title */}
-
         <Text
           fontSize={fs(22)}
           fontWeight="600"
           fontFamily={"$body"}
           textAlign="center"
-          color={colors.text} 
+          color={colors.text}
         >
           Login to Ziona
         </Text>
 
         {/* Buttons */}
-          <YStack gap={hp(1.5)}  >
+        <YStack gap={hp(1.5)}>
           <PrimaryButton
             text="Continue with Username/Email"
             color={colors.white}
@@ -102,7 +108,7 @@ export default function LoginIndex() {
             textSize={fs(14)}
             textWeight="400"
             color={colors.white}
-            onPress={() => {}}
+            onPress={handleGoogleSignIn}
             startIcon={<Image source={google} width={wp(6)} height={wp(6)} />}
             style={{
               height: hp(6.5),
@@ -159,7 +165,7 @@ export default function LoginIndex() {
             </InlineUnderlineText>
           </Text>
 
-          <YStack alignItems="center" >
+          <YStack alignItems="center">
             <Text fontSize={fs(14)}>
               Don't have an account?{" "}
               <Pressable onPress={() => router.back()}>
@@ -179,3 +185,4 @@ export default function LoginIndex() {
     </YStack>
   );
 }
+ 

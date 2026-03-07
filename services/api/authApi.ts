@@ -1,5 +1,3 @@
-// services/api/authApi.ts
-
 import { User } from "@/types";
 import { api } from "./client";
 
@@ -9,8 +7,13 @@ const log = (...args: any[]) => {
   console.log("🟦 AUTH API:", ...args);
 };
 
-const errorLog = (...args: any[]) => {
-  console.error("🟥 AUTH API ERROR:", ...args);
+const errorLog = (label: string, err: any) => {
+  console.error("🟥 AUTH API ERROR:", label);
+
+  console.log("message:", err?.message);
+  console.log("code:", err?.code);
+  console.log("status:", err?.response?.status);
+  console.log("response:", err?.response?.data);
 };
 
 export const authApi = {
@@ -22,7 +25,6 @@ export const authApi = {
   }): Promise<{ user: User }> => {
     try {
       log("signUp called");
-      log("Payload:", payload);
 
       const response = await api.post("/auth/register", {
         email: payload.email,
@@ -37,7 +39,7 @@ export const authApi = {
         user: response.data?.data?.user,
       };
     } catch (err: any) {
-      errorLog("signUp failed:", err?.response?.data || err);
+      errorLog("signUp failed", err);
       throw err;
     }
   },
@@ -45,14 +47,8 @@ export const authApi = {
   signIn: async (payload: { email: string; password: string }) => {
     try {
       log("signIn called");
-      log("Payload:", payload);
 
-      const response = await api.post("/auth/login", {
-        email: payload.email,
-        password: payload.password,
-      });
-
-      log("signIn response:", response.data);
+      const response = await api.post("/auth/login", payload);
 
       const data = response.data?.data ?? response.data ?? {};
 
@@ -62,7 +58,7 @@ export const authApi = {
         tokens: data.tokens ?? null,
       };
     } catch (err: any) {
-      errorLog("signIn failed:", err?.response?.data || err);
+      errorLog("signIn failed", err);
       throw err;
     }
   },
@@ -70,14 +66,8 @@ export const authApi = {
   verifyOtp: async (payload: { email: string; code: string }) => {
     try {
       log("verifyOtp called");
-      log("Payload:", payload);
 
-      const response = await api.post("/auth/verify-email", {
-        email: payload.email,
-        code: payload.code,
-      });
-
-      log("verifyOtp response:", response.data);
+      const response = await api.post("/auth/verify-email", payload);
 
       const data = response.data?.data ?? {};
 
@@ -86,7 +76,7 @@ export const authApi = {
         tokens: data.tokens ?? null,
       };
     } catch (err: any) {
-      errorLog("verifyOtp failed:", err?.response?.data || err);
+      errorLog("verifyOtp failed", err);
       throw err;
     }
   },
@@ -94,36 +84,12 @@ export const authApi = {
   resendOtp: async (email: string) => {
     try {
       log("resendOtp called");
-      log("Email:", email);
 
-      const response = await api.post("/auth/resend-otp", {
-        email,
-      });
-
-      log("resendOtp response:", response.data);
+      const response = await api.post("/auth/resend-otp", { email });
 
       return response.data;
     } catch (err: any) {
-      errorLog("resendOtp failed:", err?.response?.data || err);
-      throw err;
-    }
-  },
-
-  suggestUsername: async (payload: {
-    email: string;
-    date_of_birth: string;
-  }) => {
-    try {
-      log("suggestUsername called");
-      log("Payload:", payload);
-
-      const response = await api.post("/auth/suggest-usernames", payload);
-
-      log("suggestUsername response:", response.data);
-
-      return response.data?.data?.suggestions ?? [];
-    } catch (err: any) {
-      errorLog("suggestUsername failed:", err?.response?.data || err);
+      errorLog("resendOtp failed", err);
       throw err;
     }
   },
@@ -131,17 +97,12 @@ export const authApi = {
   requestPasswordReset: async (email: string) => {
     try {
       log("requestPasswordReset called");
-      log("Email:", email);
 
-      const response = await api.post("/auth/password-reset", {
-        email,
-      });
-
-      log("requestPasswordReset response:", response.data);
+      const response = await api.post("/auth/password-reset", { email });
 
       return response.data;
     } catch (err: any) {
-      errorLog("requestPasswordReset failed:", err?.response?.data || err);
+      errorLog("requestPasswordReset failed", err);
       throw err;
     }
   },
@@ -153,7 +114,6 @@ export const authApi = {
   }) => {
     try {
       log("confirmPasswordReset called");
-      log("Payload:", payload);
 
       const response = await api.post("/auth/password-reset/confirm", {
         email: payload.email,
@@ -161,11 +121,9 @@ export const authApi = {
         new_password: payload.newPassword,
       });
 
-      log("confirmPasswordReset response:", response.data);
-
       return response.data;
     } catch (err: any) {
-      errorLog("confirmPasswordReset failed:", err?.response?.data || err);
+      errorLog("confirmPasswordReset failed", err);
       throw err;
     }
   },
@@ -182,7 +140,7 @@ export const authApi = {
 
       return response.data;
     } catch (err: any) {
-      errorLog("googleLogin failed:", err?.response?.data || err);
+      errorLog("googleLogin failed", err);
       throw err;
     }
   },
@@ -193,11 +151,9 @@ export const authApi = {
 
       const response = await api.get("/auth/me");
 
-      log("getMe response:", response.data);
-
       return response.data;
     } catch (err: any) {
-      errorLog("getMe failed:", err?.response?.data || err);
+      errorLog("getMe failed", err);
       throw err;
     }
   },
@@ -210,7 +166,7 @@ export const authApi = {
 
       log("signOut response:", response?.data);
     } catch (err: any) {
-      errorLog("signOut failed:", err?.response?.data || err);
+      errorLog("signOut failed", err);
       throw err;
     }
   },

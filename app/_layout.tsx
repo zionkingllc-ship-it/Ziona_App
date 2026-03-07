@@ -1,27 +1,29 @@
-// app/_layout.tsx
 import { queryClient } from "@/lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, router, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TamaguiProvider } from "tamagui";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { ScreenDimensionsProvider } from "@/context/ScreenDimensionsContext";
 import NotificationProvider from "@/providers/notificationProvider";
-import config from "@/tamagui.config";
 import { useAuthStore } from "@/store/useAuthStore";
+import config from "@/tamagui.config";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const scheme = useColorScheme() ?? "light";
+  const segments = useSegments();
+
   const initializeAuth = useAuthStore((s) => s.initializeAuth);
   const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const [fontsLoaded] = useFonts({
     MonaSans_400: require("../assets/fonts/MonaSans-Regular.ttf"),
@@ -37,17 +39,28 @@ export default function RootLayout() {
     Merienda_600: require("../assets/fonts/Merienda-SemiBold.ttf"),
   });
 
-  useEffect(() => {
-    if (fontsLoaded) {
-      initializeAuth();
-    }
-  }, [fontsLoaded]);
 
   useEffect(() => {
     if (fontsLoaded && !isBootstrapping) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, isBootstrapping]);
+
+  /* -------- AUTH REDIRECT GUARD -------- */
+
+  useEffect(() => {
+    if (isBootstrapping) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/(auth)");
+    }
+
+    if (isAuthenticated && inAuthGroup) {
+      router.replace("/(tabs)/feed");
+    }
+  }, [isAuthenticated, isBootstrapping, segments]);
 
   if (!fontsLoaded || isBootstrapping) {
     return null;

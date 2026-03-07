@@ -73,21 +73,44 @@ export const useAuthStore = create<AuthStore>()(
             mode: "authenticated",
             isBootstrapping: false,
           });
-        } catch {
-          await get().logout();
-          set({ isBootstrapping: false });
+        } catch (err) {
+          console.log("getMe failed — keeping persisted session");
+
+          set({
+            isAuthenticated: true,
+            mode: "authenticated",
+            isBootstrapping: false,
+          });
         }
+        // catch {
+        //   await get().logout();
+        //   set({ isBootstrapping: false });
+        // }
       },
     }),
     {
       name: "auth-storage",
       storage: createJSONStorage(() => AsyncStorage),
+
       partialize: (state) => ({
         user: state.user,
         tokens: state.tokens,
         isAuthenticated: state.isAuthenticated,
         mode: state.mode,
       }),
+
+      onRehydrateStorage: () => (state) => {
+        console.log("🟦 Auth store rehydrated");
+
+        if (state?.tokens?.accessToken) {
+          setAuthTokens({
+            accessToken: state.tokens.accessToken,
+            refreshToken: state.tokens.refreshToken,
+          });
+        }
+
+        state?.initializeAuth();
+      },
     },
   ),
 );
