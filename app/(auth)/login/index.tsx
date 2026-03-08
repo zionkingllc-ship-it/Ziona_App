@@ -7,7 +7,7 @@ import { useGoogleAuth } from "@/services/auth/useGoogleAuth";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable } from "react-native";
-import { Image, Text, YStack } from "tamagui";
+import { Image, Text, XStack, YStack } from "tamagui";
 
 const cards = [
   {
@@ -142,51 +142,79 @@ export default function LoginIndex() {
           alignItems="center"
           justifyContent="space-between"
         >
-          <Text
-            fontSize={fs(13)}
-            textAlign="center"
-            fontFamily={"$body"}
-            fontWeight={"400"}
-            color={colors.termsText}
-            lineHeight={fs(18)}
+          <XStack
+            alignItems="center"
+            justifyContent="center"
+            left={0}
+            right={0}
+            padding={0}
+            width={"100%"}
+            flexWrap="wrap"
           >
-            By continuing, you agree to Ziona’s{" "}
-            <InlineUnderlineText
-              color={colors.termsButton}
+            <Text
+              fontSize={fs(13)}
+              textAlign="center"
               fontFamily={"$body"}
-              weight="500"
-              thickness={1.5}
-              offset={-1}
+              fontWeight={"400"}
+              color={colors.termsText}
+              lineHeight={fs(18)}
             >
-              Terms of use
-            </InlineUnderlineText>{" "}
-            and confirm that you have read Ziona’s{" "}
+              By continuing, you agree to Ziona’s{" "}
+            </Text>
+
             <InlineUnderlineText
               color={colors.termsButton}
               fontFamily={"$body"}
               weight="500"
+              fontSize={fs(13)}
               thickness={1}
               offset={-1}
             >
-              Privacy Policy
+              Terms of use
             </InlineUnderlineText>
-          </Text>
-
-          <YStack alignItems="center">
-            <Text fontSize={fs(14)}>
-              Don't have an account?{" "}
-              <Pressable onPress={() => router.back()}>
-                <Text
-                  color={colors.primary}
-                  fontFamily={"$body"}
-                  fontWeight="400"
-                  top={fs(3)}
-                >
-                  Signup
-                </Text>
-              </Pressable>
+            <Text
+              fontSize={fs(13)}
+              textAlign="center"
+              fontFamily={"$body"}
+              fontWeight={"400"}
+              color={colors.termsText}
+              lineHeight={fs(18)}
+            >
+              {" "}
+              and confirm that you have read Ziona’s{" "}
             </Text>
-          </YStack>
+            <Pressable
+              onPress={() =>
+                router.push(
+                  "https://www.privacypolicies.com/live/db459a7c-78ec-4d12-8d82-cf20f7e716a6",
+                )
+              }
+            >
+              <InlineUnderlineText
+                color={colors.termsButton}
+                fontFamily={"$body"}
+                weight="500"
+                thickness={1}
+                fontSize={fs(13)}
+                offset={-1}
+              >
+                Privacy Policy
+              </InlineUnderlineText>
+            </Pressable>
+          </XStack>
+
+          <XStack alignItems="center" justifyContent="center">
+            <Text fontSize={fs(14)}>Don't have an account? </Text>
+            <Pressable onPress={() => router.back()}>
+              <Text
+                color={colors.primary}
+                fontFamily={"$body"}
+                fontWeight="400"
+              >
+                Signup
+              </Text>
+            </Pressable>
+          </XStack>
         </YStack>
       </YStack>
     </YStack>

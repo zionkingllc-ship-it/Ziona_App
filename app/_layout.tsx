@@ -1,19 +1,19 @@
+import { ScreenDimensionsProvider } from "@/context/ScreenDimensionsContext";
+import { debugAuthStorage } from "@/helpers/asyncDataLog";
 import { queryClient } from "@/lib/queryClient";
+import NotificationProvider from "@/providers/notificationProvider";
+import config from "@/tamagui.config";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
+import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TamaguiProvider } from "tamagui";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import * as NavigationBar from "expo-navigation-bar";
-
-import { ScreenDimensionsProvider } from "@/context/ScreenDimensionsContext";
-import NotificationProvider from "@/providers/notificationProvider";
-import config from "@/tamagui.config";
 
 import AuthGate from "@/components/auth/AuthGate";
 
@@ -48,6 +48,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
+      debugAuthStorage();
     }
   }, [fontsLoaded]);
 
@@ -77,4 +78,4 @@ export default function RootLayout() {
       </ScreenDimensionsProvider>
     </SafeAreaProvider>
   );
-} 
+}

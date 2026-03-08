@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { router } from "expo-router";
 import { useEffect } from "react";
 import { Pressable } from "react-native";
-import { Image, Text, YStack } from "tamagui";
+import { Image, Text, XStack, YStack } from "tamagui";
 
 const cards = [
   {
@@ -33,18 +33,18 @@ export default function AuthIndex() {
 
   const { signInWithGoogle } = useGoogleAuth();
 
- const handleGoogleSignIn = async () => {
-  try {
-    console.log("Google login pressed");
+  const handleGoogleSignIn = async () => {
+    try {
+      console.log("Google login pressed");
 
-    await signInWithGoogle();
+      await signInWithGoogle();
 
-    // after successful login
-    router.replace("/(tabs)/feed");
-  } catch (err) {
-    console.log("Google login failed", err);
-  }
-};
+      // after successful login
+      router.replace("/(tabs)/feed");
+    } catch (err) {
+      console.log("Google login failed", err);
+    }
+  };
 
   const facebook = require("@/assets/images/facebook.png");
   const google = require("@/assets/images/google.png");
@@ -127,31 +127,54 @@ export default function AuthIndex() {
         </YStack>
 
         {/* -------- Footer -------- */}
+
         <YStack
           paddingVertical={hp(1.5)}
           gap={hp(9)}
           alignItems="center"
           justifyContent="space-between"
         >
-          <Text
-            fontSize={fs(13)}
-            textAlign="center"
-            fontFamily={"$body"}
-            fontWeight={"400"}
-            color={colors.termsText}
-            lineHeight={fs(18)}
+          <XStack
+            alignItems="center"
+            justifyContent="center"
+            left={0}
+            right={0}
+            padding={0}
+            width={"100%"}
+            flexWrap="wrap"
           >
-            By continuing, you agree to Ziona’s{" "}
+            <Text
+              fontSize={fs(13)}
+              textAlign="center"
+              fontFamily={"$body"}
+              fontWeight={"400"}
+              color={colors.termsText}
+              lineHeight={fs(18)}
+            >
+              By continuing, you agree to Ziona’s{" "}
+            </Text>
+
             <InlineUnderlineText
               color={colors.termsButton}
               fontFamily={"$body"}
               weight="500"
-              thickness={1.5}
+              fontSize={fs(13)}
+              thickness={1}
               offset={-1}
             >
               Terms of use
-            </InlineUnderlineText>{" "}
-            and confirm that you have read Ziona’s{" "}
+            </InlineUnderlineText>
+            <Text
+              fontSize={fs(13)}
+              textAlign="center"
+              fontFamily={"$body"}
+              fontWeight={"400"}
+              color={colors.termsText}
+              lineHeight={fs(18)}
+            >
+              {" "}
+              and confirm that you have read Ziona’s{" "}
+            </Text>
             <Pressable
               onPress={() =>
                 router.push(
@@ -164,12 +187,13 @@ export default function AuthIndex() {
                 fontFamily={"$body"}
                 weight="500"
                 thickness={1}
+                fontSize={fs(13)}
                 offset={-1}
               >
                 Privacy Policy
               </InlineUnderlineText>
             </Pressable>
-          </Text>
+          </XStack>
 
           <YStack alignItems="center">
             <Pressable
@@ -181,7 +205,7 @@ export default function AuthIndex() {
             >
               <InlineUnderlineText
                 color={colors.text}
-                thickness={1.5}
+                thickness={1}
                 fontFamily={"$body"}
                 offset={-1}
                 weight="400"

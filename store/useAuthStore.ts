@@ -45,17 +45,21 @@ export const useAuthStore = create<AuthStore>()(
 
       logout: async () => {
         try {
+          console.log("Logging out user");
           await authApi.signOut();
-        } catch {}
-
-        clearAuthTokens();
-
-        set({
+        } catch (err) {
+          console.log("Backend logout failed, continuing anyway");
+        }
+        /* clear axios tokens */ clearAuthTokens();
+        /* clear zustand state */ set({
           user: null,
           tokens: null,
           isAuthenticated: false,
           mode: "unauthenticated",
         });
+        /* clear persisted storage */ await AsyncStorage.removeItem(
+          "auth-storage",
+        );
       },
 
       /* -------- APP START AUTH CHECK -------- */

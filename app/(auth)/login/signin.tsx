@@ -13,7 +13,7 @@ import { EyeClosed, Eye } from "@tamagui/lucide-icons";
 import { useAsyncStore } from "@/store/useAsyncStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { authApi } from "@/services/api/authApi";
-import { isLoginPasswordValid } from "@/utils/passwordRules";
+import { isLoginPasswordValid } from "@/utils/passwordRules"; 
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

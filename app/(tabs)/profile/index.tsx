@@ -1,4 +1,3 @@
-import { GradientBackground } from "@/components/layout/GradientBackground";
 import Header from "@/components/layout/header";
 import CenteredMessage from "@/components/ui/CenteredMessage";
 import colors from "@/constants/colors";
@@ -73,10 +72,10 @@ export default function ProfileScreen() {
   const filteredPosts = useMemo(() => {
     if (activeTab === "liked") {
       return posts.filter((post) => likes[post.id]);
-    } 
+    }
 
     return posts;
-  }, [activeTab, posts, likes, ]);
+  }, [activeTab, posts, likes]);
 
   // Get thumbnail for any post type
   const getPostThumbnail = (post: Post) => {
@@ -160,160 +159,156 @@ export default function ProfileScreen() {
   };
 
   return (
-    <GradientBackground>
-      <SafeAreaView style={{ flex: 1, marginTop: 20 }}>
-        {/* HEADER */}
-        <Header
-          heading="@EmmanuelAkinyemi"
-          imageAfter2={settingIcon}
-          imageAfter={profileShareIcon}
-        />
+    <SafeAreaView style={{ flex: 1, marginTop: 20, backgroundColor:colors.white }}>
+      {/* HEADER */}
+      <Header
+        heading="@EmmanuelAkinyemi"
+        imageAfter2={settingIcon}
+        imageAfter={profileShareIcon}
+      />
 
-        {/* PROFILE INFO */}
+      {/* PROFILE INFO */}
 
-        <YStack width={"100%"} padding={20}>
-          <XStack width={"100%"} justifyContent="space-between">
-            <YStack alignItems="center" alignSelf="flex-start">
-              <View
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 40,
-                  backgroundColor: "#C084FC",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 10,
-                }}
-              >
-                <Text
-                  fontFamily={"$body"}
-                  color="white"
-                  fontSize={"$4"}
-                  fontWeight="600"
-                >
-                  ZK
-                </Text>
-              </View>
-
-              <Text fontFamily={"$body"} fontSize={"$5"} fontWeight="600">
-                Zion Kay
-              </Text>
-            </YStack>
-            <TouchableOpacity
-              onPress={() => router.push("/profile/edit")}
+      <YStack width={"100%"} padding={20}>
+        <XStack width={"100%"} justifyContent="space-between">
+          <YStack alignItems="center" alignSelf="flex-start">
+            <View
               style={{
-                marginTop: 12,
-                backgroundColor: "#eeeeee",
-                width: "30%",
-                height: "30%",
-                borderRadius: 99,
-                justifyContent: "center",
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: "#C084FC",
                 alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 10,
               }}
             >
-              <Text fontFamily={"$body"} fontSize={13} fontWeight={"400"}>
-                Edit profile
+              <Text
+                fontFamily={"$body"}
+                color="white"
+                fontSize={"$4"}
+                fontWeight="600"
+              >
+                ZK
               </Text>
-            </TouchableOpacity>
-          </XStack>
-          <Text
-            fontFamily={"$body"}
-            fontSize={13}
-            color={colors.gray}
-            fontWeight={"400"}
+            </View>
+
+            <Text fontFamily={"$body"} fontSize={"$5"} fontWeight="600">
+              Zion Kay
+            </Text>
+          </YStack>
+          <TouchableOpacity
+            onPress={() => router.push("/profile/edit")}
+            style={{
+              marginTop: 12,
+              backgroundColor: "#eeeeee",
+              width: "30%",
+              height: "30%",
+              borderRadius: 99,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
-            Christian worshipper sharing moments of praise, reflection, and
-            growth. Here to connect with others, grow in faith, and celebrate
-            worship as a daily lifestyle.
+            <Text fontFamily={"$body"} fontSize={13} fontWeight={"400"}>
+              Edit profile
+            </Text>
+          </TouchableOpacity>
+        </XStack>
+        <Text
+          fontFamily={"$body"}
+          fontSize={13}
+          color={colors.gray}
+          fontWeight={"400"}
+        >
+          Christian worshipper sharing moments of praise, reflection, and
+          growth. Here to connect with others, grow in faith, and celebrate
+          worship as a daily lifestyle.
+        </Text>
+      </YStack>
+      {/* STATS */}
+      <XStack width={"100%"} height={"11%"}>
+        <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
+          <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
+            {posts.length}
+          </Text>
+          <Text fontFamily={"$body"} fontSize={13} color={colors.gray}>
+            Posts
           </Text>
         </YStack>
-        {/* STATS */}
-        <XStack width={"100%"} height={"11%"}>
-          <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
-            <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
-              {posts.length}
-            </Text>
-            <Text fontFamily={"$body"} fontSize={13} color={colors.gray}>
-              Posts
-            </Text>
-          </YStack>
 
-          <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
-            <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
-              20
-            </Text>
-            <Text fontFamily={"$body"} fontSize={13} color={colors.gray}>
-              Followers
-            </Text>
-          </YStack>
+        <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
+          <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
+            20
+          </Text>
+          <Text fontFamily={"$body"} fontSize={13} color={colors.gray}>
+            Followers
+          </Text>
+        </YStack>
 
-          <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
-            <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
-              9
-            </Text>
-            <Text fontFamily={"$body"} fontSize={"$3"} color={colors.gray}>
-              Following
-            </Text>
-          </YStack>
-        </XStack>
+        <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
+          <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
+            9
+          </Text>
+          <Text fontFamily={"$body"} fontSize={"$3"} color={colors.gray}>
+            Following
+          </Text>
+        </YStack>
+      </XStack>
 
-        {/* TABS */}
+      {/* TABS */}
 
-        <XStack
-          width={"50%"}
-          height={"6%"}
-          alignSelf="center"
-          justifyContent="center"
-          alignItems="center"
-          padding={10}
+      <XStack
+        width={"50%"}
+        height={"6%"}
+        alignSelf="center"
+        justifyContent="center"
+        alignItems="center"
+        padding={10}
+      >
+        <TouchableOpacity
+          style={{ width: "33.33%", height: "100%" }}
+          onPress={() => setActiveTab("posts")}
         >
-          <TouchableOpacity
-            style={{ width: "33.33%", height: "100%" }}
-            onPress={() => setActiveTab("posts")}
-          >
-            <Image
-              source={activeTab === "posts" ? postActive : postInActive}
-              style={{ width: 24, height: 24, alignSelf: "flex-start" }}
-              resizeMode="cover"
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={{ width: "33.33%", height: "100%" }}
-            onPress={() => setActiveTab("liked")}
-          >
-            <Image
-              source={
-                activeTab === "liked" ? likedPostActive : likedPostInActive
-              }
-              style={{ width: 24, height: 24, alignSelf: "center" }}
-              resizeMode="cover"
-            />
-          </TouchableOpacity>
-        </XStack>
-
-        {/* CONTENT */}
-        {filteredPosts.length === 0 ? (
-          <YStack marginTop={"$7"}>
-            <CenteredMessage
-              fontFamily={"$body"}
-              text="Your message matters"
-              subtitle="Create with intention. Post with purpose."
-              actionLabel="Create Post"
-              onActionPress={() => router.navigate("/(tabs)/Create")}
-              fullScreen={false}
-            />
-          </YStack>
-        ) : (
-          <FlatList
-            data={filteredPosts}
-            keyExtractor={(item) => item.id}
-            renderItem={renderPost}
-            numColumns={3}
-            showsVerticalScrollIndicator={false}
+          <Image
+            source={activeTab === "posts" ? postActive : postInActive}
+            style={{ width: 24, height: 24, alignSelf: "flex-start" }}
+            resizeMode="cover"
           />
-        )}
-      </SafeAreaView>
-    </GradientBackground>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{ width: "33.33%", height: "100%" }}
+          onPress={() => setActiveTab("liked")}
+        >
+          <Image
+            source={activeTab === "liked" ? likedPostActive : likedPostInActive}
+            style={{ width: 24, height: 24, alignSelf: "center" }}
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+      </XStack>
+
+      {/* CONTENT */}
+      {filteredPosts.length === 0 ? (
+        <YStack marginTop={"$7"}>
+          <CenteredMessage
+            fontFamily={"$body"}
+            text="Your message matters"
+            subtitle="Create with intention. Post with purpose."
+            actionLabel="Create Post"
+            onActionPress={() => router.navigate("/(tabs)/Create")}
+            fullScreen={false}
+          />
+        </YStack>
+      ) : (
+        <FlatList
+          data={filteredPosts}
+          keyExtractor={(item) => item.id}
+          renderItem={renderPost}
+          numColumns={3}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+    </SafeAreaView>
   );
 }

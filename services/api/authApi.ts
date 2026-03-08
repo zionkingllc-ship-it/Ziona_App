@@ -62,6 +62,21 @@ export const authApi = {
       throw err;
     }
   },
+  suggestUsername: async (payload: {
+    email: string;
+    date_of_birth: string;
+  }) => {
+    try {
+      log("suggestUsername called");
+      log("Payload:", payload);
+      const response = await api.post("/auth/suggest-usernames", payload);
+      log("suggestUsername response:", response.data);
+      return response.data?.data?.suggestions ?? [];
+    } catch (err: any) {
+      errorLog("suggestUsername failed:", err?.response?.data || err);
+      throw err;
+    }
+  },
 
   verifyOtp: async (payload: { email: string; code: string }) => {
     try {

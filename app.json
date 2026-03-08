@@ -22,6 +22,7 @@
     },
 
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "package": "com.zionking.ziona",
       "intentFilters": [
         {
