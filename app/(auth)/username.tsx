@@ -31,8 +31,13 @@ export default function CreateUsername() {
 
   const userIcon = require("@/assets/images/userIcon.png");
 
+  const isValidUsername = username.trim().length > 0;
+
+  const visualValidity: boolean | undefined =
+    !isFocus ? undefined : isValidUsername ? true : false;
+
   const handleSubmit = async () => {
-    if (!username.trim()) return;
+    if (!isValidUsername) return;
     if (!email || !birthday || !password) return;
 
     const cleanUsername = username.trim().toLowerCase();
@@ -56,7 +61,6 @@ export default function CreateUsername() {
           flow: "signup",
         },
       });
-
     } catch (error) {
       console.error("Signup error:", error);
     } finally {
@@ -94,12 +98,15 @@ export default function CreateUsername() {
           </Text>
         </YStack>
 
+        {/* USERNAME INPUT */}
+
         <YStack width="100%" gap={hp(1)}>
           <TextInputWithIcon
             placeholder="Username"
             headingText="Username"
             value={username}
-            onfocus={isFocus}
+            isFocused={isFocus}
+            isValid={visualValidity}
             onFocus={() => setIsFocus(true)}
             onBlur={() => setIsFocus(false)}
             onChangeText={(value) => {
@@ -108,6 +115,8 @@ export default function CreateUsername() {
             }}
           />
         </YStack>
+
+        {/* USERNAME SUGGESTIONS */}
 
         {suggestions.length > 0 && (
           <YStack width="100%" gap={hp(1.5)}>
@@ -142,11 +151,13 @@ export default function CreateUsername() {
           </YStack>
         )}
 
+        {/* SIGNUP BUTTON */}
+
         <PrimaryButton
           text="Sign up"
           textColor={colors.white}
           color={colors.primary}
-          disabled={!username.trim() || isLoading}
+          disabled={!isValidUsername || isLoading}
           onPress={handleSubmit}
           style={{
             width: "100%",

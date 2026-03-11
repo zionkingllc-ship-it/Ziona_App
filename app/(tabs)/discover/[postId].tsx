@@ -16,40 +16,46 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 
 export default function PostViewerScreen() {
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const tabBarHeight = useBottomTabBarHeight();
 
   const feedHeight = height - tabBarHeight;
+
   const { postId, feedKey } = useLocalSearchParams();
   const { getFeed } = useFeedStore();
 
   const [feed, setFeed] = useState<Post[]>([]);
   const [activePostId, setActivePostId] = useState<string | null>(null);
+
   const flatListRef = useRef<FlatList>(null);
 
-  /* ================= LOAD FEED ================= */
+  /* LOAD FEED */
   useEffect(() => {
     const savedFeed = getFeed(feedKey as string) || [];
     setFeed(savedFeed);
   }, [feedKey, getFeed]);
 
-  const initialIndex = feed.findIndex((p) => p.id === postId);
-
-  /* ================= SCROLL TO INITIAL POST ================= */
+  /* SCROLL TO SELECTED POST */
   useEffect(() => {
-    if (flatListRef.current && initialIndex >= 0 && feed.length) {
+    if (!feed.length) return;
+
+    const index = feed.findIndex((p) => p.id === postId);
+
+    if (flatListRef.current && index >= 0) {
       setTimeout(() => {
         flatListRef.current?.scrollToIndex({
-          index: initialIndex,
+          index,
           animated: false,
         });
-        setActivePostId(feed[initialIndex]?.id ?? null);
+
+        setActivePostId(feed[index]?.id ?? null);
       }, 0);
     }
-  }, [feed, initialIndex]);
+  }, [feed, postId]);
 
-  /* ================= VIEWABILITY ================= */
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 80 }).current;
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 80,
+  }).current;
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -59,18 +65,20 @@ export default function PostViewerScreen() {
     },
   ).current;
 
+  /* UPDATED POSTCARD RENDER (matches Feed screen) */
+
   const renderItem = useCallback(
     ({ item }: { item: Post }) => (
       <PostCard
         post={item}
         isPlaying={item.id === activePostId}
         screenHeight={feedHeight}
+        screenWidth={width}
+        tabBarHeight={tabBarHeight}
       />
     ),
-    [activePostId, height],
+    [activePostId, feedHeight, width, tabBarHeight],
   );
-
-  /* ================= LOADING ================= */
 
   let content: React.ReactNode;
 
@@ -108,7 +116,7 @@ export default function PostViewerScreen() {
   }
 
   return (
-    <SafeAreaView  edges={["top"]} style={{ flex: 1 }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
       <YStack style={{ flex: 1 }}>{content}</YStack>
     </SafeAreaView>
   );

@@ -67,13 +67,11 @@ export function PostCard({
   const postImage: string = useMemo(() => {
     switch (post.type) {
       case "image":
-        return resolveToString(post.media?.items?.url);
+        return resolveToString(post.media?.items?.[0]?.url);
       case "video":
         return resolveToString(post.media?.thumbnailUrl);
       case "text":
         return resolveToString(post.media?.backgroundImage);
-      case "carousel":
-        return resolveToString(post.media?.items?.[0]?.url);
       default:
         return "";
     }

@@ -10,7 +10,7 @@ export const MOCK_POSTS: Post[] = [
       avatarUrl: require("@/assets/images/profile.png"),
     },
     media: {
-      videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", 
+      videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
     },
     caption: `If you are willing to pray, there is always a God to answer...`,
     liked: false,
@@ -18,6 +18,7 @@ export const MOCK_POSTS: Post[] = [
     bookmarked: false,
     bookmarks: 18,
     createdAt: new Date().toISOString(),
+    categories: ["love"],
   },
 
   {
@@ -36,16 +37,15 @@ export const MOCK_POSTS: Post[] = [
     caption: `Daily reflection Sometimes God calms the storm...`,
     liked: false,
     likesCount: 87,
-
     bookmarked: false,
     bookmarks: 12,
-
     createdAt: new Date().toISOString(),
+    categories: ["patience"],
   },
 
   {
     id: "3",
-    type: "carousel",
+    type: "image",
     author: {
       id: "user-3",
       name: "Miriam",
@@ -73,12 +73,12 @@ export const MOCK_POSTS: Post[] = [
     caption: "Swipe to see more moments ✨",
     liked: false,
     likesCount: 214,
-
     bookmarked: false,
     bookmarks: 45,
-
     createdAt: new Date().toISOString(),
+    categories: ["trust"],
   },
+
   {
     id: "4",
     type: "video",
@@ -89,7 +89,7 @@ export const MOCK_POSTS: Post[] = [
     },
     media: {
       videoUrl:
-        "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4", 
+        "https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-videos/2.mp4",
     },
     caption: "Faith grows when you trust God completely.",
     liked: false,
@@ -97,6 +97,7 @@ export const MOCK_POSTS: Post[] = [
     bookmarked: false,
     bookmarks: 18,
     createdAt: new Date().toISOString(),
+    categories: ["trust"],
   },
 
   {
@@ -108,7 +109,7 @@ export const MOCK_POSTS: Post[] = [
       avatarUrl: require("@/assets/images/profile.png"),
     },
     media: {
-      videoUrl: require("@/assets/videos/sample.mp4"), 
+      videoUrl: require("@/assets/videos/sample.mp4"),
     },
     caption: "Faith grows when you trust God completely.",
     liked: false,
@@ -116,6 +117,7 @@ export const MOCK_POSTS: Post[] = [
     bookmarked: false,
     bookmarks: 18,
     createdAt: new Date().toISOString(),
+    categories: ["prayer"],
   },
 ];
 

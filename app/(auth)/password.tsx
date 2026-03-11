@@ -30,11 +30,8 @@ export default function CreatePassword() {
 
   const showInvalid = isFocus && password.length > 0 && !passwordIsValid;
 
-  const visualValidity: boolean | undefined = !isFocus
-    ? undefined
-    : showInvalid
-    ? false
-    : true;
+  const visualValidity: boolean | undefined =
+    !isFocus ? undefined : showInvalid ? false : true;
 
   const handleNext = () => {
     if (!passwordIsValid) return;
@@ -76,17 +73,19 @@ export default function CreatePassword() {
           </Text>
         </YStack>
 
+        {/* PASSWORD INPUT */}
+
         <YStack width="100%" gap={hp(1)}>
           <TextInputWithIcon
             value={password}
             placeholder="Enter password"
-            onfocus={isFocus}
             headingText="Password"
+            secureTextEntry={!show}
+            isFocused={isFocus}
             isValid={visualValidity}
             onFocus={() => setIsFocus(true)}
             onBlur={() => setIsFocus(false)}
             onChangeText={setPassword}
-            secureTextEntry={!show}
             endIconVisible={password.length > 0 && isFocus}
             endIcon={
               show ? (
@@ -99,10 +98,16 @@ export default function CreatePassword() {
           />
         </YStack>
 
+        {/* PASSWORD RULES */}
+
         <YStack width="100%" gap={hp(0.8)} marginTop={hp(1)}>
           <Rule ok={checks.length} text="8 characters (20 max)" fs={fs} />
           <Rule ok={checks.letterNumber} text="1 letter and 1 number" fs={fs} />
-          <Rule ok={checks.special} text="1 special character (e.g. ! @ &)" fs={fs} />
+          <Rule
+            ok={checks.special}
+            text="1 special character (e.g. ! @ &)"
+            fs={fs}
+          />
         </YStack>
 
         <SimpleButton

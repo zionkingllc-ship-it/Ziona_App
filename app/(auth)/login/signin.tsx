@@ -13,7 +13,7 @@ import { EyeClosed, Eye } from "@tamagui/lucide-icons";
 import { useAsyncStore } from "@/store/useAsyncStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { authApi } from "@/services/api/authApi";
-import { isLoginPasswordValid } from "@/utils/passwordRules"; 
+import { isLoginPasswordValid } from "@/utils/passwordRules";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -28,8 +28,10 @@ export default function SignIn() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [isFocusEmail, setIsFocusEmail] = useState(false);
   const [isFocusPassword, setIsFocusPassword] = useState(false);
+
   const [show, setShow] = useState(false);
 
   const [authError, setAuthError] = useState<string | null>(null);
@@ -38,26 +40,23 @@ export default function SignIn() {
   const isValidEmail = emailRegex.test(email);
   const passwordIsValid = isLoginPasswordValid(password);
 
-  const visualValidEmail: boolean | undefined = !isFocusEmail
-    ? undefined
-    : isValidEmail
-    ? true
-    : false;
+  const mailIcon = require("@/assets/images/mailWithBoder.png");
+  const Xspecial = require("@/assets/images/closeSquare.png");
 
-  const visualValidPassword: boolean | undefined = !isFocusPassword
-    ? undefined
-    : passwordIsValid
-    ? true
-    : false;
+  const visualValidEmail: boolean | undefined =
+    !isFocusEmail ? undefined : isValidEmail ? true : false;
+
+  const visualValidPassword: boolean | undefined =
+    !isFocusPassword ? undefined : passwordIsValid ? true : false;
 
   const handleNext = async () => {
     if (!isValidEmail || !passwordIsValid || isLoading) return;
 
     try {
+      start("signin");
+
       setAuthError(null);
       setPasswordClientError(null);
-
-      start("signin");
 
       const response = await authApi.signIn({
         email: email.trim().toLowerCase(),
@@ -93,9 +92,6 @@ export default function SignIn() {
     }
   };
 
-  const mailIcon = require("@/assets/images/mailWithBoder.png");
-  const Xspecial = require("@/assets/images/closeSquare.png");
-
   return (
     <KeyboardAvoidingWrapper>
       <Header />
@@ -122,35 +118,49 @@ export default function SignIn() {
         </YStack>
 
         {/* EMAIL */}
+
         <YStack width="100%" gap={hp(1)}>
           <TextInputWithIcon
             value={email}
-            onfocus={isFocusEmail}
             placeholder="Email address"
             headingText="Email"
-            onChangeText={setEmail}
             keyboardType="email-address"
-            endIconVisible={isFocusEmail}
-            isValid={visualValidEmail}
+            autoCapitalize="none"
+            autoCorrect={false}
+            isFocused={isFocusEmail}
             onFocus={() => setIsFocusEmail(true)}
             onBlur={() => setIsFocusEmail(false)}
+            onChangeText={(text) => {
+              setEmail(text);
+              setAuthError(null);
+            }}
+            endIconVisible={isFocusEmail}
+            isValid={visualValidEmail}
             endIcon={<Image source={Xspecial} width={wp(5)} height={wp(5)} />}
-            onEndIconPress={() => setEmail("")}
+            onEndIconPress={() => {
+              setEmail("");
+              setAuthError(null);
+            }}
           />
         </YStack>
 
         {/* PASSWORD */}
+
         <YStack width="100%" gap={hp(1)}>
           <TextInputWithIcon
             value={password}
             placeholder="Enter password"
             headingText="Password"
-            onfocus={isFocusPassword}
+            secureTextEntry={!show}
+            isFocused={isFocusPassword}
             isValid={visualValidPassword}
             onFocus={() => setIsFocusPassword(true)}
             onBlur={handlePasswordBlur}
-            onChangeText={setPassword}
-            secureTextEntry={!show}
+            onChangeText={(text) => {
+              setPassword(text);
+              setPasswordClientError(null);
+              setAuthError(null);
+            }}
             endIconVisible={password.length > 0 && isFocusPassword}
             endIcon={
               show ? (
@@ -184,6 +194,8 @@ export default function SignIn() {
             </Text>
           </Pressable>
         </YStack>
+
+        {/* AUTH ERROR */}
 
         {authError && (
           <Text

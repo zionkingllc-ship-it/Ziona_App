@@ -1,4 +1,4 @@
-export type PostType = "image" | "video" | "carousel" | "text";
+export type PostType = "image" | "video" | "text";
 
 export type CategoryId =
   | "all"
@@ -8,28 +8,27 @@ export type CategoryId =
   | "patience"
   | "prayer";
 
-export interface BasePost {
+export interface BasePost{
   id: string;
   type: PostType;
   createdAt: string;
 
+  categories: CategoryId[];
+
   liked: boolean;
   likesCount: number;
 
-  // FIXED
   bookmarked: boolean;
   bookmarks: number;
 
   author: {
     id: string;
     name: string;
-    avatarUrl?: string | number; // allow require()
+    avatarUrl?: string | number;
   };
 
   caption?: string;
 }
-
-/* IMAGE */
 
 export interface ImagePost extends BasePost {
   type: "image";
@@ -37,13 +36,11 @@ export interface ImagePost extends BasePost {
     items: {
       id: string;
       type: "image" | "video";
-      url: string;
+      url: string | number;
       thumbnailUrl?: string;
     }[];
   };
 }
-
-/* VIDEO */
 
 export interface VideoPost extends BasePost {
   type: "video";
@@ -52,22 +49,6 @@ export interface VideoPost extends BasePost {
     thumbnailUrl?: string;
   };
 }
-
-/* CAROUSEL */
-
-export interface CarouselPost extends BasePost {
-  type: "carousel";
-  media: {
-    items: {
-      id: string;
-      type: "image" | "video";
-      url: string;
-      thumbnailUrl?: string;
-    }[];
-  };
-}
-
-/* TEXT */
 
 export interface TextPost extends BasePost {
   type: "text";
@@ -78,8 +59,4 @@ export interface TextPost extends BasePost {
   text: string;
 }
 
-export type Post =
-  | ImagePost
-  | VideoPost
-  | CarouselPost
-  | TextPost;
+export type Post = ImagePost | VideoPost | TextPost;

@@ -20,11 +20,8 @@ export default function ForgotPassword() {
 
   const showInvalid = isFocus && email.length > 0 && !isValidEmail;
 
-  const visualValidity: boolean | undefined = !isFocus
-    ? undefined
-    : showInvalid
-    ? false
-    : true;
+  const visualValidity: boolean | undefined =
+    !isFocus ? undefined : showInvalid ? false : true;
 
   const handleSendCode = async () => {
     if (!isValidEmail || loading) return;
@@ -93,21 +90,26 @@ export default function ForgotPassword() {
           </Text>
         </YStack>
 
+        {/* EMAIL INPUT */}
+
         <YStack width="100%" gap="$2">
           <TextInputWithIcon
             value={email}
-            onfocus={isFocus}
             headingText="Email"
-            onFocus={() => setIsFocus(true)}
-            onBlur={() => setIsFocus(false)}
             placeholder="Email"
             keyboardType="email-address"
             autoCapitalize="none"
-            onChangeText={setEmail}
+            autoCorrect={false}
+            isFocused={isFocus}
             isValid={visualValidity}
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+            onChangeText={(text) => {
+              setEmail(text);
+            }}
           />
 
-          {email.length > 0 && !isValidEmail && (
+          {showInvalid && (
             <Text fontSize="$3" color={colors.errorText}>
               Enter a valid email address
             </Text>

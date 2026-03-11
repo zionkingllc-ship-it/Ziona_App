@@ -6,6 +6,7 @@ import { View } from "tamagui";
 import FeedHeader from "@/components/feedHeader";
 import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
+import { preloadPostMedia } from "@/helpers/preloadMedia";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
 import { Post } from "@/types/post";
 import { useFocusEffect } from "@react-navigation/native";
@@ -37,6 +38,7 @@ export default function Feed() {
     setActivePostId(null);
     flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [feedType]);
+
   console.log("containerHeight", containerHeight);
   console.log("tabBarHeight", tabBarHeight);
 
@@ -47,8 +49,19 @@ export default function Feed() {
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].item?.id) {
-        setActivePostId(viewableItems[0].item.id);
+      if (viewableItems.length === 0) return;
+
+      const currentPost = viewableItems[0].item;
+
+      if (!currentPost?.id) return;
+
+      setActivePostId(currentPost.id);
+
+      const index = data.findIndex((p) => p.id === currentPost.id);
+
+      if (index >= 0) {
+        preloadPostMedia(data[index + 1]);
+        preloadPostMedia(data[index - 1]);
       }
     },
   ).current;
@@ -122,7 +135,7 @@ export default function Feed() {
             onViewableItemsChanged={onViewableItemsChanged}
             windowSize={3}
             initialNumToRender={2}
-            maxToRenderPerBatch={2} 
+            maxToRenderPerBatch={2}
             removeClippedSubviews
           />
         )}

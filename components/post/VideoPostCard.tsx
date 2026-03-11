@@ -71,7 +71,7 @@ export default function VideoPostCard({
 
   const videoGesture = Gesture.Exclusive(doubleTap, singleTap, longPress);
 
-  // 🔥 SCRUB BAR POSITION — ALWAYS ABOVE TAB BAR
+  //  SCRUB BAR POSITION — ALWAYS ABOVE TAB BAR
   const scrubBottom = 0;
 
   const scrubWidth = screenWidth * 0.9;
@@ -92,7 +92,7 @@ export default function VideoPostCard({
           ref={videoRef}
           source={{ uri: post.media?.videoUrl }}
           style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
+          resizeMode="contain"
           repeat
           rate={playbackRate.value}
           paused={!isPlaying}

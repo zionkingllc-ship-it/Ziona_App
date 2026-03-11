@@ -25,19 +25,20 @@ export default function PostThumbnail({
 }: Props) {
   const [thumbnailUri, setThumbnailUri] = useState<string | null>(null);
 
+  const isCarousel =
+    post.type === "image" && post.media.items.length > 1;
+
   useEffect(() => {
     let isMounted = true;
 
     async function loadThumbnail() {
       if (post.type !== "video") return;
 
-      // 1️ Use backend thumbnail if available
       if (post.media.thumbnailUrl) {
         if (isMounted) setThumbnailUri(post.media.thumbnailUrl);
         return;
       }
 
-      // Otherwise generate from video
       const generated = await generateVideoThumbnail(
         post.media.videoUrl
       );
@@ -55,45 +56,52 @@ export default function PostThumbnail({
   }, [post]);
 
   const renderMedia = () => {
-    // IMAGE
+    /* IMAGE (single or carousel) */
     if (post.type === "image") {
-      return (
-        <Image
-          source={{ uri: post.media.items.url }}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
-      );
-    }
-
-    // VIDEO
-    if (post.type === "video" && thumbnailUri) {
-      return (
-        <Image
-          source={{ uri: thumbnailUri }}
-          style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
-        />
-      );
-    }
-
-    // CAROUSEL (first item)
-    if (post.type === "carousel") {
       const firstItem = post.media.items[0];
+
+      if (!firstItem) return null;
+
+      const source =
+        typeof firstItem.url === "string"
+          ? { uri: firstItem.url }
+          : firstItem.url;
+
       return (
         <Image
-          source={{ uri: firstItem.url }}
+          source={source}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
       );
     }
 
-    // TEXT
+    /* VIDEO */
+    if (post.type === "video" && thumbnailUri) {
+      const source =
+        typeof thumbnailUri === "string"
+          ? { uri: thumbnailUri }
+          : thumbnailUri;
+
+      return (
+        <Image
+          source={source}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
+      );
+    }
+
+    /* TEXT */
     if (post.type === "text") {
+      const source =
+        typeof post.media.backgroundImage === "string"
+          ? { uri: post.media.backgroundImage }
+          : post.media.backgroundImage;
+
       return (
         <ImageBackground
-          source={post.media.backgroundImage}
+          source={source}
           style={{ flex: 1, justifyContent: "center", padding: 10 }}
           resizeMode="cover"
         >
@@ -136,6 +144,7 @@ export default function PostThumbnail({
     >
       {renderMedia()}
 
+      {/* VIDEO ICON */}
       {post.type === "video" && (
         <Ionicons
           name="videocam"
@@ -149,7 +158,8 @@ export default function PostThumbnail({
         />
       )}
 
-      {post.type === "carousel" && (
+      {/* CAROUSEL ICON */}
+      {isCarousel && (
         <Ionicons
           name="images"
           size={18}

@@ -6,6 +6,7 @@ import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useAsyncStore } from "@/store/useAsyncStore";
 import { useSignupStore } from "@/store/useSignupStore";
+import { authApi } from "@/services/api/authApi";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Image, Text, YStack } from "tamagui";
@@ -24,17 +25,21 @@ export default function Email() {
 
   const [email, setLocalEmail] = useState(storedEmail ?? "");
   const [isFocus, setIsFocus] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const isValidEmail = emailRegex.test(email);
 
   const Xspecial = require("@/assets/images/closeSquare.png");
   const mailIcon = require("@/assets/images/mailWithBoder.png");
 
-  const showInvalid = isFocus && email.length > 0 && !isValidEmail;
+  const showInvalidFormat = isFocus && email.length > 0 && !isValidEmail;
 
-  const visualValidity: boolean | undefined = !isFocus
-    ? undefined
-    : showInvalid
+  const showError = showInvalidFormat || serverError;
+
+  const visualValidity: boolean | undefined =
+    !isFocus && !serverError
+      ? undefined
+      : showError
       ? false
       : true;
 
@@ -44,15 +49,27 @@ export default function Email() {
     try {
       start("emailNext");
 
-      // Save email into signup store
+      setServerError(null);
+
+      const result = await authApi.checkEmail(email.trim().toLowerCase());
+
+      if (result.exists) {
+        setServerError(result.message || "Email already registered");
+        return;
+      }
+
       setEmail(email.trim().toLowerCase());
 
-      // Preserve slide animation smoothness
       requestAnimationFrame(() => {
         setTimeout(() => {
           router.push("/(auth)/birthday");
         }, 120);
       });
+    } catch (err: any) {
+      setServerError(
+        err?.response?.data?.error?.message ||
+          "Unable to verify email, please try again"
+      );
     } finally {
       stop("emailNext");
     }
@@ -87,27 +104,35 @@ export default function Email() {
         <YStack width="100%" gap={hp(1)}>
           <TextInputWithIcon
             value={email}
-            onfocus={isFocus}
             placeholder="Email address"
             headingText="Email address"
-            onChangeText={setLocalEmail}
             keyboardType="email-address"
-            endIconVisible={isFocus}
-            isValid={visualValidity}
+            autoCapitalize="none"
+            autoCorrect={false}
+            isFocused={isFocus}
             onFocus={() => setIsFocus(true)}
             onBlur={() => setIsFocus(false)}
+            onChangeText={(text) => {
+              setLocalEmail(text);
+              setServerError(null);
+            }}
+            endIconVisible={isFocus}
+            isValid={visualValidity}
             endIcon={<Image source={Xspecial} width={wp(5)} height={wp(5)} />}
-            onEndIconPress={() => setLocalEmail("")}
+            onEndIconPress={() => {
+              setLocalEmail("");
+              setServerError(null);
+            }}
           />
 
-          {showInvalid && (
+          {showError && (
             <Text
               fontSize={fs(13)}
               color={colors.errorText}
               alignSelf="flex-start"
               marginTop={hp(0.5)}
             >
-              Enter a valid email address
+              {serverError || "Enter a valid email address"}
             </Text>
           )}
         </YStack>

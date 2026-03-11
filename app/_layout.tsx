@@ -39,7 +39,7 @@ export default function RootLayout() {
   /* -------- FORCE BLACK ANDROID NAVIGATION BAR -------- */
 
   useEffect(() => {
-    NavigationBar.setBackgroundColorAsync("#ffffff");
+    // NavigationBar.setBackgroundColorAsync("#ffffff");
     NavigationBar.setButtonStyleAsync("dark");
   }, []);
 

@@ -1,9 +1,9 @@
-import { Post } from "./post"; 
+import {BasePost } from "./post"; 
 
 type FeedStatus = "idle" | "loading" | "success" | "empty" | "error";
 
 type FeedState = {
-  data: Post
+  data: BasePost
   status: FeedStatus;
   error?: string;
 };

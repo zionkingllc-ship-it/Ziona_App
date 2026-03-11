@@ -1,9 +1,4 @@
-export type DiscoverCategory = {
-  id: string;
-  label: string;
-  icon: any; // Image require or URI
-  bgColor: string;
-};
+
 
 export type DiscoverPost = {
   id: string;
@@ -11,3 +6,13 @@ export type DiscoverPost = {
   media?: { url: string; thumbnailUrl?: string }[];
   text?: string;
 };
+
+export type DiscoverCategory = {
+  id: string
+  label: string
+  slug: string
+  icon: string
+  bgColor: string
+  bdColor: string
+  order?: number
+}

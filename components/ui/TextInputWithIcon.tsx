@@ -1,8 +1,9 @@
 import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ReactNode } from "react";
-import { Image, Pressable, TextInput, TextInputProps } from "react-native";
+import { Image, Pressable, ImageSourcePropType, TextInputProps } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
+import BaseInput from "@/components/ui/BaseTextInput";
 
 type InputType = "numeric" | "alphanumeric";
 
@@ -10,18 +11,17 @@ type AppTextInputProps = TextInputProps & {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
-  startIconVisible?: boolean;
-  isValid?: boolean;
   startIcon?: ReactNode;
   endIcon?: ReactNode;
-  startImage?: any;
-  endImage?: any;
+  startImage?: ImageSourcePropType;
+  endImage?: ImageSourcePropType;
   inputType?: InputType;
   onEndIconPress?: () => void;
   endIconVisible?: boolean;
   headingText: string;
-  onfocus: boolean;
+  isValid?: boolean;
   fontFamily?: string;
+  isFocused?: boolean;
 };
 
 export function TextInputWithIcon({
@@ -29,7 +29,6 @@ export function TextInputWithIcon({
   onChangeText,
   isValid,
   placeholder,
-  onfocus,
   startIcon,
   endIconVisible,
   endIcon,
@@ -39,6 +38,7 @@ export function TextInputWithIcon({
   fontFamily = "System",
   inputType = "alphanumeric",
   onEndIconPress,
+  isFocused,
   ...props
 }: AppTextInputProps) {
   const { wp, hp, fs } = useResponsive();
@@ -47,22 +47,22 @@ export function TextInputWithIcon({
     isValid === false
       ? colors.errorBorderColor
       : isValid === true
-        ? colors.successBorder
-        : colors.borderColor;
+      ? colors.successBorder
+      : colors.borderColor;
 
   const backgroundColor =
     isValid === false
       ? colors.errorBackground
       : isValid === true
-        ? colors.successBackground
-        : colors.borderBackground;
+      ? colors.successBackground
+      : colors.borderBackground;
 
   const headerColor =
     isValid === false
       ? colors.errorText
       : isValid === true
-        ? colors.successText
-        : colors.inputTitle;
+      ? colors.successText
+      : colors.inputTitle;
 
   const INPUT_HEIGHT = hp(7);
   const ICON_SIZE = wp(5);
@@ -74,6 +74,8 @@ export function TextInputWithIcon({
       onChangeText(text);
     }
   };
+
+  const showHeading = isFocused || value.length > 0;
 
   return (
     <XStack
@@ -92,60 +94,45 @@ export function TextInputWithIcon({
       {startImage && (
         <Image
           source={startImage}
-          style={{ width: ICON_SIZE, height: ICON_SIZE }}
+          style={{ width: ICON_SIZE, height: ICON_SIZE, marginRight: wp(2) }}
           resizeMode="contain"
         />
       )}
 
       <YStack flex={1} justifyContent="center">
-        {onfocus && (
+        {showHeading && (
           <Text fontSize={fs(10)} color={headerColor} marginBottom={hp(0.3)}>
             {headingText}
           </Text>
         )}
 
-        <TextInput
-          style={{
-            flex: 1,
-            padding: 0,
-            fontSize: fs(16),
-            color: colors.black,
-            fontFamily,
-            backgroundColor: "transparent",
-          }}
+        <BaseInput
+          {...props}
           value={value}
           placeholder={placeholder}
           placeholderTextColor={colors.placeHolderText}
-          keyboardType={inputType === "numeric" ? "numeric" : "default"}
-          autoCorrect={false}
-          autoCapitalize="none"
-          underlineColorAndroid="transparent"
-          textContentType="oneTimeCode"
-          importantForAutofill="no"
-          blurOnSubmit={false}
-          autoComplete="off"
+          keyboardType={
+            props.keyboardType ??
+            (inputType === "numeric" ? "number-pad" : "default")
+          }
+          style={{
+            fontSize: fs(16),
+            color: colors.black,
+            fontFamily,
+          }}
           onChangeText={handleChange}
-          {...props}
         />
       </YStack>
 
-      {((endIcon && endIconVisible) || (endImage && endIconVisible)) &&
-        onEndIconPress && (
-          <Pressable
-            onPress={onEndIconPress}
-            hitSlop={10}
-            style={{ marginLeft: wp(2) }}
-          >
-            {endIcon && <YStack>{endIcon}</YStack>}
-            {endImage && (
-              <Image
-                source={endImage}
-                style={{ width: ICON_SIZE, height: ICON_SIZE }}
-                resizeMode="contain"
-              />
-            )}
-          </Pressable>
-        )}
+      {(endIconVisible && endIcon && onEndIconPress) && (
+        <Pressable
+          onPress={onEndIconPress}
+          hitSlop={10}
+          style={{ marginLeft: wp(2) }}
+        >
+          <YStack>{endIcon}</YStack>
+        </Pressable>
+      )}
     </XStack>
   );
 }

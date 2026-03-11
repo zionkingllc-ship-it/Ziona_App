@@ -1,3 +1,4 @@
+import OtpContainer from "@/components/auth/OtpContainer";
 import { KeyboardAvoidingWrapper } from "@/components/layout/KeyboardAvoidingWrapper";
 import Header from "@/components/layout/header";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -6,9 +7,9 @@ import colors from "@/constants/colors";
 import { authApi } from "@/services/api/authApi";
 import { useAuthStore } from "@/store/useAuthStore";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { Keyboard, Pressable, TextInput } from "react-native";
-import { Image, Text, XStack, YStack } from "tamagui";
+import { useEffect, useState } from "react";
+import { Keyboard } from "react-native";
+import { Image, Text, YStack } from "tamagui";
 
 const OTP_LENGTH = 6;
 
@@ -30,12 +31,9 @@ export default function VerifyOtp() {
 
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [timer, setTimer] = useState(50);
   const [errorVisible, setErrorVisible] = useState(false);
-
-  const hasSubmitted = useRef(false);
-  const inputsRef = useRef<TextInput[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /* ---------------- SCREEN MOUNT ---------------- */
 
@@ -53,8 +51,8 @@ export default function VerifyOtp() {
     const interval = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
-          log("Resend available");
           clearInterval(interval);
+          log("Resend available");
           return 0;
         }
 
@@ -67,22 +65,12 @@ export default function VerifyOtp() {
     return () => clearInterval(interval);
   }, []);
 
-  /* ---------------- AUTOFOCUS ---------------- */
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      inputsRef.current[0]?.focus();
-    }, 300);
-
-    return () => clearTimeout(t);
-  }, []);
-
   /* ---------------- SUBMIT OTP ---------------- */
 
   const submitOtp = async (code: string) => {
-    if (hasSubmitted.current) return;
+    if (isSubmitting) return;
 
-    hasSubmitted.current = true;
+    setIsSubmitting(true);
     Keyboard.dismiss();
 
     line();
@@ -130,42 +118,10 @@ export default function VerifyOtp() {
         return;
       }
     } catch (error: any) {
-      console.error(
-        "OTP verification failed:",
-        error?.response?.data || error
-      );
+      console.error("OTP verification failed:", error?.response?.data || error);
 
-      hasSubmitted.current = false;
       setErrorVisible(true);
-    }
-  };
-
-  /* ---------------- HANDLE INPUT ---------------- */
-
-  const handleChange = (value: string, index: number) => {
-    if (!/^\d?$/.test(value)) return;
-
-    log("Digit entered", { index, value });
-
-    const nextOtp = [...otp];
-    nextOtp[index] = value;
-    setOtp(nextOtp);
-
-    if (value && index < OTP_LENGTH - 1) {
-      inputsRef.current[index + 1]?.focus();
-    }
-
-    if (!hasSubmitted.current && nextOtp.every((digit) => digit !== "")) {
-      log("OTP complete — triggering submit");
-      submitOtp(nextOtp.join(""));
-    }
-  };
-
-  /* ---------------- BACKSPACE ---------------- */
-
-  const handleBackspace = (index: number) => {
-    if (otp[index] === "" && index > 0) {
-      inputsRef.current[index - 1]?.focus();
+      setIsSubmitting(false);
     }
   };
 
@@ -179,20 +135,14 @@ export default function VerifyOtp() {
     log("Email:", email);
 
     setTimer(50);
-    setOtp(Array(OTP_LENGTH).fill(""));
 
     try {
       const response = await authApi.resendOtp(email);
 
       log("Resend success:", response);
-
-      hasSubmitted.current = false;
-      inputsRef.current[0]?.focus();
     } catch (error: any) {
-      console.error(
-        "Resend OTP failed:",
-        error?.response?.data || error
-      );
+      console.error("Resend OTP failed:", error?.response?.data || error);
+
       setErrorVisible(true);
     }
 
@@ -241,41 +191,13 @@ export default function VerifyOtp() {
 
         {/* OTP INPUTS */}
 
-        <XStack justifyContent="space-between" marginTop="$4">
-          {otp.map((digit, index) => (
-            <Pressable
-              key={index}
-              onPress={() => inputsRef.current[index]?.focus()}
-            >
-              <TextInput
-                ref={(ref) => {
-                  if (ref) inputsRef.current[index] = ref;
-                }}
-                value={digit}
-                onChangeText={(v) => handleChange(v, index)}
-                onKeyPress={({ nativeEvent }) => {
-                  if (nativeEvent.key === "Backspace") {
-                    handleBackspace(index);
-                  }
-                }}
-                keyboardType="number-pad"
-                maxLength={1}
-                style={{
-                  width: 44,
-                  height: 48,
-                  borderRadius: 8,
-                  borderWidth: digit ? 1.5 : 1,
-                  borderColor: digit ? colors.primary : colors.borderColor,
-                  backgroundColor: colors.borderBackground,
-                  textAlign: "center",
-                  fontFamily: "$body",
-                  fontSize: 18,
-                  color: colors.black,
-                }}
-              />
-            </Pressable>
-          ))}
-        </XStack>
+        <OtpContainer
+          length={OTP_LENGTH}
+          onComplete={(code: string) => {
+            log("OTP complete — triggering submit");
+            submitOtp(code);
+          }}
+        />
 
         {/* RESEND */}
 

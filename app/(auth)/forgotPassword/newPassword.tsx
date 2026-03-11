@@ -33,11 +33,8 @@ export default function CreatePassword() {
 
   const showInvalid = isFocus && password.length > 0 && !passwordIsValid;
 
-  const visualValidity: boolean | undefined = !isFocus
-    ? undefined
-    : showInvalid
-      ? false
-      : true;
+  const visualValidity: boolean | undefined =
+    !isFocus ? undefined : showInvalid ? false : true;
 
   const handleSubmit = async () => {
     if (!passwordIsValid || loading) return;
@@ -83,25 +80,30 @@ export default function CreatePassword() {
 
         <YStack alignItems="center" marginTop="$6" gap="$3">
           <Text
-            fontFamily={"$body"}
+            fontFamily="$body"
             fontSize="$4"
             fontWeight="600"
-            color={"#754800"}
+            color="#754800"
           >
             Create new password
           </Text>
         </YStack>
 
+        {/* PASSWORD INPUT */}
+
         <TextInputWithIcon
           value={password}
           placeholder="Enter password"
-          endIconVisible={password.length > 0 && isFocus}
-          onChangeText={setPassword}
-          onfocus={isFocus}
           headingText="Password"
+          secureTextEntry={!show}
+          isFocused={isFocus}
           isValid={visualValidity}
           onFocus={() => setIsFocus(true)}
           onBlur={() => setIsFocus(false)}
+          onChangeText={(text) => {
+            setPassword(text);
+          }}
+          endIconVisible={password.length > 0 && isFocus}
           endIcon={
             show ? (
               <Eye size={24} color={colors.inputIconColor} />
@@ -109,15 +111,16 @@ export default function CreatePassword() {
               <EyeClosed size={24} color={colors.inputIconColor} />
             )
           }
-          secureTextEntry={!show}
           onEndIconPress={() => setShow((prev) => !prev)}
         />
 
+        {/* PASSWORD RULES */}
+
         <YStack gap="$2" marginLeft={5}>
           <Text
-            fontFamily={"$body"}
-            fontSize={"$4"}
-            fontWeight={"500"}
+            fontFamily="$body"
+            fontSize="$4"
+            fontWeight="500"
             color={colors.headerText}
           >
             Your password must have at least:
@@ -154,8 +157,8 @@ export default function CreatePassword() {
 function Rule({ ok, text }: { ok: boolean; text: string }) {
   return (
     <Text
-      fontFamily={"$body"}
-      fontSize={"$4"}
+      fontFamily="$body"
+      fontSize="$4"
       color={ok ? colors.SUCCESS_GREEN : colors.subHeader}
     >
       ✓ {text}

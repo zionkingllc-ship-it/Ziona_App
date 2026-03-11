@@ -44,6 +44,24 @@ export const authApi = {
     }
   },
 
+  checkEmail: async (email: string) => {
+  try {
+    log("checkEmail called");
+
+    const response = await api.post("/auth/check-email", { email });
+
+    log("checkEmail response:", response.data);
+
+    return {
+      exists: response.data?.data?.exists ?? false,
+      message: response.data?.data?.message ?? "",
+    };
+  } catch (err: any) {
+    errorLog("checkEmail failed", err);
+    throw err;
+  }
+},
+
   signIn: async (payload: { email: string; password: string }) => {
     try {
       log("signIn called");
