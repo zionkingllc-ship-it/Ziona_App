@@ -60,3 +60,28 @@ export interface TextPost extends BasePost {
 }
 
 export type Post = ImagePost | VideoPost | TextPost;
+
+
+export type CreatePostType = "media" | "text" | "bible";
+
+export interface CreatePostDraft {
+  type: CreatePostType;
+
+  media?: {
+    uri: string;
+    type: "image" | "video";
+    thumbnail?: string;
+  };
+
+  text?: string;
+
+  category?: CategoryId;
+
+  bibleVerse?: {
+    translation: string;
+    book: string;
+    chapter: number;
+    verses: number[];
+    text: string;
+  };
+}

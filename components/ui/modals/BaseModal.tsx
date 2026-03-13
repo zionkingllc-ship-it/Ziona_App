@@ -1,13 +1,6 @@
-// components/modals/BaseModal.tsx
-
 import React from "react";
-import {
-  Modal,
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Pressable,
-} from "react-native";
+import { Modal, View, StyleSheet, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface BaseModalProps {
   visible: boolean;
@@ -22,6 +15,8 @@ export default function BaseModal({
   children,
   alignBottom = false,
 }: BaseModalProps) {
+  const insets = useSafeAreaInsets();
+
   return (
     <Modal
       visible={visible}
@@ -29,16 +24,26 @@ export default function BaseModal({
       animationType="fade"
       statusBarTranslucent
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <View style={styles.overlay}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+
         <View
           style={[
             styles.container,
             alignBottom && { justifyContent: "flex-end" },
           ]}
+          pointerEvents="box-none"
         >
-          <Pressable>{children}</Pressable>
+          <View
+            style={{
+              width: "100%",
+              paddingBottom: alignBottom ? insets.bottom : 0,
+            }}
+          >
+            {children}
+          </View>
         </View>
-      </Pressable>
+      </View>
     </Modal>
   );
 }

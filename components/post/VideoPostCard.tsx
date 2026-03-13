@@ -1,5 +1,4 @@
 import colors from "@/constants/colors";
-import { useScreenDimensions } from "@/context/ScreenDimensionsContext";
 import { Post } from "@/types/post";
 import { Play } from "@tamagui/lucide-icons";
 import React, { useRef, useState } from "react";
@@ -35,7 +34,7 @@ export default function VideoPostCard({
   screenHeight,
   tabBarHeight,
 }: Props) {
-  const videoRef = useRef<any>(null); 
+  const videoRef = useRef<any>(null);
 
   const [videoDuration, setVideoDuration] = useState(0);
   const playbackRate = useSharedValue(1);
@@ -74,7 +73,7 @@ export default function VideoPostCard({
   //  SCRUB BAR POSITION — ALWAYS ABOVE TAB BAR
   const scrubBottom = 0;
 
-  const scrubWidth = screenWidth * 0.9;
+  const scrubWidth = screenWidth;
   const scrubHeight = 7;
 
   const playButtonSize = Math.min(50, screenWidth * 0.12);
@@ -152,7 +151,6 @@ export default function VideoPostCard({
             alignSelf: "center",
             height: scrubHeight,
             backgroundColor: "rgba(255,255,255,0.3)",
-            borderRadius: scrubHeight / 2,
             overflow: "hidden",
           }}
         >

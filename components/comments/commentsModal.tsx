@@ -1,3 +1,4 @@
+import BaseModal from "@/components/ui/modals/BaseModal";
 import colors from "@/constants/colors";
 import { Heart } from "@tamagui/lucide-icons";
 import React, { useEffect, useRef, useState } from "react";
@@ -6,7 +7,6 @@ import {
   FlatList,
   Keyboard,
   LayoutChangeEvent,
-  Modal,
   Platform,
   Pressable,
   TextInput,
@@ -55,10 +55,6 @@ export function CommentsSheet({ visible, onClose }: Props) {
 
   const inputRef = useRef<TextInput>(null);
 
-  /* -------------------------
-     KEYBOARD CONTROL (FIX)
-  -------------------------- */
-
   const keyboardHeight = useSharedValue(0);
 
   useEffect(() => {
@@ -79,12 +75,12 @@ export function CommentsSheet({ visible, onClose }: Props) {
   }, []);
 
   const sheetAnimatedStyle = useAnimatedStyle(() => ({
-    marginBottom: Platform.OS === "android" ? keyboardHeight.value : 0,
+    transform: [
+      {
+        translateY: Platform.OS === "android" ? -keyboardHeight.value : 0,
+      },
+    ],
   }));
-
-  /* -------------------------
-     LOGIC
-  -------------------------- */
 
   const toggleLike = (id: string) => {
     setComments((prev) =>
@@ -109,197 +105,153 @@ export function CommentsSheet({ visible, onClose }: Props) {
     inputRef.current?.focus();
   };
 
-  /* -------------------------
-     RENDER
-  -------------------------- */
-
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="slide"
-      statusBarTranslucent
-    >
-      <View style={{ flex: 1 }}>
-        {/* BACKDROP */}
-        <Pressable
-          onPress={onClose}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.4)",
-          }}
-        />
-
-        {/* SHEET CONTAINER */}
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-          }}
-          pointerEvents="box-none"
+    <BaseModal visible={visible} onClose={onClose} alignBottom>
+      <Animated.View
+        style={[
+          {
+            height: height * 0.7,   // key fix
+            backgroundColor: "white",
+            borderTopLeftRadius: 30,
+            borderTopRightRadius: 30,
+            overflow: "hidden",
+          },
+          sheetAnimatedStyle,
+        ]}
+      >
+        <YStack
+          padding="$4"
+          borderBottomWidth={1}
+          borderColor="#eee"
+          alignItems="center"
         >
-          <Animated.View
-            style={[
-              {
-                maxHeight: height * 0.7,
-                flex: 1,
-                backgroundColor: "white",
-                borderTopLeftRadius: 30,
-                borderTopRightRadius: 30,
-                overflow: "hidden",
-              },
-              sheetAnimatedStyle,
-            ]}
-          >
-            {/* HEADER */}
-            <YStack
-              padding="$4"
-              borderBottomWidth={1}
-              borderColor="#eee"
-              alignItems="center"
-            >
-              <Text fontFamily={"$body"} fontWeight="600" fontSize="$4">
-                Comments
-              </Text>
-            </YStack>
+          <Text fontFamily={"$body"} fontWeight="600" fontSize="$4">
+            Comments
+          </Text>
+        </YStack>
 
-            {/* LIST */}
-            <View style={{ flex: 1 }}>
-              <FlatList
-                data={comments}
-                keyExtractor={(item) => item.id}
-                style={{ flex: 1 }}
-                nestedScrollEnabled
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{
-                  padding: 16,
-                  paddingBottom: bottomHeight,
-                }}
-                renderItem={({ item }) => (
-                  <XStack justifyContent="space-between" padding="$4">
-                    <XStack gap="$2" flex={1}>
-                      <Image
-                        source={{ uri: "https://i.pravatar.cc/100" }}
-                        width={30}
-                        height={30}
-                        borderRadius={50}
-                      />
+        <View style={{ flex: 1 }}>
+          <FlatList
+            data={comments}
+            keyExtractor={(item) => item.id}
+            keyboardDismissMode="interactive"
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              padding: 16,
+              paddingBottom: bottomHeight,
+            }}
+            renderItem={({ item }) => (
+              <XStack justifyContent="space-between" padding="$4">
+                <XStack gap="$2" flex={1}>
+                  <Image
+                    source={{ uri: "https://i.pravatar.cc/100" }}
+                    width={30}
+                    height={30}
+                    borderRadius={50}
+                  />
 
-                      <YStack flex={1}>
-                        <XStack gap="$2" alignItems="center">
-                          <Text fontWeight="600" fontFamily={"$body"} fontSize={16}>
-                            {item.name}
-                          </Text>
-                          <Text color="#999" fontFamily={"$body"} fontSize={10}>
-                            {item.time}
-                          </Text>
-                        </XStack>
-
-                        <Text fontSize={13} fontFamily={"$body"}>{item.text}</Text>
-
-                        <XStack marginTop={15} gap={15}>
-                          <TouchableOpacity
-                            style={{
-                              borderWidth: 1,
-                              borderColor: "#836F8B",
-                              paddingHorizontal: 2,
-                              borderRadius: 4,
-                              width: 40,
-                              justifyContent:"center",
-                              height: 15,
-                              alignItems:"center"
-                            }}
-                          >
-                            <Text fontSize={10} fontFamily={"$body"} fontWeight={600}>Reply</Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity>
-                            <Text fontSize={10} fontFamily={"$body"} >View Replies</Text>
-                          </TouchableOpacity>
-                        </XStack>
-                      </YStack>
+                  <YStack flex={1}>
+                    <XStack gap="$2" alignItems="center">
+                      <Text fontWeight="600" fontFamily="$body" fontSize={16}>
+                        {item.name}
+                      </Text>
+                      <Text color="#999" fontFamily="$body" fontSize={10}>
+                        {item.time}
+                      </Text>
                     </XStack>
 
-                    <Pressable onPress={() => toggleLike(item.id)}>
-                      {item.liked ? (
-                        <Image source={likeIconActive} width={24} height={24} />
-                      ) : (
-                        <Heart size={24} color={colors.primary} />
-                      )}
-                      <Text fontSize={10} fontFamily={"$body"} textAlign="center">
-                        {item.likeCount}
-                      </Text>
-                    </Pressable>
-                  </XStack>
-                )}
-              />
-            </View>
-
-            {/* INPUT SECTION */}
-            <YStack
-              borderTopWidth={1}
-              borderColor="#eee"
-              onLayout={onBottomLayout}
-            >
-              <XStack
-                padding="$1"
-                gap="$2"
-                alignItems="center"
-                backgroundColor={"#FAF9FA"}
-                borderWidth={1}
-                borderColor={"#EEEBEF"}
-                marginHorizontal={10}
-                paddingHorizontal={14}
-                borderRadius={8}
-                marginTop={10}
-                marginBottom={isFocused ? 10 : 20}
-                minHeight={43}
-                maxHeight={"$10"}
-              >
-                <TextInput
-                  ref={inputRef}
-                  multiline 
-                  placeholder="Join the conversation..."
-                  placeholderTextColor={"#836F8B"}
-                  value={inputValue}
-                  onChangeText={setInputValue}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  style={{ flex: 1, fontFamily:"$body" }}
-                />
-                <Image
-                  source={require("@/assets/images/sendIcon.png")}
-                  width={30}
-                  height={30}
-                />
-              </XStack>
-
-              {isFocused && (
-                <XStack
-                  paddingHorizontal="$3"
-                  paddingBottom="$3"
-                  gap="$3"
-                  marginBottom={15}
-                >
-                  {EMOJIS.map((emoji) => (
-                    <Text
-                      key={emoji}
-                      fontSize={22} 
-                      onPress={() => addEmoji(emoji)}
-                    >
-                      {emoji}
+                    <Text fontSize={13} fontFamily="$body">
+                      {item.text}
                     </Text>
-                  ))}
+
+                    <XStack marginTop={15} gap={15}>
+                      <TouchableOpacity
+                        style={{
+                          borderWidth: 1,
+                          borderColor: "#836F8B",
+                          paddingHorizontal: 2,
+                          borderRadius: 4,
+                          width: 40,
+                          justifyContent: "center",
+                          height: 15,
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text fontSize={10} fontFamily="$body" fontWeight={600}>
+                          Reply
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity>
+                        <Text fontSize={10} fontFamily="$body">
+                          View Replies
+                        </Text>
+                      </TouchableOpacity>
+                    </XStack>
+                  </YStack>
                 </XStack>
-              )}
-            </YStack>
-          </Animated.View>
+
+                <Pressable onPress={() => toggleLike(item.id)}>
+                  {item.liked ? (
+                    <Image source={likeIconActive} width={24} height={24} />
+                  ) : (
+                    <Heart size={24} color={colors.primary} />
+                  )}
+
+                  <Text fontSize={10} fontFamily="$body" textAlign="center">
+                    {item.likeCount}
+                  </Text>
+                </Pressable>
+              </XStack>
+            )}
+          />
         </View>
-      </View>
-    </Modal>
+
+        <YStack borderTopWidth={1} borderColor="#eee" onLayout={onBottomLayout}>
+          <XStack
+            padding="$1"
+            gap="$2"
+            alignItems="center"
+            backgroundColor="#FAF9FA"
+            borderWidth={1}
+            borderColor="#EEEBEF"
+            marginHorizontal={10}
+            paddingHorizontal={14}
+            borderRadius={8}
+            marginTop={10}
+            marginBottom={isFocused ? 10 : 20}
+            minHeight={43}
+          >
+            <TextInput
+              ref={inputRef}
+              multiline
+              placeholder="Join the conversation..."
+              placeholderTextColor="#836F8B"
+              value={inputValue}
+              onChangeText={setInputValue}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              style={{ flex: 1, fontFamily: "$body" }}
+            />
+
+            <Image
+              source={require("@/assets/images/sendIcon.png")}
+              width={30}
+              height={30}
+            />
+          </XStack>
+
+          {isFocused && (
+            <XStack paddingHorizontal="$3" paddingBottom="$3" gap="$3" marginBottom={15}>
+              {EMOJIS.map((emoji) => (
+                <Text key={emoji} fontSize={22} onPress={() => addEmoji(emoji)}>
+                  {emoji}
+                </Text>
+              ))}
+            </XStack>
+          )}
+        </YStack>
+      </Animated.View>
+    </BaseModal>
   );
 }
