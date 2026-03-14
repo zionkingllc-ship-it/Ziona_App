@@ -1,29 +1,27 @@
-import { CategoryId } from "./post";
+import { Category } from "./category"
 
-export type CreatePostType = "media" | "text" | "bible";
+export type CreatePostType = "media" | "text" | "bible"
 
-export interface BibleVerse {
-  translation: string;
-  book: string;
-  chapter: number;
-  verses: number[];
-  text: string;
-}
-
-export interface MediaDraft {
-  uri: string;
-  type: "image" | "video";
-  thumbnail?: string;
+export interface BibleSelection {
+  translation: string
+  book: string
+  chapter: number
+  verses: number[]
+  text: string
 }
 
 export interface CreatePostDraft {
-  type: CreatePostType;
+  type: CreatePostType
 
-  media?: MediaDraft;
+  media?: {
+    uri: string
+    type: "image" | "video"
+    thumbnail?: string
+  }
 
-  text?: string;
+  text?: string
 
-  category?: CategoryId;
+  category?: Category
 
-  bibleVerse?: BibleVerse;
+  bibleVerse?: BibleSelection
 }

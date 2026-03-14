@@ -45,7 +45,7 @@ export default function TextPostCardInput({
 
       <View
         position="absolute"
-        left={-wp(3)}
+        left={-wp(2)}
         bottom={-hp(5)}
         pointerEvents="none"
       >
@@ -61,8 +61,10 @@ export default function TextPostCardInput({
         flex={1}
         backgroundColor={backgroundColor}
         padding={hp(1)}
-        minHeight={hp(52)}
+        minHeight={hp(52)} 
         borderRadius={wp(4)}
+        borderWidth={wp(1)}
+        borderColor={colors.white}
       >
         {/* Left strip */}
 
@@ -162,8 +164,9 @@ export default function TextPostCardInput({
                   onChangeText(text);
                 }
               }}
-              placeholder="Write your testimony..."
+              placeholder="Whats on your mind?"
               multiline
+              
               style={{
                 flex: 1,
                 fontSize: fs(17),

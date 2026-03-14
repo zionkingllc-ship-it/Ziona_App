@@ -19,7 +19,7 @@ export function SimpleButton({
   text,
   textColor,
   textSize = "$4",
-  textWeight = "600",
+  textWeight = "400",
   onPress,
   color,
   fontFamily ="$body",
@@ -45,7 +45,6 @@ export function SimpleButton({
         ) : (
           <Text
             color={textColor ?? "black"}
-            textAlign="center"
             fontFamily={fontFamily}
             fontSize={textSize}
             fontWeight={textWeight}

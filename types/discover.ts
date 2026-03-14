@@ -1,4 +1,4 @@
-
+import { Category } from "./category";
 
 export type DiscoverPost = {
   id: string;
@@ -7,12 +7,4 @@ export type DiscoverPost = {
   text?: string;
 };
 
-export type DiscoverCategory = {
-  id: string
-  label: string
-  slug: string
-  icon: string
-  bgColor: string
-  bdColor: string
-  order?: number
-}
+export type DiscoverCategory = Category;

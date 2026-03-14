@@ -1,33 +1,33 @@
-import { create } from "zustand";
-import { CreatePostDraft, CreatePostType } from "@/types/createPost";
+import { create } from "zustand"
+import { CreatePostDraft, CreatePostType } from "@/types/createPost"
 
 interface CreatePostState {
-  draft: CreatePostDraft | null;
+draft: CreatePostDraft | null
 
-  startDraft: (type: CreatePostType) => void;
+startDraft: (type: CreatePostType) => void
 
-  updateDraft: (data: Partial<CreatePostDraft>) => void;
+updateDraft: (data: Partial<CreatePostDraft>) => void
 
-  resetDraft: () => void;
+resetDraft: () => void
 }
 
 export const useCreatePostStore = create<CreatePostState>((set) => ({
-  draft: null,
+draft: null,
 
-  startDraft: (type) =>
-    set({
-      draft: {
-        type,
-      },
-    }),
+startDraft: (type) =>
+set({
+draft: {
+type,
+},
+}),
 
-  updateDraft: (data) =>
-    set((state) => ({
-      draft: {
-        ...state.draft!,
-        ...data,
-      },
-    })),
+updateDraft: (data) =>
+set((state) => ({
+draft: {
+...(state.draft ?? { type: "text" }),
+...data,
+},
+})),
 
-  resetDraft: () => set({ draft: null }),
-}));
+resetDraft: () => set({ draft: null }),
+}))
