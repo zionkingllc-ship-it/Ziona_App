@@ -1,27 +1,101 @@
 import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useCreatePostStore } from "@/store/createPostStore";
+import { MediaItem } from "@/types/createPost";
+
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
+
 import { Image, StyleSheet, TouchableOpacity } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
 
 export default function CreateScreen() {
-  const { startDraft } = useCreatePostStore();
+  const { startDraft, setMedia } = useCreatePostStore();
   const { wp, hp, fs } = useResponsive();
+
+  async function ensurePermission() {
+    const { status } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      alert("Permission to access media library is required.");
+      return false;
+    }
+
+    return true;
+  }
+
+  function normalizeMedia(
+    asset: ImagePicker.ImagePickerAsset
+  ): MediaItem {
+    return {
+      id: asset.assetId ?? asset.uri,
+      uri: asset.uri,
+      type: asset.type === "video" ? "video" : "image",
+    };
+  }
+
+  async function pickInitialMedia() {
+    const allowed = await ensurePermission();
+    if (!allowed) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsMultipleSelection: true,
+      quality: 1,
+    });
+
+    if (result.canceled) return;
+
+    const assets = result.assets;
+
+    const video = assets.find((a) => a.type === "video");
+
+    /* =========================
+       VIDEO FLOW
+    ========================= */
+
+    if (video) {
+      if (assets.length > 1) {
+        alert("Only one video allowed.");
+        return;
+      }
+
+      startDraft("video"); // ✅ FIXED
+
+      setMedia([normalizeMedia(video)]);
+
+      router.push("/create/media");
+      return;
+    }
+
+    /* =========================
+       IMAGE FLOW
+    ========================= */
+
+    const images = assets
+      .filter((a) => a.type !== "video")
+      .slice(0, 5);
+
+    if (assets.length > 5) {
+      alert("Maximum 5 images allowed.");
+    }
+
+    startDraft("image"); // ✅ FIXED
+
+    setMedia(images.map(normalizeMedia));
+
+    router.push("/create/media");
+  }
 
   function openText() {
     startDraft("text");
     router.push("/create/text");
   }
 
-  function openMedia() {
-    startDraft("media");
-    router.push("/create/media");
-  }
-
   function openBible() {
     startDraft("bible");
-    router.push("/create/text");
+    router.push("/create/CreateBiblePostScreen");
   }
 
   return (
@@ -31,8 +105,6 @@ export default function CreateScreen() {
       paddingTop={hp(5)}
       backgroundColor={colors.white}
     >
-      {/* TITLE */}
-
       <Text
         fontSize={fs(18)}
         fontWeight="600"
@@ -43,43 +115,19 @@ export default function CreateScreen() {
         Create Post
       </Text>
 
-      {/* GRID */}
-
-      <XStack flexWrap="wrap" gap={wp(3)}>
-        {/*SHARE THOUGHTS*/}
+      <XStack flexWrap="wrap" rowGap={wp(7)} columnGap={wp(4)}>
+        {/* TEXT */}
 
         <TouchableOpacity
-          style={[
-            styles.card,
-            {
-              width: wp(42),
-              height: hp(13),
-              borderRadius: wp(3),
-
-              shadowColor: colors.black,
-              shadowOpacity: 0.06,
-              shadowOffset: { width: 0, height: 8 },
-              shadowRadius: 2,
-              elevation: 1.5,
-            },
-          ]}
+          style={[styles.card, cardStyle(wp, hp)]}
           onPress={openText}
         >
-          <YStack alignItems="center" gap={hp(1)} paddingHorizontal={hp(5)}>
+          <YStack alignItems="center" gap={hp(1)}>
             <Image
               source={require("@/assets/images/writeIcon.png")}
-              style={{
-                width: wp(7),
-                height: wp(7),
-                resizeMode: "contain",
-              }}
+              style={iconStyle(wp)}
             />
-            <Text
-              fontSize={fs(14)}
-              fontFamily={"$body"}
-              fontWeight={"400"}
-              textAlign="center"
-            >
+            <Text fontSize={fs(14)} textAlign="center">
               Share your thoughts
             </Text>
           </YStack>
@@ -88,38 +136,16 @@ export default function CreateScreen() {
         {/* MEDIA */}
 
         <TouchableOpacity
-          style={[
-            styles.card,
-            {
-              width: wp(42),
-              height: hp(13),
-              borderRadius: wp(3),
-
-              shadowColor: colors.black,
-              shadowOpacity: 0.06,
-              shadowOffset: { width: 0, height: 8 },
-              shadowRadius: 2,
-              elevation: 1.5,
-            },
-          ]}
-          onPress={openMedia}
+          style={[styles.card, cardStyle(wp, hp)]}
+          onPress={pickInitialMedia}
         >
-          <YStack alignItems="center" gap={hp(1)} paddingHorizontal={hp(5)}>
+          <YStack alignItems="center" gap={hp(1)}>
             <Image
               source={require("@/assets/images/imageIcon.png")}
-              style={{
-                width: wp(7),
-                height: wp(7),
-                resizeMode: "contain",
-              }}
+              style={iconStyle(wp)}
             />
-            <Text
-              fontSize={fs(14)}
-              fontFamily={"$body"}
-              fontWeight={"400"}
-              textAlign="center"
-            >
-              Upload a video/ Image
+            <Text fontSize={fs(14)} textAlign="center">
+              Upload a video / image
             </Text>
           </YStack>
         </TouchableOpacity>
@@ -127,37 +153,15 @@ export default function CreateScreen() {
         {/* BIBLE */}
 
         <TouchableOpacity
-          style={[
-            styles.card,
-            {
-              width: wp(42),
-              height: hp(13),
-              borderRadius: wp(3),
-
-              shadowColor: colors.black,
-              shadowOpacity: 0.06,
-              shadowOffset: { width: 0, height: 8 },
-              shadowRadius: 2,
-              elevation: 1.5, 
-            },
-          ]}
-          onPress={openText}
+          style={[styles.card, cardStyle(wp, hp)]}
+          onPress={openBible}
         >
-          <YStack alignItems="center" gap={hp(1)} paddingHorizontal={hp(3)}>
+          <YStack alignItems="center" gap={hp(1)}>
             <Image
               source={require("@/assets/images/bibleIcon.png")}
-              style={{
-                width: wp(7),
-                height: wp(7),
-                resizeMode: "contain",
-              }}
+              style={iconStyle(wp)}
             />
-            <Text
-              fontSize={fs(14)}
-              fontFamily={"$body"}
-              fontWeight={"400"}
-              textAlign="center"
-            >
+            <Text fontSize={fs(14)} textAlign="center">
               Share a Bible verse
             </Text>
           </YStack>
@@ -172,5 +176,26 @@ const styles = StyleSheet.create({
     backgroundColor: "#FAF9FA",
     justifyContent: "center",
     alignItems: "center",
+    elevation: 1,
+    shadowRadius: 10,
+    shadowColor: "#000000",
+    shadowOffset: { height: 0, width: 5 },
   },
 });
+
+function cardStyle(wp: any, hp: any) {
+  return {
+    width: wp(42),
+    height: hp(13),
+    borderRadius: wp(3),
+    padding: wp(7),
+  };
+}
+
+function iconStyle(wp: any) {
+  return {
+    width: wp(7),
+    height: wp(7),
+    resizeMode: "contain" as const,
+  };
+}

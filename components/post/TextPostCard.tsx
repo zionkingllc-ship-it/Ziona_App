@@ -55,6 +55,34 @@ export default function TextPostCard({
 
   const gesture = Gesture.Exclusive(doubleTap, singleTap);
 
+  /* =========================
+     DATA MAPPING
+  ========================= */
+
+  const categoryObj = post.categories?.[0];
+
+  const category = categoryObj?.label ?? "";
+  const backgroundColor = categoryObj?.bgColor ?? "#D9C0A0";
+
+  const scriptureData =
+    post.type === "text" ? post.text?.scripture : undefined;
+
+  const scripture = scriptureData
+    ? `${scriptureData.book} ${scriptureData.chapter}:${scriptureData.verseStart}${
+        scriptureData.verseEnd &&
+        scriptureData.verseEnd > scriptureData.verseStart
+          ? `-${scriptureData.verseEnd}`
+          : ""
+      }`
+    : "";
+
+  const translation = scriptureData?.translation ?? "";
+
+  const verseText = scriptureData?.text ?? "";
+
+  const testimonyText =
+    post.type === "text" ? post.text?.message ?? post.caption ?? "" : "";
+
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View
@@ -91,7 +119,7 @@ export default function TextPostCard({
           {/* Card */}
           <XStack
             flex={1}
-            backgroundColor={"#D9C0A0"}
+            backgroundColor={backgroundColor}
             padding={hp(1.5)}
             borderRadius={wp(1.5)}
           >
@@ -105,82 +133,94 @@ export default function TextPostCard({
 
             {/* Content */}
             <YStack flex={1} padding={hp(1)}>
-              {/* Header */}
-              <YStack
-                paddingBottom={hp(1.5)}
-                borderBottomWidth={1}
-                borderColor="#62292E"
-                marginBottom={hp(2)}
-              >
-                <Text
-                  fontFamily="$script"
-                  fontWeight="600"
-                  fontSize={fs(15)}
-                  color={colors.black}
+              {/* HEADER */}
+              {(category || scripture) && (
+                <YStack
+                  paddingBottom={hp(1.5)}
+                  borderBottomWidth={1}
+                  borderColor="#62292E"
+                  marginBottom={hp(2)}
                 >
-                  Love
-                </Text>
-
-                <XStack justifyContent="space-between" alignItems="center">
-                  <Text
-                    fontFamily="$script"
-                    fontWeight="600"
-                    fontSize={fs(15)}
-                    color={colors.black}
-                  >
-                    John 3:16
-                  </Text>
-
-                  <View
-                    borderWidth={1}
-                    borderColor="#836F8B"
-                    borderRadius={wp(2)}
-                    paddingHorizontal={wp(3)}
-                    paddingVertical={hp(0.6)}
-                  >
+                  {category ? (
                     <Text
-                      fontFamily="$body"
+                      fontFamily="$script"
                       fontWeight="600"
-                      fontSize={fs(11)}
-                      color="#836F8B"
+                      fontSize={fs(15)}
+                      color={colors.black}
                     >
-                      KJV
+                      {category}
                     </Text>
-                  </View>
-                </XStack>
-              </YStack>
+                  ) : null}
 
-              {/* Verse */}
-              <View
-                borderLeftWidth={3}
-                borderLeftColor="#62292E"
-                paddingLeft={wp(4)}
-                marginBottom={hp(2)}
-              >
+                  <XStack justifyContent="space-between" alignItems="center">
+                    {scripture ? (
+                      <Text
+                        fontFamily="$script"
+                        fontWeight="600"
+                        fontSize={fs(15)}
+                        color={colors.black}
+                      >
+                        {scripture}
+                      </Text>
+                    ) : (
+                      <View />
+                    )}
+
+                    {translation ? (
+                      <View
+                        borderWidth={1}
+                        borderColor="#836F8B"
+                        borderRadius={wp(2)}
+                        paddingHorizontal={wp(3)}
+                        paddingVertical={hp(0.6)}
+                      >
+                        <Text
+                          fontFamily="$body"
+                          fontWeight="600"
+                          fontSize={fs(11)}
+                          color="#836F8B"
+                        >
+                          {translation}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </XStack>
+                </YStack>
+              )}
+
+              {/* VERSE */}
+              {verseText ? (
+                <View
+                  borderLeftWidth={3}
+                  borderLeftColor="#62292E"
+                  paddingLeft={wp(4)}
+                  marginBottom={hp(2)}
+                >
+                  <Text
+                    fontFamily="$heading"
+                    fontWeight="400"
+                    fontSize={fs(17)}
+                    fontStyle="italic"
+                    color={colors.black}
+                    lineHeight={fs(25)}
+                  >
+                    {verseText}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* TESTIMONY */}
+              {testimonyText ? (
                 <Text
                   fontFamily="$heading"
                   fontWeight="400"
                   fontSize={fs(17)}
-                  fontStyle="italic"
                   color={colors.black}
                   lineHeight={fs(25)}
                 >
-                  “Jesus wept.”
+                  {testimonyText}
                 </Text>
-              </View>
-
-              {/* Description */}
-              <Text
-                fontFamily="$heading"
-                fontWeight="400"
-                fontSize={fs(17)}
-                color={colors.black}
-                lineHeight={fs(25)}
-              >
-                In quiet seasons and loud storms, God remains constant. When
-                doors close, trust His direction. When answers delay, trust His
-                timing.
-              </Text>
+              ) : null}
             </YStack>
           </XStack>
         </XStack>

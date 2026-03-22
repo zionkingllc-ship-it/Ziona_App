@@ -1,12 +1,14 @@
 export interface Category {
-id: string
-label: string
-slug: string
+  id: string;
+  label: string;
+  slug: string;
 
-icon: string | number
+  icon?: {
+    uri: string;
+  };
 
-bgColor: string
-bdColor: string
+  bgColor: string;
+  bdColor: string;
 
-order?: number
+  order?: number;
 }

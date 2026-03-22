@@ -19,7 +19,7 @@ export function preloadPostMedia(post?: Post) {
   }
 
   if (post.type === "text") {
-    const bg = post.media.backgroundImage;
+    const bg = post.media?.backgroundImage;
 
     if (typeof bg === "string") {
       Image.prefetch(bg);

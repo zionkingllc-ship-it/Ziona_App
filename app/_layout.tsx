@@ -14,13 +14,18 @@ import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TamaguiProvider } from "tamagui";
-
+import { useCategoryStore } from "@/store/categoryStore"
 import AuthGate from "@/components/auth/AuthGate";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const scheme = useColorScheme() ?? "light";
+  const loadCategories = useCategoryStore((s) => s.loadCategories);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   const [fontsLoaded] = useFonts({
     MonaSans_400: require("../assets/fonts/MonaSans-Regular.ttf"),

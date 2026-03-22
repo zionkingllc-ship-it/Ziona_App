@@ -4,12 +4,12 @@ import { TextInputWithIcon } from "@/components/ui/TextInputWithIcon";
 import { SimpleButton } from "@/components/ui/centerTextButton";
 import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
+import { authApi } from "@/services/api/authApi";
 import { useAsyncStore } from "@/store/useAsyncStore";
 import { useSignupStore } from "@/store/useSignupStore";
-import { authApi } from "@/services/api/authApi";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Image, Text, YStack } from "tamagui";
+import { Image, Text, XStack, YStack } from "tamagui";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -37,11 +37,7 @@ export default function Email() {
   const showError = showInvalidFormat || serverError;
 
   const visualValidity: boolean | undefined =
-    !isFocus && !serverError
-      ? undefined
-      : showError
-      ? false
-      : true;
+    !isFocus && !serverError ? undefined : showError ? false : true;
 
   const handleNext = async () => {
     if (!isValidEmail || isLoading) return;
@@ -68,7 +64,7 @@ export default function Email() {
     } catch (err: any) {
       setServerError(
         err?.response?.data?.error?.message ||
-          "Unable to verify email, please try again"
+          "Unable to verify email, please try again",
       );
     } finally {
       stop("emailNext");
@@ -77,7 +73,9 @@ export default function Email() {
 
   return (
     <KeyboardAvoidingWrapper>
-      <Header />
+      <XStack paddingLeft={wp(5)}>
+        <Header />
+      </XStack>
 
       <YStack
         flex={1}

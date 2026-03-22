@@ -103,7 +103,7 @@ export const useAuthStore = create<AuthStore>()(
 
           /* do NOT logout automatically */
           set({
-            isAuthenticated: true,
+            isAuthenticated: false,
             mode: "authenticated",
             isBootstrapping: false,
             isInitializing: false,

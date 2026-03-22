@@ -18,7 +18,13 @@ export const MOCK_POSTS: Post[] = [
     bookmarked: false,
     bookmarks: 18,
     createdAt: new Date().toISOString(),
-    categories: ["love"],
+    categories: [
+      {
+        label: "Love",
+        bgColor: "#F4F3F4",
+        bdColor: "#E5E5E5",
+      },
+    ],
   },
 
   {
@@ -29,7 +35,10 @@ export const MOCK_POSTS: Post[] = [
       name: "Elijah",
       avatarUrl: require("@/assets/images/profile.png"),
     },
-    text: "Sometimes God calms the storm. Sometimes He lets the storm rage and calms His child.",
+    text: {
+      message:
+        "Sometimes God calms the storm. Sometimes He lets the storm rage and calms His child.",
+    },
     media: {
       backgroundImage: require("@/assets/images/textPostBackground1.png"),
       thumbnailUrl: "https://picsum.photos/800/1200?random=10",
@@ -40,7 +49,13 @@ export const MOCK_POSTS: Post[] = [
     bookmarked: false,
     bookmarks: 12,
     createdAt: new Date().toISOString(),
-    categories: ["patience"],
+    categories: [
+      {
+        label: "Patience",
+        bgColor: "#F4F3F4",
+        bdColor: "#E5E5E5",
+      },
+    ],
   },
 
   {
@@ -76,7 +91,13 @@ export const MOCK_POSTS: Post[] = [
     bookmarked: false,
     bookmarks: 45,
     createdAt: new Date().toISOString(),
-    categories: ["trust"],
+    categories: [
+      {
+        label: "Trust",
+        bgColor: "#F4F3F4",
+        bdColor: "#E5E5E5",
+      },
+    ],
   },
 
   {
@@ -97,7 +118,13 @@ export const MOCK_POSTS: Post[] = [
     bookmarked: false,
     bookmarks: 18,
     createdAt: new Date().toISOString(),
-    categories: ["trust"],
+    categories: [
+      {
+        label: "Trust",
+        bgColor: "#F4F3F4",
+        bdColor: "#E5E5E5",
+      },
+    ],
   },
 
   {
@@ -117,7 +144,13 @@ export const MOCK_POSTS: Post[] = [
     bookmarked: false,
     bookmarks: 18,
     createdAt: new Date().toISOString(),
-    categories: ["prayer"],
+    categories: [
+      {
+        label: "Prayer",
+        bgColor: "#F4F3F4",
+        bdColor: "#E5E5E5",
+      },
+    ],
   },
 ];
 

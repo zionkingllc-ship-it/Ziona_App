@@ -4,80 +4,164 @@ import TextPostCardInput from "@/components/post/TextPostCardInput";
 import { SimpleButton } from "@/components/ui/centerTextButton";
 import BibleSelectorModal from "@/components/ui/modals/BibleSelectorModal";
 import CategoryModal from "@/components/ui/modals/CategoryModal";
+import SuccessModal from "@/components/ui/modals/successModal";
 import colors from "@/constants/colors";
-import {
-  MOCK_BOOKS,
-  MOCK_CHAPTERS,
-  MOCK_TRANSLATIONS,
-  MOCK_VERSES,
-} from "@/constants/mockBible";
+
 import { useResponsive } from "@/hooks/useResponsive";
+
+import { publishDraftPost } from "@/services/graphQL/publishDraftPost";
+
 import { useCreatePostStore } from "@/store/createPostStore";
 
-import { useState } from "react";
-import { Image, ScrollView, TouchableOpacity } from "react-native";
+import { router } from "expo-router";
+
+import { useEffect, useRef, useState } from "react";
+
+import { Alert, Image, ScrollView, TouchableOpacity } from "react-native";
+
 import { Text, XStack, YStack } from "tamagui";
+
+/* =========================
+   HELPER
+========================= */
+
+function buildReference(book: string, chapter: number, verses: number[]) {
+  const sorted = [...verses].sort((a, b) => a - b);
+
+  if (!sorted.length) return "";
+
+  if (sorted.length === 1) {
+    return `${book} ${chapter}:${sorted[0]}`;
+  }
+
+  return `${book} ${chapter}:${sorted[0]}-${sorted[sorted.length - 1]}`;
+}
 
 export default function CreateTextScreen() {
   const { wp, hp, fs } = useResponsive();
 
-  const { draft, updateDraft } = useCreatePostStore();
+  const {
+    draft,
+    startDraft,
+    setText,
+    setCategory,
+    setBibleVerse,
+  } = useCreatePostStore();
 
   const [categoryVisible, setCategoryVisible] = useState(false);
   const [bibleVisible, setBibleVisible] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [limitModal, setLimitModal] = useState(false);
+  const [limitMessage, setLimitMessage] = useState("");
+  const uploadLock = useRef(false);
 
-  const translation = draft?.bibleVerse?.translation || "";
-  const book = draft?.bibleVerse?.book || "";
-  const chapter = draft?.bibleVerse?.chapter || 0;
+  /* =========================
+     ENSURE DRAFT EXISTS
+  ========================= */
 
-  const verseText = draft?.bibleVerse?.text;
+  useEffect(() => {
+    if (!draft) {
+      startDraft("text"); // ✅ CRITICAL FIX
+    }
+  }, []);
 
-  const cardColor = draft?.category?.bgColor ?? "#E6E2C5";
-  const selectedCategory = draft?.category;
+  /* =========================
+     TYPE SAFETY
+  ========================= */
 
-  const tagIcon =
-    selectedCategory?.icon ?? require("@/assets/images/tagIcon.png");
+  if (!draft || (draft.type !== "text" && draft.type !== "bible")) {
+    return null;
+  }
 
-  const tagTitle = selectedCategory?.label ?? "Select a tag";
+  const isBible = draft.type === "bible";
 
-  const tagSubtitle = selectedCategory ? "Tap to change" : "Choose a category";
+  /* =========================
+     DERIVED DATA
+  ========================= */
+
+  const translation =
+    isBible && draft.bibleVerse ? draft.bibleVerse.translation : "";
+
+  const book =
+    isBible && draft.bibleVerse ? draft.bibleVerse.book : "";
+
+  const chapter =
+    isBible && draft.bibleVerse ? draft.bibleVerse.chapter : 0;
+
+  const verses =
+    isBible && draft.bibleVerse ? draft.bibleVerse.verses : [];
+
+  const verseText = isBible ? draft.bibleVerse?.text : undefined;
+
+  const reference =
+    book && chapter && verses.length
+      ? buildReference(book, chapter, verses)
+      : "";
+
+  const cardColor = draft.category?.bgColor ?? "#E6E2C5";
+
+  const textValue = draft.type === "text" ? draft.text : "";
+  const hasText = textValue.trim().length > 0;
+
+  /* =========================
+     VALIDATION
+  ========================= */
+
+  const canUpload =
+    !!draft.category?.id &&
+    ((draft.type === "text" && hasText) ||
+      (draft.type === "bible" && !!draft.bibleVerse));
+
+  /* =========================
+     POST HANDLER
+  ========================= */
+
+  async function handleUpload() {
+    if (!canUpload) return;
+    if (uploadLock.current) return;
+
+    uploadLock.current = true;
+
+    try {
+      setUploading(true);
+
+      await publishDraftPost(draft);
+
+      router.replace("/(tabs)/home");
+    } catch (error: any) {
+      Alert.alert("Upload failed", error?.message || "Something went wrong");
+    } finally {
+      setUploading(false);
+      uploadLock.current = false;
+    }
+  }
 
   return (
     <YStack
       style={{ flex: 1, backgroundColor: colors.white, paddingTop: hp(5) }}
     >
-      <Header heading="Create Post" />
+      <XStack marginLeft={wp(4)}>
+        <Header heading="Create Post" />
+      </XStack>
+
       <ScrollView style={{ flex: 1 }}>
         <YStack flex={1} paddingHorizontal={wp(6)} paddingTop={hp(2)}>
-          {/* TEXT CARD */}
-
           <TextPostCardInput
-            category={draft?.category?.label}
-            scripture={
-              book && chapter
-                ? `${book} ${chapter}:${draft?.bibleVerse?.verses?.[0] ?? ""}`
-                : undefined
-            }
+            category={draft.category?.label}
+            scripture={reference || undefined}
             translation={translation}
             verseText={verseText}
-            value={draft?.text ?? ""}
-            onChangeText={(text: string) =>
-              updateDraft({
-                text,
-              })
-            }
+            value={textValue}
+            onChangeText={setText}
             backgroundColor={cardColor}
           />
 
-          {/* ACTION CARDS */}
-
           <XStack flex={1} marginTop={hp(7)} marginBottom={hp(4)} gap={wp(3)}>
             <TagSelectorCard
-              category={draft?.category}
+              category={draft.category}
               onPress={() => setCategoryVisible(true)}
             />
 
-            {/* BIBLE VERSE */}
             <TouchableOpacity
               style={{
                 flex: 0.4,
@@ -97,49 +181,49 @@ export default function CreateTextScreen() {
                 }}
               />
 
-              <Text fontFamily={"$body"} fontSize={fs(14)} fontWeight="500">
+              <Text fontSize={fs(14)} fontWeight="500">
                 Bible verse
               </Text>
 
-              <Text fontFamily={"$body"} fontSize={fs(11)} color="#8A7F87">
-                Choose a verse
+              <Text fontSize={fs(11)} color="#8A7F87">
+                {reference ? "Change verse" : "Choose a verse"}
               </Text>
             </TouchableOpacity>
           </XStack>
 
-          {/* NEXT BUTTON */}
-
           <SimpleButton
-            text="Next"
+            text={uploading ? "Uploading..." : "Post"}
             textColor={colors.buttonText}
             color={colors.primary}
-            onPress={() => {}}
+            disabled={uploading || !canUpload}
+            onPress={handleUpload}
           />
-
-          {/* CATEGORY MODAL */}
 
           <CategoryModal
             visible={categoryVisible}
             onClose={() => setCategoryVisible(false)}
             onSelect={(category) => {
-              updateDraft({
-                category,
-              });
-
+              setCategory(category);
               setCategoryVisible(false);
             }}
           />
 
-          {/* BIBLE SELECTOR MODAL */}
-
           <BibleSelectorModal
             visible={bibleVisible}
-            translations={MOCK_TRANSLATIONS}
-            books={MOCK_BOOKS}
-            chapters={MOCK_CHAPTERS}
-            verses={MOCK_VERSES}
             onClose={() => setBibleVisible(false)}
-            onDone={(data) => updateDraft({ bibleVerse: data })}
+            onDone={(data) => {
+              setBibleVerse(data);
+              setBibleVisible(false);
+            }}
+          />
+
+          <SuccessModal
+            visible={limitModal}
+            onClose={() => setLimitModal(false)}
+            title="Limit exceeded"
+            message={limitMessage}
+            type="warning"
+            autoClose
           />
         </YStack>
       </ScrollView>

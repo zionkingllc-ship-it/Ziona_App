@@ -40,7 +40,7 @@ export default function AuthIndex() {
       await signInWithGoogle();
 
       // after successful login
-      router.replace("/(tabs)/feed");
+      router.replace("/(auth)/username");
     } catch (err) {
       console.log("Google login failed", err);
     }

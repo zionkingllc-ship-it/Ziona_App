@@ -60,8 +60,9 @@ export default function Feed() {
       const index = data.findIndex((p) => p.id === currentPost.id);
 
       if (index >= 0) {
-        preloadPostMedia(data[index + 1]);
-        preloadPostMedia(data[index - 1]);
+        // ✅ FIX: guard undefined
+        if (data[index + 1]) preloadPostMedia(data[index + 1]);
+        if (data[index - 1]) preloadPostMedia(data[index - 1]);
       }
     },
   ).current;

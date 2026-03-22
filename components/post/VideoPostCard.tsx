@@ -70,13 +70,17 @@ export default function VideoPostCard({
 
   const videoGesture = Gesture.Exclusive(doubleTap, singleTap, longPress);
 
-  //  SCRUB BAR POSITION — ALWAYS ABOVE TAB BAR
   const scrubBottom = 0;
-
   const scrubWidth = screenWidth;
   const scrubHeight = 7;
 
   const playButtonSize = Math.min(50, screenWidth * 0.12);
+
+  
+ const videoUrl =
+  post.type === "video" && typeof post.media?.videoUrl === "string"
+    ? post.media.videoUrl
+    : undefined;
 
   return (
     <GestureDetector gesture={videoGesture}>
@@ -89,7 +93,7 @@ export default function VideoPostCard({
       >
         <Video
           ref={videoRef}
-          source={{ uri: post.media?.videoUrl }}
+          source={videoUrl ? { uri: videoUrl } : undefined}
           style={{ width: "100%", height: "100%" }}
           resizeMode="contain"
           repeat
@@ -104,7 +108,6 @@ export default function VideoPostCard({
           onError={(error) => console.error("Video playback error:", error)}
         />
 
-        {/* HEART ANIMATION */}
         <Animated.View
           style={[
             {
@@ -121,7 +124,6 @@ export default function VideoPostCard({
           />
         </Animated.View>
 
-        {/* PLAY BUTTON */}
         <View
           width={playButtonSize}
           height={playButtonSize}
@@ -142,7 +144,6 @@ export default function VideoPostCard({
           />
         </View>
 
-        {/* SCRUB BAR (VIDEO ONLY) */}
         <Animated.View
           style={{
             position: "absolute",

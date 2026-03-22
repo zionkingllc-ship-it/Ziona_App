@@ -2,6 +2,8 @@ import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { TextInput } from "react-native";
 import { Image, Text, View, XStack, YStack } from "tamagui";
+import { useState } from "react";
+import SuccessModal from "../ui/modals/successModal";
 
 interface Props {
   category?: string;
@@ -15,6 +17,8 @@ interface Props {
   onChangeText: (text: string) => void;
 
   maxLength?: number;
+
+  showInput?: boolean;
 }
 
 export default function TextPostCardInput({
@@ -28,12 +32,15 @@ export default function TextPostCardInput({
   value,
   onChangeText,
   maxLength = 500,
+
+  showInput = true,
 }: Props) {
   const { wp, hp, fs } = useResponsive();
 
-  const flapImage = require("@/assets/images/jounalFlap2.png");
+  const [errorVisible, setErrorVisible] = useState(false);
+  const [remainingError, setRemainingError] = useState(0);
 
-  /* Correct length calculation */
+  const flapImage = require("@/assets/images/jounalFlap2.png");
 
   const verseLength = verseText ? verseText.length : 0;
   const used = value.length + verseLength;
@@ -41,7 +48,15 @@ export default function TextPostCardInput({
 
   return (
     <View flex={1}>
-      {/* Decorative Strip */}
+      {/* ERROR MODAL */}
+      <SuccessModal
+        visible={errorVisible}
+        onClose={() => setErrorVisible(false)}
+        type="warning"
+        autoClose
+        title="Character limit exceeded"
+        message={`You can only add ${remainingError} more characters`}
+      />
 
       <View
         position="absolute"
@@ -61,13 +76,11 @@ export default function TextPostCardInput({
         flex={1}
         backgroundColor={backgroundColor}
         padding={hp(1)}
-        minHeight={hp(52)} 
+        minHeight={hp(52)}
         borderRadius={wp(4)}
         borderWidth={wp(1)}
         borderColor={colors.white}
       >
-        {/* Left strip */}
-
         <YStack
           width={wp(3)}
           height={"103%"}
@@ -75,11 +88,7 @@ export default function TextPostCardInput({
           backgroundColor={"#573f2114"}
         />
 
-        {/* Content */}
-
         <YStack flex={1} padding={hp(1)}>
-          {/* HEADER */}
-
           {(category || scripture) && (
             <YStack
               paddingBottom={hp(1.5)}
@@ -132,8 +141,6 @@ export default function TextPostCardInput({
             </YStack>
           )}
 
-          {/* VERSE */}
-
           {verseText && (
             <View
               borderLeftWidth={3}
@@ -154,38 +161,50 @@ export default function TextPostCardInput({
             </View>
           )}
 
-          {/* INPUT AREA */}
-
           <View flex={1} justifyContent="space-between">
-            <TextInput
-              value={value}
-              onChangeText={(text) => {
-                if (text.length + verseLength <= maxLength) {
+            {showInput && (
+              <TextInput
+                value={value}
+                onChangeText={(text) => {
+                  const newUsed = text.length + verseLength;
+
+                  if (newUsed > maxLength) {
+                    // ✅ SHOW ERROR
+                    setRemainingError(maxLength - verseLength);
+                    setErrorVisible(true);
+                    return;
+                  }
+
                   onChangeText(text);
+                }}
+                placeholder="Whats on your mind?"
+                multiline
+                style={{
+                  flex: 1,
+                  fontSize: fs(17),
+                  color: colors.black,
+                  lineHeight: fs(25),
+                  textAlignVertical: "top",
+                }}
+              />
+            )}
+
+            {showInput && (
+              <Text
+                alignSelf="flex-end"
+                fontSize={fs(11)}
+                color={
+                  used < maxLength / 2
+                    ? "#836F8B"
+                    : used === maxLength
+                    ? colors.errorText
+                    : "#ac8101"
                 }
-              }}
-              placeholder="Whats on your mind?"
-              multiline
-              
-              style={{
-                flex: 1,
-                fontSize: fs(17),
-                color: colors.black,
-                lineHeight: fs(25),
-                textAlignVertical: "top",
-              }}
-            />
-
-            {/* COUNTER */}
-
-            <Text
-              alignSelf="flex-end"
-              fontSize={fs(11)}
-              color="#836F8B"
-              marginTop={hp(1)}
-            >
-              {used}/{maxLength}
-            </Text>
+                marginTop={hp(1)}
+              >
+                {used}/{maxLength}
+              </Text>
+            )}
           </View>
         </YStack>
       </XStack>

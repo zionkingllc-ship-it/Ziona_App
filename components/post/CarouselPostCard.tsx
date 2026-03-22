@@ -1,3 +1,4 @@
+import colors from "@/constants/colors";
 import { Post } from "@/types/post";
 import React, { useRef, useState } from "react";
 import {
@@ -8,7 +9,6 @@ import {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS } from "react-native-reanimated";
 import { Image, View, XStack } from "tamagui";
-import colors from "@/constants/colors";
 
 interface Props {
   post: Post;
@@ -32,7 +32,7 @@ export default function CarouselPostCard({
 
   const likeIconActive = require("@/assets/images/likeIcon2.png");
 
-  const mediaItems = post.media?.items ?? [];
+  const mediaItems = post.type === "image" ? (post.media?.items ?? []) : [];
 
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max);
@@ -51,9 +51,7 @@ export default function CarouselPostCard({
     });
 
   const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(
-      e.nativeEvent.contentOffset.x / screenWidth
-    );
+    const index = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
     setActiveIndex(index);
   };
 
@@ -78,9 +76,7 @@ export default function CarouselPostCard({
             if (!item?.url) return null;
 
             const source =
-              typeof item.url === "string"
-                ? { uri: item.url }
-                : item.url;
+              typeof item.url === "string" ? { uri: item.url } : item.url;
 
             return (
               <Image
@@ -93,7 +89,6 @@ export default function CarouselPostCard({
           }}
         />
 
-        {/* ❤️ Heart */}
         <Animated.View
           style={[
             {
@@ -114,7 +109,6 @@ export default function CarouselPostCard({
           />
         </Animated.View>
 
-        {/* Pagination */}
         {mediaItems.length > 1 && (
           <XStack
             position="absolute"
@@ -129,9 +123,7 @@ export default function CarouselPostCard({
                 height={wp(2)}
                 borderRadius={wp(1)}
                 backgroundColor={
-                  index === activeIndex
-                    ? colors.white
-                    : "rgba(255,255,255,0.4)"
+                  index === activeIndex ? colors.white : "rgba(255,255,255,0.4)"
                 }
               />
             ))}

@@ -3,13 +3,13 @@ import BaseModal from "./BaseModal";
 
 import { BibleVerse } from "@/types/bible";
 
-import { X } from "@tamagui/lucide-icons";
 import { useEffect, useRef } from "react";
 
 import { Dimensions, FlatList, Pressable, StyleSheet } from "react-native";
 
 import { Text, View, XStack } from "tamagui";
 import { SimpleButton } from "../centerTextButton";
+import CloseButton from "../CloseButton";
 
 const { height } = Dimensions.get("window");
 
@@ -37,11 +37,29 @@ export default function ScriptureReaderModal({
 }: Props) {
   const listRef = useRef<FlatList>(null);
 
-  /* FIND FIRST SELECTED VERSE */
+  /* =========================
+     SAFE VERSES (FIX)
+  ========================= */
 
-  const firstSelectedIndex = verses.findIndex((v) => v.number === selected[0]);
+  const safeVerses: BibleVerse[] = (verses ?? []).map((v, i) => ({
+    number:
+      typeof v?.number === "number"
+        ? v.number
+        : i + 1, // fallback if backend fails
+    text: v?.text ?? "",
+  }));
 
-  /* AUTO SCROLL TO SELECTED */
+  /* =========================
+     FIND FIRST SELECTED
+  ========================= */
+
+  const firstSelectedIndex = safeVerses.findIndex(
+    (v) => v.number === selected[0]
+  );
+
+  /* =========================
+     AUTO SCROLL
+  ========================= */
 
   useEffect(() => {
     if (visible && firstSelectedIndex >= 0) {
@@ -61,25 +79,25 @@ export default function ScriptureReaderModal({
         {/* HEADER */}
 
         <XStack justifyContent="space-between" marginBottom={12}>
-          <Text fontWeight="700" color="#6B2FA3">
+          <Text fontFamily={"$body"} fontWeight="700" color="#6B2FA3">
             {reference}
           </Text>
 
-          <Pressable onPress={onClose}>
-            <X size={18} />
-          </Pressable>
+          <CloseButton onPress={onClose} size={24} />
         </XStack>
 
-        {/* SCRIPTURE CONTAINER */}
+        {/* CONTENT */}
 
         <View style={styles.container}>
           <FlatList
             ref={listRef}
-            data={verses}
-            keyExtractor={(item) => String(item.number)}
+            data={safeVerses}
+            keyExtractor={(item, index) =>
+              `${item.number}-${index}`
+            }
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 120 }}
-            getItemLayout={(data, index) => ({
+            getItemLayout={(_, index) => ({
               length: 60,
               offset: 60 * index,
               index,
@@ -89,20 +107,30 @@ export default function ScriptureReaderModal({
 
               return (
                 <Pressable
-                  style={[styles.verseRow, active && styles.activeVerse]}
+                  style={[
+                    styles.verseRow,
+                    active && styles.activeVerse,
+                  ]}
                   onPress={() => onToggle(item.number)}
                 >
-                  <Text fontWeight="700" marginRight={6}>
-                    {item.number}
+                  {/* ✅ ALWAYS SHOW NUMBER */}
+                  <Text
+                    fontFamily={"$body"}
+                    fontWeight="700"
+                    marginRight={8}
+                  >
+                    {item.number}.
                   </Text>
 
-                  <Text flex={1}>{item.text}</Text>
+                  <Text fontFamily={"$body"} flex={1}>
+                    {item.text}
+                  </Text>
                 </Pressable>
               );
             }}
           />
 
-          {/* FIXED ACTION BAR */}
+          {/* ACTION BAR */}
 
           <View style={styles.bottomBar}>
             <SimpleButton
@@ -153,7 +181,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
 
-  doneButton: {  
+  doneButton: {
     borderRadius: 10,
     alignItems: "center",
   },

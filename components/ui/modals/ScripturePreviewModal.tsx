@@ -12,7 +12,8 @@ interface Props {
   onClose: () => void;
 }
 
-export default function ScripturePreviewModal({
+// FIX: name must match import
+export default function ScriptureReaderModal({
   visible,
   scripture,
   reference,

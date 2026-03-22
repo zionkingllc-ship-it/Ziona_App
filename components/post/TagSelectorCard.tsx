@@ -50,6 +50,7 @@ export default function TagSelectorCard({ category, onPress }: Props) {
 
         <Text
           fontFamily={"$body"}
+          fontWeight={"400"}
           fontSize={fs(11)}
           color="#8A7F87"
         >

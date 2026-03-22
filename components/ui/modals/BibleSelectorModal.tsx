@@ -1,12 +1,15 @@
+import React, { memo, useEffect, useMemo, useState } from "react";
 import BaseModal from "./BaseModal";
 import ScriptureReaderModal from "./ScriptureReaderModal";
 import SelectChip from "./SelectChip";
 import TranslationDropdown from "./TranslationDropdown";
 
+//import { MockBibleRepository } from "@/repository/mockBibleRepository";
+import { GraphqlBibleRepository } from "@/repository/graphql/GraphqlBibleRepository";
+
 import { BibleBook, BibleTranslation, BibleVerse } from "@/types/bible";
 
-import { Search, X } from "@tamagui/lucide-icons";
-import { useEffect, useMemo, useState } from "react";
+import { Search } from "@tamagui/lucide-icons";
 
 import {
   Dimensions,
@@ -17,36 +20,86 @@ import {
 } from "react-native";
 
 import { Text, View, XStack } from "tamagui";
+import CloseButton from "../CloseButton";
 
 const { height } = Dimensions.get("window");
 
+/* =========================
+   MEMOIZED VERSE ROW
+========================= */
+
+const VerseRow = memo(
+  ({
+    verse,
+    onPress,
+    active,
+  }: {
+    verse: BibleVerse;
+    onPress: () => void;
+    active?: boolean;
+  }) => {
+    return (
+      <Pressable
+        style={[styles.row, active && styles.verseSelected]}
+        onPress={onPress}
+      >
+        <Text
+          fontFamily={"$body"}
+          fontWeight="400"
+          color={active ? "white" : "black"}
+        >
+          {verse.number}
+        </Text>
+      </Pressable>
+    );
+  },
+);
+
 interface Props {
   visible: boolean;
-  verses?: BibleVerse[];
-  translations?: BibleTranslation[];
-  books?: BibleBook[];
-  chapters?: number[];
   onClose: () => void;
+
   onDone: (data: {
     translation: string;
     book: string;
-    chapter?: number;
+    chapter: number;
     verses: number[];
     text: string;
   }) => void;
+  remainingChars?: number;
+  onLimitExceeded?: (remaining: number) => void;
 }
 
 export default function BibleSelectorModal({
   visible,
-  verses = [],
-  translations = [],
-  books = [],
-  chapters = [],
   onClose,
   onDone,
+  remainingChars = 500,
+  onLimitExceeded,
 }: Props) {
+  /* =========================
+     REPOSITORY (SWITCH POINT)
+  ========================= */
+
+  const repository = useMemo(() => {
+    return new GraphqlBibleRepository();
+  }, []);
+
+  /* =========================
+     DATA STATE
+  ========================= */
+
+  const [translations, setTranslations] = useState<BibleTranslation[]>([]);
+  const [books, setBooks] = useState<BibleBook[]>([]);
+  const [chapters, setChapters] = useState<number[]>([]);
+  const [verses, setVerses] = useState<BibleVerse[]>([]);
+
+  /* =========================
+     SELECTION STATE
+  ========================= */
+
   const [translation, setTranslation] = useState("KJV");
-  const [book, setBook] = useState("");
+  const [book, setBook] = useState<BibleBook | null>(null);
   const [chapter, setChapter] = useState<number | undefined>();
   const [verse, setVerse] = useState<number | undefined>();
 
@@ -58,12 +111,85 @@ export default function BibleSelectorModal({
   const [search, setSearch] = useState("");
   const [testament, setTestament] = useState<"old" | "new">("old");
 
-  /* RESET */
+  /* =========================
+     INITIAL LOAD
+  ========================= */
+
+  useEffect(() => {
+    if (!visible) return;
+
+    loadTranslations();
+    loadBooks();
+  }, [visible]);
+
+  async function loadTranslations() {
+    try {
+      const data = await repository.getTranslations();
+      setTranslations(data);
+    } catch {
+      console.log("Failed to load translations");
+    }
+  }
+
+  async function loadBooks() {
+    try {
+      const data = await repository.getBooks();
+      setBooks(data);
+    } catch {
+      console.log("Failed to load books");
+    }
+  }
+
+  /* =========================
+     LOAD CHAPTERS
+  ========================= */
+
+  useEffect(() => {
+    if (!book) return;
+
+    loadChapters(book);
+  }, [book]);
+
+  async function loadChapters(selectedBook: BibleBook) {
+    try {
+      const data = await repository.getChapters(selectedBook);
+      setChapters(data);
+    } catch {
+      console.log("Failed to load chapters");
+    }
+  }
+
+  /* =========================
+     LOAD VERSES
+  ========================= */
+
+  useEffect(() => {
+    if (!chapter || !book) return;
+
+    loadVerses(book.name, chapter, translation);
+  }, [chapter, book, translation]);
+
+  async function loadVerses(
+    bookName: string,
+    chapter: number,
+    version: string,
+  ) {
+    try {
+      const data = await repository.getVerses(version, bookName, chapter);
+      setVerses(data);
+    } catch {
+      console.log("Failed to load verses");
+    }
+  }
+
+  /* =========================
+     RESET LOGIC
+  ========================= */
 
   useEffect(() => {
     if (!visible) {
       setTranslation("KJV");
-      setBook("");
+      setBook(null);
       setChapter(undefined);
       setVerse(undefined);
       setSelected([]);
@@ -73,72 +199,8 @@ export default function BibleSelectorModal({
     }
   }, [visible]);
 
-  /* BOOK FILTER */
-
-  const filteredBooks = useMemo(() => {
-    return books.filter(
-      (b) =>
-        b.testament === testament &&
-        b.name.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [books, search, testament]);
-
-  /* CHAPTER FILTER */
-
-  const filteredChapters = useMemo(() => {
-    if (!search) return chapters;
-
-    return chapters.filter((c) => String(c).includes(search));
-  }, [chapters, search]);
-
-  /* VERSE FILTER */
-
-  const filteredVerses = useMemo(() => {
-    if (!search) return verses;
-
-    return verses.filter(
-      (v) =>
-        v.text.toLowerCase().includes(search.toLowerCase()) ||
-        String(v.number).includes(search),
-    );
-  }, [verses, search]);
-
-  /* TOGGLE VERSE (reader) */
-
-  function toggleVerse(v: number) {
-    setSelected((prev) =>
-      prev.includes(v) ? prev.filter((i) => i !== v) : [...prev, v],
-    );
-  }
-
-  /* SELECT VERSE (selector step) */
-  function selectVerse(v: number) {
-    setVerse(v);
-    setSelected([v]);
-    setSearch("");
-    setReaderOpen(true);
-  }
-  /* DONE */
-
-  function finish() {
-    const ordered = [...selected].sort((a, b) => a - b);
-
-    const text = verses
-      .filter((v) => ordered.includes(v.number))
-      .map((v) => v.text)
-      .join(" ");
-
-    onDone({
-      translation,
-      book,
-      chapter,
-      verses: ordered,
-      text,
-    });
-  }
-
   function resetAll() {
-    setBook("");
+    setBook(null);
     setChapter(undefined);
     setVerse(undefined);
     setSelected([]);
@@ -152,29 +214,62 @@ export default function BibleSelectorModal({
     setSearch("");
   }
 
-  function resetChapterLevel() {
-    setVerse(undefined);
-    setSelected([]);
-    setSearch("");
+  /* =========================
+     FILTER LOGIC
+  ========================= */
+
+  const filteredBooks = useMemo(() => {
+    return books.filter(
+      (b) =>
+        b.testament === testament &&
+        b.name.toLowerCase().includes(search.toLowerCase()),
+    );
+  }, [books, search, testament]);
+
+  const filteredChapters = useMemo(() => {
+    if (!search) return chapters;
+
+    return chapters.filter((c) => String(c).includes(search));
+  }, [chapters, search]);
+
+  const filteredVerses = useMemo(() => {
+    if (!search) return verses;
+
+    const s = search.toLowerCase();
+
+    return verses.filter(
+      (v) => v.text.toLowerCase().includes(s) || String(v.number).includes(s),
+    );
+  }, [verses, search]);
+
+  /* =========================
+     VERSE SELECTION
+  ========================= */
+
+  function toggleVerse(v: number) {
+    setSelected((prev) =>
+      prev.includes(v) ? prev.filter((i) => i !== v) : [...prev, v],
+    );
   }
+
+  function selectVerse(v: number) {
+    setVerse(v);
+    setSelected([v]);
+    setSearch("");
+    setReaderOpen(true);
+  }
+
   return (
     <BaseModal visible={visible} onClose={onClose} alignBottom>
       <View style={styles.sheet}>
-        {/* HEADER */}
-
         <XStack justifyContent="space-between" marginBottom={10}>
-          <Text fontFamily={"$body"} fontWeight="600">
+          <Text fontFamily={"$body"} fontWeight="400" fontSize={16}>
             Add Bible
           </Text>
-
-          <Pressable onPress={onClose}>
-            <X size={16} />
-          </Pressable>
+          <CloseButton onPress={onClose} size={24} />
         </XStack>
 
-        {/* CHIPS */}
-
-        <XStack gap="$2" marginBottom={20}>
+        <XStack gap="$2" justifyContent="center" marginBottom={20}>
           <SelectChip
             label={translation}
             active
@@ -185,7 +280,7 @@ export default function BibleSelectorModal({
           />
 
           <SelectChip
-            label={book || "BOOKS"}
+            label={book?.name || "BOOKS"}
             active={!!book}
             onPress={() => {
               if (book) resetAll();
@@ -209,8 +304,6 @@ export default function BibleSelectorModal({
           />
         </XStack>
 
-        {/* SEARCH */}
-
         <XStack style={styles.searchContainer}>
           <Search size={16} color="#777" />
 
@@ -218,11 +311,9 @@ export default function BibleSelectorModal({
             placeholder="Search..."
             value={search}
             onChangeText={setSearch}
-            style={styles.searchInput}
+            style={[styles.searchInput, { fontFamily: "$body" }]}
           />
         </XStack>
-
-        {/* BOOKS */}
 
         {!book && (
           <>
@@ -231,36 +322,34 @@ export default function BibleSelectorModal({
                 style={[styles.tab, testament === "old" && styles.activeTab]}
                 onPress={() => setTestament("old")}
               >
-                <Text>Old Testament</Text>
+                <Text fontFamily={"$body"}>Old Testament</Text>
               </Pressable>
 
               <Pressable
                 style={[styles.tab, testament === "new" && styles.activeTab]}
                 onPress={() => setTestament("new")}
               >
-                <Text>New Testament</Text>
+                <Text fontFamily={"$body"}>New Testament</Text>
               </Pressable>
             </XStack>
 
             <FlatList
               data={filteredBooks}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.slug}
               renderItem={({ item }) => (
                 <Pressable
                   style={styles.row}
                   onPress={() => {
-                    setBook(item.name);
+                    setBook(item);
                     setSearch("");
                   }}
                 >
-                  <Text>{item.name}</Text>
+                  <Text fontFamily={"$body"}>{item.name}</Text>
                 </Pressable>
               )}
             />
           </>
         )}
-
-        {/* CHAPTER LIST */}
 
         {book && !chapter && (
           <FlatList
@@ -274,33 +363,25 @@ export default function BibleSelectorModal({
                   setSearch("");
                 }}
               >
-                <Text>{item}</Text>
+                <Text fontFamily={"$body"}>{item}</Text>
               </Pressable>
             )}
           />
         )}
 
-        {/* VERSE LIST */}
-
         {book && chapter && !verse && (
           <FlatList
             data={filteredVerses}
             keyExtractor={(item) => String(item.number)}
-            renderItem={({ item }) => {
-              const active = verse === item.number;
-
-              return (
-                <Pressable
-                  style={[styles.row, active && styles.verseSelected]}
-                  onPress={() => selectVerse(item.number)}
-                >
-                  <Text fontWeight="700">{item.number}</Text>
-                </Pressable>
-              );
-            }}
+            renderItem={({ item }) => (
+              <VerseRow
+                verse={item}
+                active={verse === item.number}
+                onPress={() => selectVerse(item.number)}
+              />
+            )}
           />
         )}
-        {/* TRANSLATION */}
 
         <TranslationDropdown
           visible={translationOpen}
@@ -312,38 +393,38 @@ export default function BibleSelectorModal({
         />
       </View>
 
-      {/* READER */}
-
       <ScriptureReaderModal
-        visible={readerOpen}
-        verses={verses}
-        selected={selected}
-        reference={`${book} ${chapter ?? ""}`}
-        translation={translation}
-        book={book}
-        chapter={chapter}
-        onToggle={toggleVerse}
-        onClose={() => setReaderOpen(false)}
-        onDone={(numbers) => {
-          const ordered = [...numbers].sort((a, b) => a - b);
+  visible={readerOpen}
+  verses={verses}
+  selected={selected}
+  reference={`${book?.name ?? ""} ${chapter ?? ""}`}
+  translation={translation}
+  book={book?.name ?? ""}
+  chapter={chapter}
+  onToggle={toggleVerse}
+  onClose={() => setReaderOpen(false)}
+  onDone={(numbers) => {
+    const ordered = [...numbers].sort((a, b) => a - b);
 
-          const text = verses
-            .filter((v) => ordered.includes(v.number))
-            .map((v) => v.text)
-            .join(" ");
+    const text = verses
+      .filter((v) => ordered.includes(v.number))
+      .map((v) => v.text)
+      .join(" ");
 
-          onDone({
-            translation,
-            book,
-            chapter,
-            verses: ordered,
-            text,
-          });
+    if (!chapter || !book) return;
 
-          setReaderOpen(false);
-          onClose();
-        }}
-      />
+    onDone({
+      translation,
+      book: book.name,
+      chapter,
+      verses: ordered,
+      text,
+    });
+
+    setReaderOpen(false);
+    onClose();
+  }}
+/>
     </BaseModal>
   );
 }
@@ -358,35 +439,23 @@ const styles = StyleSheet.create({
   },
 
   searchContainer: {
-    backgroundColor: "#F4F4F4",
     borderRadius: 8,
     paddingHorizontal: 10,
     alignItems: "center",
     gap: 8,
+    borderWidth: 0.5,
+    borderColor: "#EEEBEF",
   },
 
-  searchInput: {
-    flex: 1,
-  },
+  searchInput: { flex: 1 },
 
-  tab: {
-    flex: 1,
-    padding: 10,
-    alignItems: "center",
-  },
+  tab: { flex: 1, padding: 10, alignItems: "center" },
 
-  activeTab: {
-    backgroundColor: "#EAD9F3",
-    borderRadius: 8,
-  },
+  activeTab: { backgroundColor: "#EAD9F3", borderRadius: 8 },
 
-  row: {
-    paddingVertical: 12,
-  },
+  row: { paddingVertical: 12 },
 
-  verseSelected: {
-    backgroundColor: "black",
-  },
+  verseSelected: { backgroundColor: "black" },
 
   done: {
     backgroundColor: "#7A2E8A",

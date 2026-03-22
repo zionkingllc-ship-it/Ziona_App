@@ -20,7 +20,7 @@ return ( <View style={styles.dropdown}>
       style={styles.row}
       onPress={() => onSelect(item)}
     >
-      <Text>{item}</Text>
+      <Text fontFamily={"$body"} fontWeight={"600"}>{item}</Text>
     </Pressable>
   ))}
 </View>

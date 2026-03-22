@@ -32,8 +32,7 @@ export default function Header({
   return (
     <XStack width={"100%"} justifyContent="space-between" alignItems="center">
       <ChevronLeft
-        size={24}
-        marginLeft={15}
+        size={24} 
         marginTop={5}
         color={iconBeforeColor ? iconBeforeColor : colors.black}
         onPress={() => router.back()}
