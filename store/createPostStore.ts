@@ -1,9 +1,5 @@
-import {
-  BibleVerse,
-  CreatePostDraft,
-  MediaItem,
-} from "@/types/createPost";
 import { Category } from "@/types/category";
+import { BibleVerse, CreatePostDraft, MediaItem } from "@/types/createPost";
 
 import { create } from "zustand";
 
@@ -20,7 +16,9 @@ interface CreatePostState {
 
   setCategory: (category: Category) => void;
 
-  setBibleVerse: (bible: BibleVerse | null) => void;
+  setBibleVerse: (bible: BibleVerse) => void;
+
+  setCaption: (caption: string) => void;
 
   resetDraft: () => void;
 }
@@ -34,40 +32,57 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
      START DRAFT
   ========================= */
 
-  startDraft: (type, mediaType) => {
-    if (type === "text") {
-      return set({
-        draft: {
-          type: "text",
-          text: "",
-          category: {} as Category, // temporary until selected
-        },
-      });
-    }
+  startDraft: (type, mediaType) =>
+    set((state) => {
+      const prevText =
+        state.draft?.type === "text" || state.draft?.type === "bible"
+          ? (state.draft.text ?? "")
+          : "";
 
-    if (type === "media") {
-      if (!mediaType) throw new Error("mediaType required");
+      const prevCategory = state.draft?.category;
 
-      return set({
-        draft: {
-          type: "media",
-          mediaType,
-          media: { items: [] },
-          category: {} as Category,
-        },
-      });
-    }
+      if (type === "text") {
+        return {
+          draft: {
+            type: "text",
+            text: prevText,
+            category: prevCategory ?? ({} as Category),
+          },
+        };
+      }
 
-    if (type === "bible") {
-      return set({
-        draft: {
-          type: "bible",
-          bibleVerse: {} as BibleVerse,
-          category: {} as Category,
-        },
-      });
-    }
-  },
+      if (type === "media") {
+        if (!mediaType) throw new Error("mediaType required");
+
+        return {
+          draft: {
+            type: "media",
+            mediaType,
+            media: { items: [] },
+            category: prevCategory ?? ({} as Category),
+          },
+        };
+      }
+
+      if (type === "bible") {
+        return {
+          draft: {
+            type: "bible",
+            bibleVerse:
+              state.draft?.type === "bible"
+                ? state.draft.bibleVerse
+                : ({} as BibleVerse),
+            text:
+              state.draft?.type === "text" || state.draft?.type === "bible"
+                ? (state.draft.text ?? "")
+                : "",
+            category: state.draft?.category ?? ({} as Category),
+          },
+        };
+      }
+
+      return { draft: state.draft };
+    }),
 
   /* =========================
      TEXT
@@ -75,20 +90,23 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
 
   setText: (text) =>
     set((state) => {
-      if (!state.draft || state.draft.type !== "text") {
-        return { draft: state.draft };
+      if (!state.draft) return state;
+
+      if (text.length > MAX_LENGTH) return state;
+
+      if (state.draft.type === "text") {
+        return {
+          draft: { ...state.draft, text },
+        };
       }
 
-      if (text.length > MAX_LENGTH) {
-        return { draft: state.draft };
+      if (state.draft.type === "bible") {
+        return {
+          draft: { ...state.draft, text },
+        };
       }
 
-      return {
-        draft: {
-          ...state.draft,
-          text,
-        },
-      };
+      return state;
     }),
 
   /* =========================
@@ -97,9 +115,7 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
 
   setMedia: (items) =>
     set((state) => {
-      if (!state.draft || state.draft.type !== "media") {
-        return { draft: state.draft };
-      }
+      if (!state.draft || state.draft.type !== "media") return state;
 
       return {
         draft: {
@@ -115,7 +131,7 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
 
   setCategory: (category) =>
     set((state) => {
-      if (!state.draft) return { draft: state.draft };
+      if (!state.draft) return state;
 
       return {
         draft: {
@@ -131,14 +147,43 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
 
   setBibleVerse: (bible) =>
     set((state) => {
-      if (!state.draft || state.draft.type !== "bible") {
-        return { draft: state.draft };
+      if (!state.draft) return state;
+
+      if (state.draft.type === "text") {
+        return {
+          draft: {
+            type: "bible",
+            text: state.draft.text,
+            bibleVerse: bible,
+            category: state.draft.category,
+          },
+        };
       }
+
+      if (state.draft.type === "bible") {
+        return {
+          draft: {
+            ...state.draft,
+            bibleVerse: bible,
+          },
+        };
+      }
+
+      return state;
+    }),
+
+  /* =========================
+     CAPTION (MEDIA ONLY)
+  ========================= */
+
+  setCaption: (caption: string) =>
+    set((state) => {
+      if (!state.draft || state.draft.type !== "media") return state;
 
       return {
         draft: {
           ...state.draft,
-          bibleVerse: bible ?? ({} as BibleVerse),
+          caption,
         },
       };
     }),

@@ -4,9 +4,7 @@ import ScriptureReaderModal from "./ScriptureReaderModal";
 import SelectChip from "./SelectChip";
 import TranslationDropdown from "./TranslationDropdown";
 
-//import { MockBibleRepository } from "@/repository/mockBibleRepository";
 import { GraphqlBibleRepository } from "@/repository/graphql/GraphqlBibleRepository";
-
 import { BibleBook, BibleTranslation, BibleVerse } from "@/types/bible";
 
 import { Search } from "@tamagui/lucide-icons";
@@ -66,21 +64,13 @@ interface Props {
     verses: number[];
     text: string;
   }) => void;
-  remainingChars?: number;
-  onLimitExceeded?: (remaining: number) => void;
 }
 
 export default function BibleSelectorModal({
   visible,
   onClose,
   onDone,
-  remainingChars = 500,
-  onLimitExceeded,
 }: Props) {
-  /* =========================
-     REPOSITORY (SWITCH POINT)
-  ========================= */
-
   const repository = useMemo(() => {
     return new GraphqlBibleRepository();
   }, []);
@@ -93,6 +83,7 @@ export default function BibleSelectorModal({
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [chapters, setChapters] = useState<number[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
+  const [loadingVerses, setLoadingVerses] = useState(false);
 
   /* =========================
      SELECTION STATE
@@ -101,8 +92,6 @@ export default function BibleSelectorModal({
   const [translation, setTranslation] = useState("KJV");
   const [book, setBook] = useState<BibleBook | null>(null);
   const [chapter, setChapter] = useState<number | undefined>();
-  const [verse, setVerse] = useState<number | undefined>();
-
   const [selected, setSelected] = useState<number[]>([]);
 
   const [translationOpen, setTranslationOpen] = useState(false);
@@ -117,7 +106,6 @@ export default function BibleSelectorModal({
 
   useEffect(() => {
     if (!visible) return;
-
     loadTranslations();
     loadBooks();
   }, [visible]);
@@ -126,18 +114,14 @@ export default function BibleSelectorModal({
     try {
       const data = await repository.getTranslations();
       setTranslations(data);
-    } catch {
-      console.log("Failed to load translations");
-    }
+    } catch {}
   }
 
   async function loadBooks() {
     try {
       const data = await repository.getBooks();
       setBooks(data);
-    } catch {
-      console.log("Failed to load books");
-    }
+    } catch {}
   }
 
   /* =========================
@@ -146,7 +130,6 @@ export default function BibleSelectorModal({
 
   useEffect(() => {
     if (!book) return;
-
     loadChapters(book);
   }, [book]);
 
@@ -154,18 +137,24 @@ export default function BibleSelectorModal({
     try {
       const data = await repository.getChapters(selectedBook);
       setChapters(data);
-    } catch {
-      console.log("Failed to load chapters");
-    }
+    } catch {}
   }
 
   /* =========================
      LOAD VERSES
   ========================= */
+useEffect(() => {
+  if (!visible) return;
 
+  // force clean start every time modal opens
+  setBook(null);
+  setChapter(undefined);
+  setSelected([]);
+  setVerses([]);
+  setSearch("");
+}, [visible]);
   useEffect(() => {
     if (!chapter || !book) return;
-
     loadVerses(book.name, chapter, translation);
   }, [chapter, book, translation]);
 
@@ -175,47 +164,18 @@ export default function BibleSelectorModal({
     version: string,
   ) {
     try {
+      setLoadingVerses(true);
       const data = await repository.getVerses(version, bookName, chapter);
       setVerses(data);
     } catch {
       console.log("Failed to load verses");
+    } finally {
+      setLoadingVerses(false);
     }
   }
 
   /* =========================
-     RESET LOGIC
-  ========================= */
-
-  useEffect(() => {
-    if (!visible) {
-      setTranslation("KJV");
-      setBook(null);
-      setChapter(undefined);
-      setVerse(undefined);
-      setSelected([]);
-      setSearch("");
-      setTranslationOpen(false);
-      setReaderOpen(false);
-    }
-  }, [visible]);
-
-  function resetAll() {
-    setBook(null);
-    setChapter(undefined);
-    setVerse(undefined);
-    setSelected([]);
-    setSearch("");
-  }
-
-  function resetBookLevel() {
-    setChapter(undefined);
-    setVerse(undefined);
-    setSelected([]);
-    setSearch("");
-  }
-
-  /* =========================
-     FILTER LOGIC
+     FILTER
   ========================= */
 
   const filteredBooks = useMemo(() => {
@@ -228,22 +188,19 @@ export default function BibleSelectorModal({
 
   const filteredChapters = useMemo(() => {
     if (!search) return chapters;
-
     return chapters.filter((c) => String(c).includes(search));
   }, [chapters, search]);
 
   const filteredVerses = useMemo(() => {
     if (!search) return verses;
-
     const s = search.toLowerCase();
-
     return verses.filter(
       (v) => v.text.toLowerCase().includes(s) || String(v.number).includes(s),
     );
   }, [verses, search]);
 
   /* =========================
-     VERSE SELECTION
+     SELECTION
   ========================= */
 
   function toggleVerse(v: number) {
@@ -253,7 +210,8 @@ export default function BibleSelectorModal({
   }
 
   function selectVerse(v: number) {
-    setVerse(v);
+    if (loadingVerses || verses.length === 0) return;
+
     setSelected([v]);
     setSearch("");
     setReaderOpen(true);
@@ -263,120 +221,115 @@ export default function BibleSelectorModal({
     <BaseModal visible={visible} onClose={onClose} alignBottom>
       <View style={styles.sheet}>
         <XStack justifyContent="space-between" marginBottom={10}>
-          <Text fontFamily={"$body"} fontWeight="400" fontSize={16}>
+          <Text fontFamily={"$body"} fontSize={16}>
             Add Bible
           </Text>
           <CloseButton onPress={onClose} size={24} />
         </XStack>
 
+        {/* SELECTORS */}
         <XStack gap="$2" justifyContent="center" marginBottom={20}>
+          {/* TRANSLATION */}
           <SelectChip
             label={translation}
             active
             onPress={() => {
-              resetAll();
+              setBook(null);
+              setChapter(undefined);
+              setSelected([]);
               setTranslationOpen(true);
             }}
           />
 
+          {/* BOOK */}
           <SelectChip
             label={book?.name || "BOOKS"}
             active={!!book}
             onPress={() => {
-              if (book) resetAll();
+              if (book) {
+                setBook(null);
+                setChapter(undefined);
+                setSelected([]);
+              }
             }}
           />
 
+          {/* CHAPTER */}
           <SelectChip
             label={chapter ? String(chapter) : "CHAPTER"}
             active={!!chapter}
             onPress={() => {
-              if (chapter) resetBookLevel();
+              if (chapter) {
+                setChapter(undefined);
+                setSelected([]);
+              }
             }}
           />
 
+          {/* VERSE */}
           <SelectChip
-            label={verse ? String(verse) : "VERSE"}
-            active={!!verse}
+            label={
+              selected.length > 0
+                ? selected.length === 1
+                  ? String(selected[0])
+                  : `${selected[0]}-${selected[selected.length - 1]}`
+                : "VERSE"
+            }
+            active={selected.length > 0}
             onPress={() => {
-              if (verse) setReaderOpen(true);
+              if (selected.length > 0 && !loadingVerses) {
+                setReaderOpen(true);
+              }
             }}
           />
         </XStack>
 
+        {/* SEARCH */}
         <XStack style={styles.searchContainer}>
           <Search size={16} color="#777" />
-
           <TextInput
-            placeholder="Search..."
             value={search}
             onChangeText={setSearch}
-            style={[styles.searchInput, { fontFamily: "$body" }]}
+            style={styles.searchInput}
+            placeholder="start typing..."
           />
         </XStack>
 
+        {/* BOOKS */}
         {!book && (
-          <>
-            <XStack marginVertical={10}>
-              <Pressable
-                style={[styles.tab, testament === "old" && styles.activeTab]}
-                onPress={() => setTestament("old")}
-              >
-                <Text fontFamily={"$body"}>Old Testament</Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.tab, testament === "new" && styles.activeTab]}
-                onPress={() => setTestament("new")}
-              >
-                <Text fontFamily={"$body"}>New Testament</Text>
-              </Pressable>
-            </XStack>
-
-            <FlatList
-              data={filteredBooks}
-              keyExtractor={(item) => item.slug}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.row}
-                  onPress={() => {
-                    setBook(item);
-                    setSearch("");
-                  }}
-                >
-                  <Text fontFamily={"$body"}>{item.name}</Text>
-                </Pressable>
-              )}
-            />
-          </>
-        )}
-
-        {book && !chapter && (
           <FlatList
-            data={filteredChapters}
-            keyExtractor={(item) => String(item)}
+            data={filteredBooks}
+            keyExtractor={(item) => item.slug}
             renderItem={({ item }) => (
-              <Pressable
-                style={styles.row}
-                onPress={() => {
-                  setChapter(item);
-                  setSearch("");
-                }}
-              >
-                <Text fontFamily={"$body"}>{item}</Text>
+              <Pressable style={styles.row} onPress={() => setBook(item)}>
+                <Text>{item.name}</Text>
               </Pressable>
             )}
           />
         )}
 
-        {book && chapter && !verse && (
+        {/* CHAPTERS */}
+        {book && !chapter && (
+          <FlatList
+            data={filteredChapters}
+            keyExtractor={(item) => String(item)}
+            renderItem={({ item }) => (
+              <Pressable style={styles.row} onPress={() => setChapter(item)}>
+                <Text>{item}</Text>
+              </Pressable>
+            )}
+          />
+        )}
+
+        {/* VERSES */}
+        {book && chapter && (
           <FlatList
             data={filteredVerses}
             keyExtractor={(item) => String(item.number)}
             renderItem={({ item }) => (
               <VerseRow
                 verse={item}
-                active={verse === item.number}
+                active={selected.includes(item.number)}
                 onPress={() => selectVerse(item.number)}
               />
             )}
@@ -394,37 +347,48 @@ export default function BibleSelectorModal({
       </View>
 
       <ScriptureReaderModal
-  visible={readerOpen}
-  verses={verses}
-  selected={selected}
-  reference={`${book?.name ?? ""} ${chapter ?? ""}`}
-  translation={translation}
-  book={book?.name ?? ""}
-  chapter={chapter}
-  onToggle={toggleVerse}
-  onClose={() => setReaderOpen(false)}
-  onDone={(numbers) => {
-    const ordered = [...numbers].sort((a, b) => a - b);
+        visible={readerOpen && !loadingVerses}
+        verses={verses}
+        selected={selected}
+        reference={`${book?.name ?? ""} ${chapter ?? ""}`}
+        translation={translation}
+        book={book?.name ?? ""}
+        chapter={chapter}
+        onToggle={toggleVerse}
+        onClose={() => setReaderOpen(false)}
+        onDone={async (numbers) => {
+          const ordered = [...numbers].sort((a, b) => a - b);
 
-    const text = verses
-      .filter((v) => ordered.includes(v.number))
-      .map((v) => v.text)
-      .join(" ");
+          if (!chapter || !book || ordered.length === 0) return;
 
-    if (!chapter || !book) return;
+          try {
+            const scripture = await repository.getScripture({
+              book: book.name,
+              chapter,
+              version: translation,
+            });
 
-    onDone({
-      translation,
-      book: book.name,
-      chapter,
-      verses: ordered,
-      text,
-    });
+            const selectedVerses = (scripture.verses || []).filter((v: any) =>
+              ordered.includes(v.number),
+            );
 
-    setReaderOpen(false);
-    onClose();
-  }}
-/>
+            const text = selectedVerses.map((v: any) => v.text).join(" ");
+
+            onDone({
+              translation,
+              book: scripture.book,
+              chapter: scripture.chapter,
+              verses: ordered,
+              text,
+            });
+
+            setReaderOpen(false);
+            onClose();
+          } catch (err) {
+            console.log("Failed to fetch scripture", err);
+          }
+        }}
+      />
     </BaseModal>
   );
 }
@@ -437,7 +401,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
   },
-
   searchContainer: {
     borderRadius: 8,
     paddingHorizontal: 10,
@@ -446,22 +409,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: "#EEEBEF",
   },
-
   searchInput: { flex: 1 },
-
-  tab: { flex: 1, padding: 10, alignItems: "center" },
-
-  activeTab: { backgroundColor: "#EAD9F3", borderRadius: 8 },
-
   row: { paddingVertical: 12 },
-
   verseSelected: { backgroundColor: "black" },
-
-  done: {
-    backgroundColor: "#7A2E8A",
-    padding: 14,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
-  },
 });

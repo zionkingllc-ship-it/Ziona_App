@@ -5,19 +5,18 @@ import { SimpleButton } from "@/components/ui/centerTextButton";
 import BibleSelectorModal from "@/components/ui/modals/BibleSelectorModal";
 import CategoryModal from "@/components/ui/modals/CategoryModal";
 import SuccessModal from "@/components/ui/modals/successModal";
+
 import colors from "@/constants/colors";
 
+import { usePostFeedback } from "@/hooks/usePostFeedback";
 import { useResponsive } from "@/hooks/useResponsive";
 
 import { publishDraftPost } from "@/services/graphQL/publishDraftPost";
 
 import { useCreatePostStore } from "@/store/createPostStore";
 
-import { router } from "expo-router";
-
 import { useEffect, useRef, useState } from "react";
-
-import { Alert, Image, ScrollView, TouchableOpacity } from "react-native";
+import { Image, ScrollView, TouchableOpacity } from "react-native";
 
 import { Text, XStack, YStack } from "tamagui";
 
@@ -34,105 +33,93 @@ function buildReference(book: string, chapter: number, verses: number[]) {
     return `${book} ${chapter}:${sorted[0]}`;
   }
 
-  return `${book} ${chapter}:${sorted[0]}-${sorted[sorted.length - 1]}`;
+  const isContinuous = sorted.every(
+    (v, i) => i === 0 || v === sorted[i - 1] + 1,
+  );
+
+  if (isContinuous) {
+    return `${book} ${chapter}:${sorted[0]}-${sorted[sorted.length - 1]}`;
+  }
+
+  return `${book} ${chapter}:${sorted.join(", ")}`;
 }
 
 export default function CreateTextScreen() {
   const { wp, hp, fs } = useResponsive();
 
-  const {
-    draft,
-    startDraft,
-    setText,
-    setCategory,
-    setBibleVerse,
-  } = useCreatePostStore();
+  const { draft, startDraft, setText, setCategory, setBibleVerse } =
+    useCreatePostStore();
 
   const [categoryVisible, setCategoryVisible] = useState(false);
   const [bibleVisible, setBibleVisible] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [limitModal, setLimitModal] = useState(false);
-  const [limitMessage, setLimitMessage] = useState("");
+
   const uploadLock = useRef(false);
 
   /* =========================
-     ENSURE DRAFT EXISTS
+     ENSURE TEXT DRAFT
   ========================= */
 
   useEffect(() => {
     if (!draft) {
-      startDraft("text"); // ✅ CRITICAL FIX
+      startDraft("text");
     }
   }, []);
 
-  /* =========================
-     TYPE SAFETY
-  ========================= */
-
-  if (!draft || (draft.type !== "text" && draft.type !== "bible")) {
-    return null;
-  }
-
-  const isBible = draft.type === "bible";
+  if (!draft) return null;
 
   /* =========================
      DERIVED DATA
   ========================= */
 
-  const translation =
-    isBible && draft.bibleVerse ? draft.bibleVerse.translation : "";
+  const verse = draft.type === "bible" ? draft.bibleVerse : undefined;
 
-  const book =
-    isBible && draft.bibleVerse ? draft.bibleVerse.book : "";
+  const translation = verse?.translation ?? "";
+  const book = verse?.book ?? "";
+  const chapter = verse?.chapter ?? 0;
+  const verses = verse?.verses ?? [];
 
-  const chapter =
-    isBible && draft.bibleVerse ? draft.bibleVerse.chapter : 0;
-
-  const verses =
-    isBible && draft.bibleVerse ? draft.bibleVerse.verses : [];
-
-  const verseText = isBible ? draft.bibleVerse?.text : undefined;
+  const verseText = verse?.text;
 
   const reference =
     book && chapter && verses.length
       ? buildReference(book, chapter, verses)
       : "";
+  console.log("ALL DATA", translation, book, chapter, verse, reference);
+  const textValue = "text" in draft ? draft.text : "";
 
   const cardColor = draft.category?.bgColor ?? "#E6E2C5";
-
-  const textValue = draft.type === "text" ? draft.text : "";
-  const hasText = textValue.trim().length > 0;
 
   /* =========================
      VALIDATION
   ========================= */
 
-  const canUpload =
-    !!draft.category?.id &&
-    ((draft.type === "text" && hasText) ||
-      (draft.type === "bible" && !!draft.bibleVerse));
+  const hasText = textValue.trim().length > 0;
+
+  const canUpload = !!draft.category?.id && (hasText || !!verseText);
 
   /* =========================
      POST HANDLER
   ========================= */
 
-  async function handleUpload() {
-    if (!canUpload) return;
-    if (uploadLock.current) return;
+  const feedback = usePostFeedback("/(tabs)/create");
 
-    uploadLock.current = true;
+  async function handleUpload() {
+    if (!draft) return;
+
+    if (!canUpload) {
+      feedback.showError("Add required fields");
+      return;
+    }
 
     try {
       setUploading(true);
-
       await publishDraftPost(draft);
-
-      router.replace("/(tabs)/home");
+      feedback.showSuccess();
     } catch (error: any) {
-      Alert.alert("Upload failed", error?.message || "Something went wrong");
+      feedback.showError(error?.message);
     } finally {
       setUploading(false);
-      uploadLock.current = false;
     }
   }
 
@@ -146,9 +133,11 @@ export default function CreateTextScreen() {
 
       <ScrollView style={{ flex: 1 }}>
         <YStack flex={1} paddingHorizontal={wp(6)} paddingTop={hp(2)}>
+          {/* INPUT CARD */}
           <TextPostCardInput
+            showInput={true}
             category={draft.category?.label}
-            scripture={reference || undefined}
+            scripture={reference}
             translation={translation}
             verseText={verseText}
             value={textValue}
@@ -156,6 +145,7 @@ export default function CreateTextScreen() {
             backgroundColor={cardColor}
           />
 
+          {/* ACTIONS */}
           <XStack flex={1} marginTop={hp(7)} marginBottom={hp(4)} gap={wp(3)}>
             <TagSelectorCard
               category={draft.category}
@@ -191,14 +181,16 @@ export default function CreateTextScreen() {
             </TouchableOpacity>
           </XStack>
 
+          {/* POST BUTTON */}
           <SimpleButton
-            text={uploading ? "Uploading..." : "Post"}
+            text={uploading ? "Posting..." : "Post"}
             textColor={colors.buttonText}
             color={colors.primary}
             disabled={uploading || !canUpload}
             onPress={handleUpload}
           />
 
+          {/* CATEGORY MODAL */}
           <CategoryModal
             visible={categoryVisible}
             onClose={() => setCategoryVisible(false)}
@@ -208,6 +200,7 @@ export default function CreateTextScreen() {
             }}
           />
 
+          {/* BIBLE MODAL */}
           <BibleSelectorModal
             visible={bibleVisible}
             onClose={() => setBibleVisible(false)}
@@ -216,17 +209,18 @@ export default function CreateTextScreen() {
               setBibleVisible(false);
             }}
           />
-
-          <SuccessModal
-            visible={limitModal}
-            onClose={() => setLimitModal(false)}
-            title="Limit exceeded"
-            message={limitMessage}
-            type="warning"
-            autoClose
-          />
         </YStack>
       </ScrollView>
+
+      {/* SUCCESS MODAL */}
+      <SuccessModal
+        visible={feedback.visible}
+        onClose={feedback.handleClose}
+        title={feedback.type === "success" ? "Success" : "failed"}
+        message={feedback.message}
+        type={feedback.type}
+        autoClose
+      />
     </YStack>
   );
 }

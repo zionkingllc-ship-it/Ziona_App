@@ -1,9 +1,6 @@
+import { graphqlRequest } from "@/services/graphQL/graphqlClient";
+import { BibleBook, BibleTranslation, BibleVerse } from "@/types/bible";
 import { BibleRepository } from "../bibleRepository";
-import {
-  BibleBook,
-  BibleTranslation,
-  BibleVerse,
-} from "@/types/bible";
 
 import {
   getBibleBooks,
@@ -29,8 +26,46 @@ export class GraphqlBibleRepository implements BibleRepository {
   async getVerses(
     translation: string,
     book: string,
-    chapter: number
+    chapter: number,
   ): Promise<BibleVerse[]> {
     return getBibleVerses(book, chapter, translation);
   }
+
+ async getScripture(params: {
+  book: string;
+  chapter: number;
+  version: string;
+}) {
+  const QUERY = `
+    query scripture(
+      $book: String!
+      $chapter: Int!
+      $version: String!
+    ) {
+      scripture(
+        book: $book
+        chapter: $chapter
+        version: $version
+      ) {
+        book
+        chapter
+        version
+        verses {
+          number
+          text
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    book: params.book,
+    chapter: params.chapter,
+    version: params.version.toLowerCase(),
+  };
+
+  const data = await graphqlRequest(QUERY, variables);
+
+  return data?.scripture;
+}
 }

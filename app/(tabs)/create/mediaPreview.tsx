@@ -1,85 +1,75 @@
 import Header from "@/components/layout/header";
 import TagSelectorCard from "@/components/post/TagSelectorCard";
 import { SimpleButton } from "@/components/ui/centerTextButton";
+import SuccessModal from "@/components/ui/modals/successModal";
 
 import colors from "@/constants/colors";
-
 import { useResponsive } from "@/hooks/useResponsive";
-import { publishDraftPost } from "@/services/graphQL/publishDraftPost";
+import { publishMediaPost } from "@/services/graphQL/drafts/mediaDraft";
 import { useCreatePostStore } from "@/store/createPostStore";
 
 import { useState } from "react";
 import { router } from "expo-router";
 
-import { Image, TouchableOpacity, Alert } from "react-native";
-
+import { Image, TouchableOpacity } from "react-native";
 import { Text, View, XStack, YStack } from "tamagui";
-
 import { Video, ResizeMode } from "expo-av";
 
 export default function CreateMediaPreviewScreen() {
   const { wp, hp, fs } = useResponsive();
-
   const { draft } = useCreatePostStore();
 
   const [uploading, setUploading] = useState(false);
 
-  /* =========================
-     TYPE SAFETY
-  ========================= */
+  // ✅ modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<"success" | "failed">("success");
+  const [modalMessage, setModalMessage] = useState("");
 
-  if (!draft || draft.type !== "media") {
-    return null;
-  }
+  if (!draft || draft.type !== "media") return null;
 
   const mediaDraft = draft;
+  const media = mediaDraft.media.items[0];
 
-  const mediaItems = mediaDraft.media.items;
-  const media = mediaItems[0];
-
-  const caption = ""; // no caption stored in media draft
-
-  /* =========================
-     VALIDATION
-  ========================= */
+  const caption = mediaDraft.caption ?? "";
 
   const canUpload =
-    mediaItems.length > 0 && !!mediaDraft.category?.id;
-
-  /* =========================
-     HANDLE UPLOAD
-  ========================= */
+    mediaDraft.media.items.length > 0 &&
+    !!mediaDraft.category?.id;
 
   async function handleUpload() {
     if (uploading) return;
 
     if (!canUpload) {
-      Alert.alert("Missing info", "Add media and category");
+      setModalType("failed");
+      setModalMessage("Add media and category");
+      setModalVisible(true);
       return;
     }
 
     try {
       setUploading(true);
+      await publishMediaPost(mediaDraft);
 
-      await publishDraftPost(mediaDraft);
+      setModalType("success");
+      setModalMessage("Post uploaded successfully");
+      setModalVisible(true);
 
-      Alert.alert("Success", "Post uploaded successfully");
-
-      router.replace("/(tabs)/home");
+      // navigate after short delay (optional but clean)
+      setTimeout(() => {
+        router.replace("/(tabs)/create");
+      }, 1200);
     } catch (error: any) {
-      Alert.alert("Upload Failed", error?.message || "Something went wrong");
+      setModalType("failed");
+      setModalMessage(error?.message || "Upload failed");
+      setModalVisible(true);
     } finally {
       setUploading(false);
     }
   }
 
   return (
-    <YStack
-      flex={1}
-      backgroundColor={colors.white}
-      paddingTop={hp(5)}
-      paddingHorizontal={wp(6)}
-    >
+    <YStack flex={1} backgroundColor={colors.white} paddingTop={hp(5)} paddingHorizontal={wp(6)}>
       <Header heading="Preview" />
 
       <View
@@ -89,28 +79,20 @@ export default function CreateMediaPreviewScreen() {
           borderRadius: 10,
           overflow: "hidden",
           marginTop: hp(2),
-          backgroundColor: "#EEE",
         }}
       >
         {media?.type === "image" && (
           <Image
             source={{ uri: media.uri }}
-            style={{
-              width: "100%",
-              height: "100%",
-            }}
+            style={{ width: "100%", height: "100%" }}
           />
         )}
 
         {media?.type === "video" && (
           <Video
             source={{ uri: media.uri }}
-            style={{
-              width: "100%",
-              height: "100%",
-            }}
+            style={{ width: "100%", height: "100%" }}
             resizeMode={ResizeMode.COVER}
-            shouldPlay={false}
             useNativeControls
           />
         )}
@@ -132,36 +114,10 @@ export default function CreateMediaPreviewScreen() {
           <Text color="white">✕</Text>
         </TouchableOpacity>
 
-        <XStack
-          position="absolute"
-          bottom={14}
-          left={14}
-          right={60}
-          gap="$2"
-          alignItems="center"
-        >
-          <View
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 20,
-              backgroundColor: "#FF5722",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text color="white" fontWeight="700">
-              M
-            </Text>
-          </View>
-
-          <YStack flex={1}>
-            <Text fontWeight="600" color="white">
-              Zion
-            </Text>
-            <Text fontSize={fs(13)} color="white">
-              {caption}
-            </Text>
+        <XStack position="absolute" bottom={14} left={14} right={60}>
+          <YStack>
+            <Text color="white">Zion</Text>
+            <Text color="white">{caption}</Text>
           </YStack>
         </XStack>
       </View>
@@ -173,12 +129,20 @@ export default function CreateMediaPreviewScreen() {
       <YStack marginTop={hp(3)}>
         <SimpleButton
           text={uploading ? "Uploading..." : "Upload"}
-          textColor={colors.white}
-          color={colors.primary}
           disabled={!canUpload || uploading}
           onPress={handleUpload}
         />
       </YStack>
+
+      {/* ✅ MODAL */}
+      <SuccessModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title={modalType === "success" ? "Success" : "Failed"}
+        message={modalMessage}
+        type={modalType}
+        autoClose
+      />
     </YStack>
   );
 }

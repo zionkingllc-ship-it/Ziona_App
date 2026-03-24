@@ -1,10 +1,4 @@
-import { DiscoverCategory } from "./discover";
-
-/* =========================
-   POST TYPES (MATCH BACKEND)
-========================= */
-
-export type CreatePostType = "MEDIA" | "TEXT" | "BIBLE";
+import { Category } from "./category";
 
 /* =========================
    MEDIA
@@ -16,7 +10,6 @@ export interface MediaItem {
   id: string;
   uri: string;
   type: MediaType;
-  thumbnail?: string;
 }
 
 /* =========================
@@ -29,27 +22,34 @@ export interface BibleVerse {
   chapter: number;
   verses: number[];
   text: string;
-  reference?: string;
 }
 
 /* =========================
-   DRAFT (STRICT + CLEAN)
+   DRAFT (CLEAN)
 ========================= */
 
+export type TextDraft = {
+  type: "text";
+  text: string;
+  category: Category;
+};
+
+export type MediaDraft = {
+  type: "media";
+  mediaType: "image" | "video";
+  media: { items: MediaItem[] };
+  category: Category;
+  caption?: string;
+};
+
+export type BibleDraft = {
+  type: "bible";
+  bibleVerse: BibleVerse;
+  category: Category;
+  text?: string; 
+};
+
 export type CreatePostDraft =
-  | {
-      type: "text";
-      text: string;
-      category: DiscoverCategory;
-    }
-  | {
-      type: "media";
-      mediaType: MediaType;
-      media: { items: MediaItem[] };
-      category: DiscoverCategory;
-    }
-  | {
-      type: "bible";
-      bibleVerse: BibleVerse;
-      category: DiscoverCategory;
-    };
+  | TextDraft
+  | MediaDraft
+  | BibleDraft;

@@ -5,17 +5,14 @@ import { SimpleButton } from "@/components/ui/centerTextButton";
 import BibleSelectorModal from "@/components/ui/modals/BibleSelectorModal";
 import CategoryModal from "@/components/ui/modals/CategoryModal";
 import SuccessModal from "@/components/ui/modals/successModal";
-
-import { TouchableOpacity, ScrollView } from "react-native";
-import { Image, Text, XStack, YStack } from "tamagui";
-
 import colors from "@/constants/colors";
+import { usePostFeedback } from "@/hooks/usePostFeedback";
 import { useResponsive } from "@/hooks/useResponsive";
 import { publishDraftPost } from "@/services/graphQL/publishDraftPost";
 import { useCreatePostStore } from "@/store/createPostStore";
-
-import { router } from "expo-router";
 import { useRef, useState } from "react";
+import { ScrollView, TouchableOpacity } from "react-native";
+import { Image, Text, XStack, YStack } from "tamagui";
 
 /* =========================
    HELPER
@@ -31,13 +28,11 @@ function buildReference(book: string, chapter: number, verses: number[]) {
   }
 
   const isContinuous = sorted.every(
-    (v, i) => i === 0 || v === sorted[i - 1] + 1
+    (v, i) => i === 0 || v === sorted[i - 1] + 1,
   );
 
   if (isContinuous) {
-    return `${book} ${chapter}:${sorted[0]}-${
-      sorted[sorted.length - 1]
-    }`;
+    return `${book} ${chapter}:${sorted[0]}-${sorted[sorted.length - 1]}`;
   }
 
   return `${book} ${chapter}:${sorted.join(", ")}`;
@@ -50,13 +45,7 @@ export default function CreateBiblePostScreen() {
 
   const [categoryVisible, setCategoryVisible] = useState(false);
   const [bibleVisible, setBibleVisible] = useState(true); // auto open
-  const [uploading, setUploading] = useState(false);
-
-  const [errorVisible, setErrorVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const uploadLock = useRef(false);
-
+  const [uploading, setUploading] = useState(false); 
   /* =========================
      TYPE SAFETY
   ========================= */
@@ -98,32 +87,25 @@ export default function CreateBiblePostScreen() {
      VALIDATION
   ========================= */
 
-  const canUpload =
-    !!bibleDraft.category &&
-    !!bibleDraft.bibleVerse;
+  const canUpload = !!bibleDraft.category && !!bibleDraft.bibleVerse;
 
   /* =========================
      SUBMIT
   ========================= */
 
+  const feedback = usePostFeedback("/(tabs)/create");
+
   async function handleUpload() {
     if (!canUpload) return;
-    if (uploadLock.current) return;
-
-    uploadLock.current = true;
 
     try {
       setUploading(true);
-
       await publishDraftPost(bibleDraft);
-
-      router.replace("/(tabs)/home");
+      feedback.showSuccess();
     } catch (error: any) {
-      setErrorMessage(error?.message || "Something went wrong");
-      setErrorVisible(true);
+      feedback.showError(error?.message);
     } finally {
       setUploading(false);
-      uploadLock.current = false;
     }
   }
 
@@ -145,7 +127,7 @@ export default function CreateBiblePostScreen() {
             scripture={reference}
             translation={translation}
             verseText={verseText}
-            value=""
+            value={""}
             onChangeText={() => {}}
             backgroundColor={cardColor}
           />
@@ -213,13 +195,6 @@ export default function CreateBiblePostScreen() {
           <BibleSelectorModal
             visible={bibleVisible}
             onClose={() => setBibleVisible(false)}
-            remainingChars={remaining}
-            onLimitExceeded={(remaining) => {
-              setErrorMessage(
-                `You can only add ${remaining} more characters.`
-              );
-              setErrorVisible(true);
-            }}
             onDone={(data) => {
               setBibleVerse(data);
               setBibleVisible(false);
@@ -228,14 +203,13 @@ export default function CreateBiblePostScreen() {
         </YStack>
       </ScrollView>
 
-      {/* ERROR */}
-
       <SuccessModal
-        visible={errorVisible}
-        onClose={() => setErrorVisible(false)}
-        title="Limit exceeded"
-        message={errorMessage}
-        type="warning"
+        visible={feedback.visible}
+        onClose={feedback.handleClose}
+        title={feedback.type === "success" ? "Success" : "failed"}
+        message={feedback.message}
+        type={feedback.type}
+        autoClose
       />
     </YStack>
   );

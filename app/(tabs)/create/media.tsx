@@ -22,7 +22,7 @@ import { Text, XStack, YStack } from "tamagui";
 export default function CreateMediaScreen() {
   const { wp, hp, fs } = useResponsive();
 
-  const { draft, startDraft, setText, setMedia, setCategory } =
+  const { draft, startDraft, setCaption, setMedia, setCategory } =
     useCreatePostStore();
 
   const [categoryVisible, setCategoryVisible] = useState(false);
@@ -35,22 +35,14 @@ export default function CreateMediaScreen() {
 
   useEffect(() => {
     if (!draft) {
-      startDraft("media", "image"); // ✅ FIXED
+      startDraft("media", "image");
     }
   }, []);
 
-  /* =========================
-     TYPE NARROWING
-  ========================= */
-
-  if (!draft || draft.type !== "media") {
-    return null;
-  }
+  if (!draft || draft.type !== "media") return null;
 
   const mediaDraft = draft;
-
   const mediaItems = mediaDraft.media?.items ?? [];
-  const caption = ""; // ❌ no text in media draft anymore
 
   /* =========================
      PERMISSION
@@ -73,9 +65,7 @@ export default function CreateMediaScreen() {
      NORMALIZE MEDIA
   ========================= */
 
-  function normalizeMedia(
-    asset: ImagePicker.ImagePickerAsset
-  ): MediaItem {
+  function normalizeMedia(asset: ImagePicker.ImagePickerAsset): MediaItem {
     return {
       id: asset.assetId ?? asset.uri,
       uri: asset.uri,
@@ -105,8 +95,6 @@ export default function CreateMediaScreen() {
 
     const video = assets.find((a) => a.type === "video");
 
-    /* VIDEO RULES */
-
     if (video) {
       if (existing.length > 0) {
         setError("Cannot add video when images exist.");
@@ -121,10 +109,9 @@ export default function CreateMediaScreen() {
       }
 
       setMedia([normalizeMedia(video)]);
+      router.push("/create/mediaPreview");
       return;
     }
-
-    /* IMAGE RULES */
 
     const remainingSlots = 5 - existing.length;
 
@@ -139,86 +126,52 @@ export default function CreateMediaScreen() {
       .slice(0, remainingSlots)
       .map(normalizeMedia);
 
-    setMedia([...existing, ...images]);
-  }
+    const updated = [...existing, ...images];
+    setMedia(updated);
 
-  /* =========================
-     REMOVE MEDIA
-  ========================= */
+    if (existing.length === 0 && updated.length > 0) {
+      router.push("/create/mediaPreview");
+    }
+  }
 
   function removeMedia(id: string) {
     setMedia(mediaItems.filter((m) => m.id !== id));
   }
 
   /* =========================
-     RENDER MEDIA
-  ========================= */
-
-  function renderMedia({ item }: { item: MediaItem }) {
-    return (
-      <YStack>
-        {item.type === "video" ? (
-          <Video
-            source={{ uri: item.uri }}
-            style={{
-              width: wp(40),
-              height: wp(45),
-              borderRadius: 6,
-              marginRight: wp(2),
-            }}
-            resizeMode={ResizeMode.COVER}
-          />
-        ) : (
-          <Image
-            source={{ uri: item.uri }}
-            style={{
-              width: wp(40),
-              height: wp(45),
-              borderRadius: 6,
-              marginRight: wp(2),
-            }}
-          />
-        )}
-
-        <TouchableOpacity
-          onPress={() => removeMedia(item.id)}
-          style={{
-            position: "absolute",
-            top: "40%",
-            left: "40%",
-          }}
-        >
-          <Trash color={colors.white} size={24} />
-        </TouchableOpacity>
-      </YStack>
-    );
-  }
-
-  /* =========================
-     LIMITS
-  ========================= */
-
-  const mediaLimitReached =
-    mediaItems.length >= 5 ||
-    mediaItems.some((m) => m.type === "video");
-
-  /* =========================
      UI
   ========================= */
 
   return (
-    <YStack
-      flex={1}
-      backgroundColor={colors.white}
-      paddingTop={hp(5)}
-      paddingHorizontal={wp(6)}
-    >
+    <YStack flex={1} backgroundColor={colors.white} paddingTop={hp(5)} paddingHorizontal={wp(6)}>
       <Header heading="Add details" />
 
       <YStack>
         <FlatList
           data={mediaItems}
-          renderItem={renderMedia}
+          renderItem={({ item }) => (
+            <YStack>
+              {item.type === "video" ? (
+                <Video
+                  source={{ uri: item.uri }}
+                  style={{ width: wp(40), height: wp(45), borderRadius: 6, marginRight: wp(2) }}
+                  resizeMode={ResizeMode.COVER}
+                />
+              ) : (
+                <Image
+                  source={{ uri: item.uri }}
+                  style={{ width: wp(40), height: wp(45), borderRadius: 6, marginRight: wp(2) }}
+                />
+              )}
+
+              <TouchableOpacity
+                onPress={() => removeMedia(item.id)}
+                style={{ position: "absolute", top: "40%", left: "40%" }}
+              >
+                <Trash color={colors.white} size={24} />
+              </TouchableOpacity>
+            </YStack>
+          )}
           keyExtractor={(item) => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -226,10 +179,9 @@ export default function CreateMediaScreen() {
         />
 
         <TouchableOpacity
-          disabled={mediaLimitReached}
           onPress={pickMedia}
           style={{
-            backgroundColor: mediaLimitReached ? "#E5E5E5" : "#F1EFF2",
+            backgroundColor: "#F1EFF2",
             paddingVertical: hp(0.7),
             marginTop: hp(2),
             borderRadius: 6,
@@ -237,26 +189,20 @@ export default function CreateMediaScreen() {
             width: wp(40),
           }}
         >
-          <Text fontFamily="$body" fontWeight="400" fontSize={fs(12)}>
-            Add media
-          </Text>
+          <Text fontSize={fs(12)}>Add media</Text>
         </TouchableOpacity>
 
-        <Text fontFamily="$body" fontSize={fs(14)} marginVertical={hp(1)}>
-          Write a caption
-        </Text>
+        <Text marginVertical={hp(1)}>Write a caption</Text>
 
         <TextInput
           multiline
-          value={""}
-          onChangeText={() => {}}
+          value={mediaDraft.caption ?? ""}
+          onChangeText={setCaption}
           maxLength={100}
           style={{
             minHeight: hp(8),
             borderBottomWidth: 1,
             borderColor: "#E5E5E5",
-            fontSize: fs(14),
-            maxHeight: 80,
           }}
         />
       </YStack>
@@ -271,9 +217,6 @@ export default function CreateMediaScreen() {
       <YStack marginTop="auto" marginBottom={hp(4)}>
         <SimpleButton
           text="Preview"
-          disabled={mediaItems.length === 0 || !mediaDraft.category?.id}
-          textColor={colors.white}
-          color={colors.primary}
           onPress={() => router.push("/create/mediaPreview")}
         />
       </YStack>
@@ -288,9 +231,9 @@ export default function CreateMediaScreen() {
       />
 
       <ErrorModal
-        visible={errorVisible}
-        message={error}
-        onClose={() => setErrorVisible(false)}
+        visible={false}
+        message=""
+        onClose={() => {}}
       />
     </YStack>
   );

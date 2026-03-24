@@ -14,8 +14,7 @@ export default function CreateScreen() {
   const { wp, hp, fs } = useResponsive();
 
   async function ensurePermission() {
-    const { status } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (status !== "granted") {
       alert("Permission to access media library is required.");
@@ -25,9 +24,7 @@ export default function CreateScreen() {
     return true;
   }
 
-  function normalizeMedia(
-    asset: ImagePicker.ImagePickerAsset
-  ): MediaItem {
+  function normalizeMedia(asset: ImagePicker.ImagePickerAsset): MediaItem {
     return {
       id: asset.assetId ?? asset.uri,
       uri: asset.uri,
@@ -50,10 +47,9 @@ export default function CreateScreen() {
     const assets = result.assets;
 
     const video = assets.find((a) => a.type === "video");
-
     /* =========================
-       VIDEO FLOW
-    ========================= */
+   VIDEO FLOW
+========================= */
 
     if (video) {
       if (assets.length > 1) {
@@ -61,7 +57,7 @@ export default function CreateScreen() {
         return;
       }
 
-      startDraft("video"); // ✅ FIXED
+      startDraft("media", "video");
 
       setMedia([normalizeMedia(video)]);
 
@@ -70,18 +66,16 @@ export default function CreateScreen() {
     }
 
     /* =========================
-       IMAGE FLOW
-    ========================= */
+   IMAGE FLOW
+========================= */
 
-    const images = assets
-      .filter((a) => a.type !== "video")
-      .slice(0, 5);
+    const images = assets.filter((a) => a.type !== "video").slice(0, 5);
 
     if (assets.length > 5) {
       alert("Maximum 5 images allowed.");
     }
 
-    startDraft("image"); // ✅ FIXED
+    startDraft("media", "image");
 
     setMedia(images.map(normalizeMedia));
 

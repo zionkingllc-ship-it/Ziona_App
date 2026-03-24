@@ -54,8 +54,8 @@ export default function TextPostCardInput({
         onClose={() => setErrorVisible(false)}
         type="warning"
         autoClose
-        title="Character limit exceeded"
-        message={`You can only add ${remainingError} more characters`}
+        title="Character limit reached"
+        message={`You can only add 500 characters`}
       />
 
       <View

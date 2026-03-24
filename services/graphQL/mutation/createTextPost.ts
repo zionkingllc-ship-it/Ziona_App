@@ -4,56 +4,37 @@ import { useAuthStore } from "@/store/useAuthStore";
 const CREATE_POST_MUTATION = `
 mutation CreatePost(
   $postType: PostType!
-  $mediaType: MediaType
   $caption: String
   $category: String
-  $mediaUrls: [String!]
-
-  $thumbnailUrl: String
-  $width: Int!
-  $height: Int!
-  $duration: Int
-
   $scriptureBook: String
   $scriptureChapter: Int
   $scriptureVerseStart: Int
   $scriptureVerseEnd: Int
-  $scriptureVersion: String
+  $scriptureTranslation: String
 ) {
   createPost(
     postType: $postType
-    mediaType: $mediaType
     caption: $caption
     category: $category
-    mediaUrls: $mediaUrls
-
-    thumbnailUrl: $thumbnailUrl
-    width: $width
-    height: $height
-    duration: $duration
-
     scriptureBook: $scriptureBook
     scriptureChapter: $scriptureChapter
     scriptureVerseStart: $scriptureVerseStart
     scriptureVerseEnd: $scriptureVerseEnd
-    scriptureVersion: $scriptureVersion
+    scriptureTranslation: $scriptureTranslation
   ) {
     success
-    postId
-    message
-    errorCode
+    post {
+      id
+      postType
+      caption
+    }
   }
 }
 `;
-export async function createPost(variables: {
-  postType: "MEDIA" | "TEXT" | "BIBLE";
-  mediaType?: string | null;
-  caption?: string | null;
-  category: string;
-  mediaUrls?: string[] | null;
-}) {
+
+export async function createTextPost(variables: any) {
   console.log("━━━━━━━━ CREATE POST START ━━━━━━━━");
-  console.log("Final GraphQL variables:", variables);
+  console.log("Variables:", variables);
 
   const token = useAuthStore.getState().tokens?.accessToken;
 
