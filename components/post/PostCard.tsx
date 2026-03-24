@@ -1,41 +1,20 @@
 import colors from "@/constants/colors";
 import { useResponsiveSize } from "@/hooks/useResponsiveSize";
-import { useBookmarksStore } from "@/store/useBookmarkStore";
-import { Post } from "@/types/post";
-import { MoreHorizontal } from "@tamagui/lucide-icons";
+import { FeedPost } from "@/types/feedTypes";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, TouchableOpacity } from "react-native";
 import { Image, Text, XStack, YStack } from "tamagui";
-import { CommentsSheet } from "../comments/commentsModal";
-import BookmarkFoldersModal from "../ui/modals/BookmarkFoldersModal";
-import ConfirmReportModal from "../ui/modals/ConfirmReportModal";
-import CreateFolderModal from "../ui/modals/CreateFolderModal";
-import OtherReportModal from "../ui/modals/OtherReportModal";
-import ReportReasonsModal from "../ui/modals/ReportReasonsModal";
-import ShareModal from "../ui/modals/ShareModal";
-import SuccessModal from "../ui/modals/successModal";
+
 import PostMedia from "./postcard/PostMedia";
 
 type Props = {
-  post: Post;
+  post: FeedPost;
   isPlaying: boolean;
   screenHeight: number;
   screenWidth: number;
   tabBarHeight: number;
 };
-
-const SCRUB_HEIGHT = 7;
-const OVERLAY_GAP = 0;
-const OVERLAY_BOTTOM = SCRUB_HEIGHT + OVERLAY_GAP;
-
-const likeIcon = require("@/assets/images/likeIcon.png");
-const likeIconActive = require("@/assets/images/likeIcon2.png");
-const commentIcon = require("@/assets/images/commentIcon.png");
-const bookmarkIcon = require("@/assets/images/bookmarkIcon.png");
-const bookmarkIconActive = require("@/assets/images/bookmarkIconActive.png");
-const shareIcon = require("@/assets/images/shareIcon.png");
-const flagIcon = require("@/assets/images/moreIcon2.png");
 
 export function PostCard({
   post,
@@ -44,42 +23,10 @@ export function PostCard({
   screenWidth,
   tabBarHeight,
 }: Props) {
-  const [liked, setLiked] = useState(post.liked);
   const [manualPaused, setManualPaused] = useState(false);
-  const [commentsVisible, setCommentsVisible] = useState(false);
-  const [confirmVisible, setConfirmVisible] = useState(false);
-  const [reasonsVisible, setReasonsVisible] = useState(false);
-  const [successVisible, setSuccessVisible] = useState(false);
-  const [foldersVisible, setFoldersVisible] = useState(false);
-  const [createVisible, setCreateVisible] = useState(false);
-  const [shareVisible, setShareVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [otherVisible, setOtherVisible] = useState(false);
-
-  const { folders, toggleBookmark, getSavedFolderIds, createFolder } =
-    useBookmarksStore();
-
-  const savedFolderIds = getSavedFolderIds(post.id);
-  const isBookmarked = savedFolderIds.length > 0;
 
   const { getIconSize, getAvatarSize, getFontSize } = useResponsiveSize();
-
-  const postImage: string = useMemo(() => {
-    switch (post.type) {
-      case "image":
-        return resolveToString(post.media?.items?.[0]?.url);
-      case "video":
-        return resolveToString(post.media?.thumbnailUrl);
-      case "text":
-        return resolveToString(post.media?.backgroundImage);
-      default:
-        return "";
-    }
-  }, [post]);
-
-  function resolveToString(source: string | number | undefined): string {
-    return typeof source === "string" ? source : "";
-  }
 
   useEffect(() => {
     if (!isPlaying) setManualPaused(false);
@@ -90,90 +37,59 @@ export function PostCard({
   }, [post.id]);
 
   const effectiveIsPlaying =
-    post.type === "video" ? isPlaying && !manualPaused : isPlaying;
+    post.type === "media" && post.mediaType === "video"
+      ? isPlaying && !manualPaused
+      : isPlaying;
 
   const handleTogglePlay = () => {
-    if (post.type === "video") {
+    if (post.type === "media" && post.mediaType === "video") {
       setManualPaused((prev) => !prev);
     }
-  };
-
-  const handleLikeFromMedia = () => {
-    setLiked(true);
   };
 
   const avatarSize = getAvatarSize(30);
   const iconSize = getIconSize(24);
   const fontSizeName = getFontSize(16);
   const fontSizeCaption = getFontSize(16);
-  const fontSizeMore = getFontSize(14);
-  const fontSizeButton = getFontSize(13);
 
   return (
     <YStack height={screenHeight} width="100%" backgroundColor="black">
-      {/* MEDIA */}
       <PostMedia
         post={post}
         isPlaying={effectiveIsPlaying}
         onTogglePlay={handleTogglePlay}
-        onLike={handleLikeFromMedia}
         screenWidth={screenWidth}
         screenHeight={screenHeight}
         tabBarHeight={tabBarHeight}
       />
 
-      {/* OVERLAY */}
-      <YStack position="absolute" bottom={OVERLAY_BOTTOM} width="100%">
+      <YStack position="absolute" bottom={10} width="100%">
         <XStack padding="$4" alignItems="flex-end">
-          {/* LEFT SIDE (PROFILE + CAPTION) */}
           <YStack flex={1} gap="$2">
-            <XStack gap="$4" alignItems="center" flexWrap="wrap">
-              <XStack gap="$2" alignItems="center">
-                <Image
-                  source={
-                    post.author?.avatarUrl
-                      ? { uri: post.author.avatarUrl }
-                      : require("@/assets/images/profile.png")
-                  }
-                  width={avatarSize}
-                  height={avatarSize}
-                  borderRadius={avatarSize / 2}
-                />
-                <Text
-                  color={colors.white}
-                  fontSize={fontSizeName}
-                  fontWeight="500"
-                >
-                  {post.author?.name || "Unknown"}
-                </Text>
-              </XStack>
-
-              <TouchableOpacity
-                style={{
-                  borderWidth: 1,
-                  borderColor: colors.white,
-                  height: 24,
-                  borderRadius: 8,
-                  paddingHorizontal: 8,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
+            <XStack gap="$2" alignItems="center">
+              <Image
+                source={
+                  post.author?.avatarUrl
+                    ? { uri: post.author.avatarUrl }
+                    : require("@/assets/images/profile.png")
+                }
+                width={avatarSize}
+                height={avatarSize}
+                borderRadius={avatarSize / 2}
+              />
+              <Text
+                color={colors.white}
+                fontSize={fontSizeName}
+                fontWeight="500"
               >
-                <Text
-                  color={colors.white}
-                  fontSize={fontSizeButton}
-                  fontWeight="500"
-                >
-                  following
-                </Text>
-              </TouchableOpacity>
+                {post.author?.username || "Unknown"}
+              </Text>
             </XStack>
 
-            {"caption" in post && post.caption && (
-              <XStack maxWidth={screenWidth * 0.8} alignItems="flex-end">
+            {post.caption ? (
+              <XStack maxWidth={screenWidth * 0.8}>
                 <Text
                   color={colors.white}
-                  fontWeight="400"
                   fontSize={fontSizeCaption}
                   numberOfLines={expanded ? undefined : 3}
                 >
@@ -191,120 +107,16 @@ export function PostCard({
                         width: "100%",
                       }}
                     />
-                    <Text
-                      color={colors.white}
-                      fontSize={fontSizeMore}
-                      fontWeight="600"
-                      alignSelf="flex-end"
-                    >
+                    <Text color={colors.white}>
                       {expanded ? "less" : "more"}
                     </Text>
                   </Pressable>
                 )}
               </XStack>
-            )}
-          </YStack>
-
-          {/* RIGHT SIDE (ACTIONS) */}
-          <YStack gap="$4" alignItems="center">
-            <Pressable onPress={() => setLiked((p) => !p)}>
-              <Image
-                source={liked ? likeIconActive : likeIcon}
-                width={iconSize}
-                height={iconSize}
-              />
-            </Pressable>
-
-            <Pressable onPress={() => setCommentsVisible(true)}>
-              <Image source={commentIcon} width={iconSize} height={iconSize} />
-            </Pressable>
-
-            <Pressable onPress={() => setFoldersVisible(true)}>
-              <Image
-                source={isBookmarked ? bookmarkIconActive : bookmarkIcon}
-                width={iconSize}
-                height={iconSize}
-              />
-            </Pressable>
-
-            <Pressable onPress={() => setShareVisible(true)}>
-              <Image source={shareIcon} width={iconSize} height={iconSize} />
-            </Pressable>
-
-            <Pressable onPress={() => setConfirmVisible(true)}>
-              <MoreHorizontal size={iconSize + 5} color={colors.white} />
-              {/* <Image source={flagIcon} width={iconSize} height={iconSize} /> */}
-            </Pressable>
+            ) : null}
           </YStack>
         </XStack>
       </YStack>
-
-      {/* ALL MODALS (unchanged) */}
-      <CommentsSheet
-        visible={commentsVisible}
-        onClose={() => setCommentsVisible(false)}
-      />
-      <ConfirmReportModal
-        visible={confirmVisible}
-        onClose={() => setConfirmVisible(false)}
-        onConfirm={() => {
-          setConfirmVisible(false);
-          setReasonsVisible(true);
-        }}
-      />
-      <ReportReasonsModal
-        visible={reasonsVisible}
-        onClose={() => setReasonsVisible(false)}
-        onSelectReason={() => {
-          setReasonsVisible(false);
-          setSuccessVisible(true);
-        }}
-        onSelectOther={() => {
-          setReasonsVisible(false);
-          setOtherVisible(true);
-        }}
-      />
-      <OtherReportModal
-        visible={otherVisible}
-        onClose={() => setOtherVisible(false)}
-        onSubmit={() => {
-          setOtherVisible(false);
-          setSuccessVisible(true);
-        }}
-      />
-      <ShareModal
-        visible={shareVisible}
-        onClose={() => setShareVisible(false)}
-        post={post}
-      />
-      <SuccessModal
-        visible={successVisible}
-        type="success"
-        onClose={() => setSuccessVisible(false)}
-        autoClose
-        title="Thank you for reporting this post"
-        message="Your feedback is important to us. While we review this content, you won't see this user's posts again."
-      />
-      <BookmarkFoldersModal
-        visible={foldersVisible}
-        folders={folders}
-        savedFolderIds={savedFolderIds}
-        onClose={() => setFoldersVisible(false)}
-        onToggleFolder={(folderId) => toggleBookmark(post.id, folderId)}
-        onCreateNew={() => {
-          setFoldersVisible(false);
-          setCreateVisible(true);
-        }}
-      />
-      <CreateFolderModal
-        visible={createVisible}
-        post={post}
-        onClose={() => setCreateVisible(false)}
-        onSave={(name) => {
-          createFolder(name, postImage, post.id);
-          setCreateVisible(false);
-        }}
-      />
     </YStack>
   );
 }

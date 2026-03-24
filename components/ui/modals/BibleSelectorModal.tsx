@@ -143,16 +143,16 @@ export default function BibleSelectorModal({
   /* =========================
      LOAD VERSES
   ========================= */
-useEffect(() => {
-  if (!visible) return;
+  useEffect(() => {
+    if (!visible) return;
 
-  // force clean start every time modal opens
-  setBook(null);
-  setChapter(undefined);
-  setSelected([]);
-  setVerses([]);
-  setSearch("");
-}, [visible]);
+    // force clean start every time modal opens
+    setBook(null);
+    setChapter(undefined);
+    setSelected([]);
+    setVerses([]);
+    setSearch("");
+  }, [visible]);
   useEffect(() => {
     if (!chapter || !book) return;
     loadVerses(book.name, chapter, translation);
@@ -373,6 +373,10 @@ useEffect(() => {
             );
 
             const text = selectedVerses.map((v: any) => v.text).join(" ");
+            if (text.length > 500) {
+              alert("Selected verses exceed 500 character limit");
+              return;
+            }
 
             onDone({
               translation,

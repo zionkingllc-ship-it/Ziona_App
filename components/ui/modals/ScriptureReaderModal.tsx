@@ -42,10 +42,7 @@ export default function ScriptureReaderModal({
   ========================= */
 
   const safeVerses: BibleVerse[] = (verses ?? []).map((v, i) => ({
-    number:
-      typeof v?.number === "number"
-        ? v.number
-        : i + 1, // fallback if backend fails
+    number: typeof v?.number === "number" ? v.number : i + 1, // fallback if backend fails
     text: v?.text ?? "",
   }));
 
@@ -54,7 +51,7 @@ export default function ScriptureReaderModal({
   ========================= */
 
   const firstSelectedIndex = safeVerses.findIndex(
-    (v) => v.number === selected[0]
+    (v) => v.number === selected[0],
   );
 
   /* =========================
@@ -72,6 +69,13 @@ export default function ScriptureReaderModal({
       }, 200);
     }
   }, [visible]);
+
+  const selectedText = safeVerses
+    .filter((v) => selected.includes(v.number))
+    .map((v) => v.text)
+    .join(" ");
+
+  const isTooLong = selectedText.length > 500;
 
   return (
     <BaseModal visible={visible} onClose={onClose}>
@@ -92,9 +96,7 @@ export default function ScriptureReaderModal({
           <FlatList
             ref={listRef}
             data={safeVerses}
-            keyExtractor={(item, index) =>
-              `${item.number}-${index}`
-            }
+            keyExtractor={(item, index) => `${item.number}-${index}`}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 120 }}
             getItemLayout={(_, index) => ({
@@ -107,18 +109,10 @@ export default function ScriptureReaderModal({
 
               return (
                 <Pressable
-                  style={[
-                    styles.verseRow,
-                    active && styles.activeVerse,
-                  ]}
+                  style={[styles.verseRow, active && styles.activeVerse]}
                   onPress={() => onToggle(item.number)}
                 >
-                  {/* ✅ ALWAYS SHOW NUMBER */}
-                  <Text
-                    fontFamily={"$body"}
-                    fontWeight="700"
-                    marginRight={8}
-                  >
+                  <Text fontFamily={"$body"} fontWeight="700" marginRight={8}>
                     {item.number}.
                   </Text>
 
@@ -142,7 +136,7 @@ export default function ScriptureReaderModal({
                 styles.doneButton,
                 selected.length === 0 && styles.disabled,
               ]}
-              disabled={selected.length === 0}
+              disabled={selected.length === 0 || isTooLong}
             />
           </View>
         </View>

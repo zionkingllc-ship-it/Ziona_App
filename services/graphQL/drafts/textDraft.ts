@@ -12,11 +12,18 @@ export async function publishTextPost(draft: TextDraft) {
 
   const input = {
     postType: "TEXT" as const,
-    caption: draft.text, 
+    caption: buildCaption(draft.text), 
     category: String(draft.category.id),
   };
 
   console.log("TEXT INPUT:", input);
 
   return await createTextPost(input);
+}
+function buildCaption(text: string, max = 20) {
+  if (!text) return "Bible verse";
+
+  if (text.length <= max) return text;
+
+  return text.slice(0, max).trimEnd() + "...";
 }

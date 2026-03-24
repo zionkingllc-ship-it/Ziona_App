@@ -1,5 +1,5 @@
 import colors from "@/constants/colors";
-import { Post } from "@/types/post";
+import { FeedMediaPost } from "@/types/feedTypes";
 import { Play } from "@tamagui/lucide-icons";
 import React, { useRef, useState } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -12,7 +12,7 @@ import Video from "react-native-video";
 import { View } from "tamagui";
 
 interface Props {
-  post: Post;
+  post: FeedMediaPost; // ✅ FIXED TYPE
   isPlaying: boolean;
   onTogglePlay?: () => void;
   onLike?: () => void;
@@ -32,7 +32,6 @@ export default function VideoPostCard({
   triggerHeart,
   screenWidth,
   screenHeight,
-  tabBarHeight,
 }: Props) {
   const videoRef = useRef<any>(null);
 
@@ -70,17 +69,16 @@ export default function VideoPostCard({
 
   const videoGesture = Gesture.Exclusive(doubleTap, singleTap, longPress);
 
-  const scrubBottom = 0;
-  const scrubWidth = screenWidth;
   const scrubHeight = 7;
-
   const playButtonSize = Math.min(50, screenWidth * 0.12);
 
-  
- const videoUrl =
-  post.type === "video" && typeof post.media?.videoUrl === "string"
-    ? post.media.videoUrl
-    : undefined;
+  // ✅ NEW — guaranteed structure from normalizer
+  const videoUrl =
+    post.mediaType === "video" && post.media?.[0]?.url
+      ? post.media[0].url
+      : undefined;
+
+  if (!videoUrl) return null; // 🚫 no fallback
 
   return (
     <GestureDetector gesture={videoGesture}>
@@ -93,7 +91,7 @@ export default function VideoPostCard({
       >
         <Video
           ref={videoRef}
-          source={videoUrl ? { uri: videoUrl } : undefined}
+          source={{ uri: videoUrl }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="contain"
           repeat
@@ -108,6 +106,7 @@ export default function VideoPostCard({
           onError={(error) => console.error("Video playback error:", error)}
         />
 
+        {/* ❤️ LIKE ANIMATION */}
         <Animated.View
           style={[
             {
@@ -124,6 +123,7 @@ export default function VideoPostCard({
           />
         </Animated.View>
 
+        {/* ▶ PLAY BUTTON */}
         <View
           width={playButtonSize}
           height={playButtonSize}
@@ -144,12 +144,12 @@ export default function VideoPostCard({
           />
         </View>
 
+        {/* ⏱ PROGRESS BAR */}
         <Animated.View
           style={{
             position: "absolute",
-            bottom: scrubBottom,
-            width: scrubWidth,
-            alignSelf: "center",
+            bottom: 0,
+            width: screenWidth,
             height: scrubHeight,
             backgroundColor: "rgba(255,255,255,0.3)",
             overflow: "hidden",

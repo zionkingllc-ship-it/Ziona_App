@@ -1,4 +1,4 @@
-import { Post } from "@/types/post";
+import { FeedPost } from "@/types/feedTypes";
 import React from "react";
 import {
   useAnimatedStyle,
@@ -11,7 +11,7 @@ import TextPostCard from "../TextPostCard";
 import VideoPostCard from "../VideoPostCard";
 
 interface Props {
-  post: Post;
+  post: FeedPost;
   isPlaying: boolean;
   onTogglePlay?: () => void;
   onLike?: () => void;
@@ -47,22 +47,42 @@ export default function PostMedia({
       });
     });
   };
-
+ 
   switch (post.type) {
-    case "video":
-      return (
-        <VideoPostCard
-          post={post}
-          isPlaying={isPlaying}
-          onTogglePlay={onTogglePlay}
-          onLike={onLike}
-          heartStyle={heartStyle}
-          triggerHeart={triggerHeart}
-          screenWidth={screenWidth}
-          screenHeight={screenHeight}
-          tabBarHeight={tabBarHeight}
-        />
-      );
+    case "media": {
+      // IMAGE
+      if (post.mediaType === "image") {
+        return (
+          <CarouselPostCard
+            post={post}
+            onLike={onLike}
+            heartStyle={heartStyle}
+            triggerHeart={triggerHeart}
+            screenWidth={screenWidth}
+            screenHeight={screenHeight}
+          />
+        );
+      }
+
+      // VIDEO
+      if (post.mediaType === "video") {
+        return (
+          <VideoPostCard
+            post={post}
+            isPlaying={isPlaying}
+            onTogglePlay={onTogglePlay}
+            onLike={onLike}
+            heartStyle={heartStyle}
+            triggerHeart={triggerHeart}
+            screenWidth={screenWidth}
+            screenHeight={screenHeight}
+            tabBarHeight={tabBarHeight}
+          />
+        );
+      }
+
+      return null;
+    }
 
     case "text":
       return (
@@ -77,10 +97,12 @@ export default function PostMedia({
         />
       );
 
-    case "image":
+    case "bible":
+      // reuse text renderer for now
       return (
-        <CarouselPostCard
+        <TextPostCard
           post={post}
+          onTogglePlay={onTogglePlay}
           onLike={onLike}
           heartStyle={heartStyle}
           triggerHeart={triggerHeart}

@@ -1,20 +1,21 @@
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, ViewToken } from "react-native";
+import { ActivityIndicator, FlatList, Text, ViewToken } from "react-native";
 import { View } from "tamagui";
-
+import { InfiniteData } from "@tanstack/react-query";
 import FeedHeader from "@/components/feedHeader";
 import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
 import { preloadPostMedia } from "@/helpers/preloadMedia";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
-import { Post } from "@/types/post";
 import { useFocusEffect } from "@react-navigation/native";
+
+import { FeedPost } from "@/types/feedTypes";
+import { normalizePost } from "@/utils/feed/normalizePost";
 
 export default function Feed() {
   const tabBarHeight = useBottomTabBarHeight();
-
-  const flatListRef = useRef<FlatList<Post>>(null);
+  const flatListRef = useRef<FlatList<FeedPost>>(null);
 
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [feedType, setFeedType] = useState<"forYou" | "following">("forYou");
@@ -25,8 +26,12 @@ export default function Feed() {
   const followingQuery = useFollowingFeed();
   const query = feedType === "forYou" ? forYouQuery : followingQuery;
 
-  const pages = query.data?.pages ?? [];
-  const data: Post[] = pages.flatMap((page) => page.posts ?? []);
+  const pages = (query.data as InfiniteData<{ posts: FeedPost[] }> | undefined)?.pages ?? [];
+
+  const data: FeedPost[] = pages
+    .flatMap((page) => page.posts ?? [])
+    .map(normalizePost)
+    .filter((p): p is FeedPost => p !== null);
 
   useFocusEffect(
     useCallback(() => {
@@ -39,9 +44,6 @@ export default function Feed() {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [feedType]);
 
-  console.log("containerHeight", containerHeight);
-  console.log("tabBarHeight", tabBarHeight);
-
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 80,
     minimumViewTime: 200,
@@ -49,26 +51,24 @@ export default function Feed() {
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length === 0) return;
+      if (!viewableItems.length) return;
 
-      const currentPost = viewableItems[0].item;
+      const current = viewableItems[0].item;
+      if (!current?.id) return;
 
-      if (!currentPost?.id) return;
+      setActivePostId(current.id);
 
-      setActivePostId(currentPost.id);
-
-      const index = data.findIndex((p) => p.id === currentPost.id);
+      const index = data.findIndex((p) => p.id === current.id);
 
       if (index >= 0) {
-        // ✅ FIX: guard undefined
-        if (data[index + 1]) preloadPostMedia(data[index + 1]);
-        if (data[index - 1]) preloadPostMedia(data[index - 1]);
+        if (data[index + 1]) preloadPostMedia(data[index + 1] as any);
+        if (data[index - 1]) preloadPostMedia(data[index - 1] as any);
       }
     },
   ).current;
 
   const renderItem = useCallback(
-    ({ item }: { item: Post }) => (
+    ({ item }: { item: FeedPost }) => (
       <PostCard
         post={item}
         isPlaying={item.id === activePostId}
@@ -82,23 +82,19 @@ export default function Feed() {
 
   if (query.isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View flex={1} justifyContent="center" alignItems="center">
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View
-      style={{
-        flex: 1,
-      }}
-    >
-      <View width={"100%"} marginTop={35}>
+    <View flex={1}>
+      <View width="100%" marginTop={35}>
         <FeedHeader
           feedType={feedType}
           onChangeFeedType={setFeedType}
-          emptyFollowing={false}
+          emptyFollowing={data.length === 0}
         />
       </View>
 
@@ -106,21 +102,28 @@ export default function Feed() {
         style={{ flex: 1 }}
         onLayout={(e) => {
           const { height, width } = e.nativeEvent.layout;
-
-          if (height !== containerHeight) {
-            setContainerHeight(height);
-          }
-
-          if (width !== containerWidth) {
-            setContainerWidth(width);
-          }
+          if (height !== containerHeight) setContainerHeight(height);
+          if (width !== containerWidth) setContainerWidth(width);
         }}
       >
-        {containerHeight > 0 && containerWidth > 0 && (
-          <FlatList<Post>
+        {data.length === 0 ? (
+          <View flex={1} justifyContent="center" alignItems="center">
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: 16,
+                fontFamily: "$body",
+                fontWeight: "400",
+              }}
+            >
+              No posts yet, be the first to create a post
+            </Text>
+          </View>
+        ) : (
+          <FlatList
             ref={flatListRef}
             data={data}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.id}
             renderItem={renderItem}
             pagingEnabled
             decelerationRate="fast"

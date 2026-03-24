@@ -42,7 +42,7 @@ export async function requestMediaUpload(
 }
 
 /* =========================
-   THIS IS WHAT YOU ARE MISSING
+   File UPLOAd
 ========================= */
 
 export async function uploadFileToStorage(

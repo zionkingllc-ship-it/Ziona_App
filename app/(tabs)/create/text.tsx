@@ -56,6 +56,8 @@ export default function CreateTextScreen() {
 
   const uploadLock = useRef(false);
 
+  const MAX_LENGTH = 500;
+
   /* =========================
      ENSURE TEXT DRAFT
   ========================= */
@@ -122,6 +124,12 @@ export default function CreateTextScreen() {
       setUploading(false);
     }
   }
+  /* =========================
+     CHARACTER LIMIT
+  ========================= */
+  const combinedLength = (textValue?.length ?? 0) + (verseText?.length ?? 0);
+
+  const remaining = MAX_LENGTH - combinedLength;
 
   return (
     <YStack
@@ -141,7 +149,13 @@ export default function CreateTextScreen() {
             translation={translation}
             verseText={verseText}
             value={textValue}
-            onChangeText={setText}
+            onChangeText={(text) => {
+              const verseLen = verseText?.length ?? 0;
+
+              if (text.length + verseLen <= MAX_LENGTH) {
+                setText(text);
+              }
+            }}
             backgroundColor={cardColor}
           />
 
@@ -205,6 +219,16 @@ export default function CreateTextScreen() {
             visible={bibleVisible}
             onClose={() => setBibleVisible(false)}
             onDone={(data) => {
+              const newVerseLength = data.text.length;
+              const currentTextLength = textValue.length;
+
+              if (newVerseLength + currentTextLength > MAX_LENGTH) {
+                feedback.showError(
+                  "Selected bible verse too long, Please select fewer verses to stay under 300 characters",
+                );
+                return;
+              }
+
               setBibleVerse(data);
               setBibleVisible(false);
             }}

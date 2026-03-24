@@ -1,5 +1,5 @@
 import colors from "@/constants/colors";
-import { Post } from "@/types/post";
+import { FeedMediaPost } from "@/types/feedTypes";
 import React, { useRef, useState } from "react";
 import {
   FlatList,
@@ -11,7 +11,7 @@ import Animated, { runOnJS } from "react-native-reanimated";
 import { Image, View, XStack } from "tamagui";
 
 interface Props {
-  post: Post;
+  post: FeedMediaPost;  
   onLike?: () => void;
   heartStyle: any;
   triggerHeart: () => void;
@@ -31,8 +31,9 @@ export default function CarouselPostCard({
   const [activeIndex, setActiveIndex] = useState(0);
 
   const likeIconActive = require("@/assets/images/likeIcon2.png");
-
-  const mediaItems = post.type === "image" ? (post.media?.items ?? []) : [];
+ 
+  const mediaItems =
+    post.mediaType === "image" ? post.media : [];
 
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max);
@@ -70,17 +71,14 @@ export default function CarouselPostCard({
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(_, index) => index.toString()}
           onMomentumScrollEnd={onScrollEnd}
           renderItem={({ item }) => {
             if (!item?.url) return null;
 
-            const source =
-              typeof item.url === "string" ? { uri: item.url } : item.url;
-
             return (
               <Image
-                source={source}
+                source={{ uri: item.url }}
                 width={screenWidth}
                 height={screenHeight}
                 resizeMode="cover"
@@ -123,7 +121,9 @@ export default function CarouselPostCard({
                 height={wp(2)}
                 borderRadius={wp(1)}
                 backgroundColor={
-                  index === activeIndex ? colors.white : "rgba(255,255,255,0.4)"
+                  index === activeIndex
+                    ? colors.white
+                    : "rgba(255,255,255,0.4)"
                 }
               />
             ))}

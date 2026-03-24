@@ -169,7 +169,7 @@ export default function TextPostCardInput({
                   const newUsed = text.length + verseLength;
 
                   if (newUsed > maxLength) {
-                    // ✅ SHOW ERROR
+                    //SHOW ERROR
                     setRemainingError(maxLength - verseLength);
                     setErrorVisible(true);
                     return;

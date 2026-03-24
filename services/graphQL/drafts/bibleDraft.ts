@@ -15,8 +15,7 @@ export async function publishBiblePost(draft: BibleDraft) {
 
   const verse = draft.bibleVerse;
 
-  const caption =
-    draft.text?.trim() || verse.text;
+const caption = buildCaption(verse.text);
 
   if (!caption) {
     throw new Error("Bible post cannot be empty");
@@ -52,4 +51,12 @@ export async function publishBiblePost(draft: BibleDraft) {
     console.error("Error:", err);
     throw err;
   }
+}
+
+function buildCaption(text: string, max = 20) {
+  if (!text) return "Bible verse";
+
+  if (text.length <= max) return text;
+
+  return text.slice(0, max).trimEnd() + "...";
 }

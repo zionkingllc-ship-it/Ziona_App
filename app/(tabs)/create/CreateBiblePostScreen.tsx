@@ -130,6 +130,8 @@ export default function CreateBiblePostScreen() {
             value={""}
             onChangeText={() => {}}
             backgroundColor={cardColor}
+            maxLength={500}
+            
           />
 
           {/* ACTIONS */}

@@ -8,12 +8,12 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { publishMediaPost } from "@/services/graphQL/drafts/mediaDraft";
 import { useCreatePostStore } from "@/store/createPostStore";
 
-import { useState } from "react";
 import { router } from "expo-router";
+import { useState } from "react";
 
+import { ResizeMode, Video } from "expo-av";
 import { Image, TouchableOpacity } from "react-native";
 import { Text, View, XStack, YStack } from "tamagui";
-import { Video, ResizeMode } from "expo-av";
 
 export default function CreateMediaPreviewScreen() {
   const { wp, hp, fs } = useResponsive();
@@ -21,11 +21,11 @@ export default function CreateMediaPreviewScreen() {
 
   const [uploading, setUploading] = useState(false);
 
-  // ✅ modal state
+  //  modal state
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<"success" | "failed">("success");
   const [modalMessage, setModalMessage] = useState("");
-
+  const [progress, setProgress] = useState(0);
   if (!draft || draft.type !== "media") return null;
 
   const mediaDraft = draft;
@@ -34,8 +34,7 @@ export default function CreateMediaPreviewScreen() {
   const caption = mediaDraft.caption ?? "";
 
   const canUpload =
-    mediaDraft.media.items.length > 0 &&
-    !!mediaDraft.category?.id;
+    mediaDraft.media.items.length > 0 && !!mediaDraft.category?.id;
 
   async function handleUpload() {
     if (uploading) return;
@@ -49,13 +48,25 @@ export default function CreateMediaPreviewScreen() {
 
     try {
       setUploading(true);
+      setProgress(0);
+
+      // fake progress (smooth UX)
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) return prev; // stop at 90% until real finish
+          return prev + Math.random() * 10;
+        });
+      }, 200);
+
       await publishMediaPost(mediaDraft);
+
+      clearInterval(interval);
+      setProgress(100);
 
       setModalType("success");
       setModalMessage("Post uploaded successfully");
       setModalVisible(true);
 
-      // navigate after short delay (optional but clean)
       setTimeout(() => {
         router.replace("/(tabs)/create");
       }, 1200);
@@ -69,7 +80,12 @@ export default function CreateMediaPreviewScreen() {
   }
 
   return (
-    <YStack flex={1} backgroundColor={colors.white} paddingTop={hp(5)} paddingHorizontal={wp(6)}>
+    <YStack
+      flex={1}
+      backgroundColor={colors.white}
+      paddingTop={hp(5)}
+      paddingHorizontal={wp(6)}
+    >
       <Header heading="Preview" />
 
       <View
@@ -122,6 +138,31 @@ export default function CreateMediaPreviewScreen() {
         </XStack>
       </View>
 
+      {uploading && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.35)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              color: "white",
+              fontSize: 28,
+              fontWeight: "700",
+            }}
+          >
+            {Math.floor(progress)}%
+          </Text>
+        </View>
+      )}
+
       <XStack justifyContent="center" marginTop={hp(5)}>
         <TagSelectorCard category={mediaDraft.category} onPress={() => {}} />
       </XStack>
@@ -134,7 +175,7 @@ export default function CreateMediaPreviewScreen() {
         />
       </YStack>
 
-      {/* ✅ MODAL */}
+      {/*MODAL */}
       <SuccessModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
