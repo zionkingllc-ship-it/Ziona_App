@@ -66,18 +66,52 @@ export function normalizePost(p: any): FeedPost | null {
   };
 
   /* ================= MEDIA ================= */
-  if (p.type === "MEDIA" && p.media?.length) {
-    const first = p.media[0];
+  if (p.type === "MEDIA") {
+    // IMAGE
+    if (p.image?.items?.length) {
+      const media = p.image.items
+        .map((i: any) => {
+          const url = fixMediaUrl(i.url);
 
-    return {
-      ...base,
-      type: "media",
-      mediaType: first?.type === "VIDEO" ? "video" : "image",
-      media: p.media.map((m: any) => ({
-        type: m.type === "VIDEO" ? "video" : "image",
-        url: fixMediaUrl(m.url),
-      })),
-    };
+          if (!url) return null;
+
+          return {
+            type: "image" as const,
+            url,
+          };
+        })
+        .filter(Boolean) as { type: "image"; url: string }[];
+
+      if (media.length === 0) return null;
+
+      return {
+        ...base,
+        type: "media",
+        mediaType: "image",
+        media,
+      };
+    }
+
+    // VIDEO
+    if (p.video?.url) {
+      const url = fixMediaUrl(p.video.url);
+
+      if (!url) return null;
+
+      return {
+        ...base,
+        type: "media",
+        mediaType: "video",
+        media: [
+          {
+            type: "video" as const,
+            url,
+          },
+        ],
+      };
+    }
+
+    return null;
   }
 
   /* ================= TEXT ================= */
