@@ -42,8 +42,6 @@ export async function createTextPost(variables: {
   postType: "TEXT" | "BIBLE";
 
   message?: string;
-  caption?: string;
-
   category: string;
 
   scriptureBook?: string;
@@ -55,8 +53,15 @@ export async function createTextPost(variables: {
   console.log("━━━━━━━ CREATE POST START ━━━━━━━━");
 
   const payload = {
-    ...variables,
-    caption: variables.message ?? variables.caption,
+    postType: variables.postType,
+    caption: variables.message, 
+    category: variables.category,
+
+    scriptureBook: variables.scriptureBook,
+    scriptureChapter: variables.scriptureChapter,
+    scriptureVerseStart: variables.scriptureVerseStart,
+    scriptureVerseEnd: variables.scriptureVerseEnd,
+    scriptureTranslation: variables.scriptureTranslation,
   };
 
   console.log("Final payload:", payload);
@@ -82,7 +87,7 @@ export async function createTextPost(variables: {
     ...data.createPost,
     post: {
       ...post,
-      caption: post.text ?? "", // unify for feed
+      text: post.text ?? "", 
     },
   };
 }

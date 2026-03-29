@@ -15,23 +15,32 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
   const [thumbnailUri, setThumbnailUri] = useState<string | null>(null);
 
   const isMedia = post.type === "media";
+  const firstMedia = isMedia ? post.media?.[0] : undefined;
 
   const isCarousel =
-    isMedia && post.media?.length > 1 && post.media[0]?.type === "image";
+    isMedia &&
+    post.media?.length > 1 &&
+    firstMedia?.type === "image";
+
+  /* ================= VIDEO THUMBNAIL ================= */
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadThumbnail() {
-      if (!isMedia || post.media[0]?.type !== "video") return;
+      if (!isMedia || firstMedia?.type !== "video") return;
 
-      const videoUrl = post.media[0]?.url;
+      const videoUrl = firstMedia.url;
       if (!videoUrl) return;
 
-      const generated = await generateVideoThumbnail(videoUrl);
+      try {
+        const generated = await generateVideoThumbnail(videoUrl);
 
-      if (generated && isMounted) {
-        setThumbnailUri(generated);
+        if (generated && isMounted) {
+          setThumbnailUri(generated);
+        }
+      } catch (err) {
+        console.warn("Thumbnail generation failed", err);
       }
     }
 
@@ -40,16 +49,16 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
     return () => {
       isMounted = false;
     };
-  }, [post]);
+  }, [firstMedia?.url]); // ✅ FIXED dependency
+
+  /* ================= RENDER ================= */
 
   const renderMedia = () => {
     /* IMAGE */
-    if (isMedia && post.media[0]?.type === "image") {
-      const firstItem = post.media[0];
-
+    if (isMedia && firstMedia?.type === "image") {
       return (
         <Image
-          source={{ uri: firstItem.url }}
+          source={{ uri: firstMedia.url }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
@@ -57,10 +66,12 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
     }
 
     /* VIDEO */
-    if (isMedia && post.media[0]?.type === "video" && thumbnailUri) {
+    if (isMedia && firstMedia?.type === "video") {
       return (
         <Image
-          source={{ uri: thumbnailUri }}
+          source={{
+            uri: thumbnailUri ?? firstMedia.url, // ✅ fallback to video url
+          }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
@@ -69,6 +80,16 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
 
     /* TEXT / BIBLE */
     if (post.type === "text" || post.type === "bible") {
+      let text = "";
+
+      if (post.type === "text") {
+        text = post.message;
+      }
+
+      if (post.scripture?.text) {
+        text = post.scripture.text;
+      }
+
       return (
         <View
           style={{
@@ -87,11 +108,7 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
               textAlign: "center",
             }}
           >
-            {post.type === "text"
-              ? post.message
-              : post.type === "bible"
-                ? post.scripture.text
-                : ""}
+            {text}
           </Text>
         </View>
       );
@@ -116,7 +133,7 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
       {renderMedia()}
 
       {/* VIDEO ICON */}
-      {isMedia && post.media[0]?.type === "video" && (
+      {isMedia && firstMedia?.type === "video" && (
         <Ionicons
           name="videocam"
           size={18}

@@ -20,6 +20,9 @@ function fixMediaUrl(url?: string) {
 export function normalizePost(p: any): FeedPost | null {
   if (!p?.id || !p?.type) return null;
 
+  console.log("TEXT LENGTH:", p.text?.length);
+console.log("TEXT VALUE:", p.text);
+
   const base = {
     id: p.id,
     createdAt: p.createdAt,
@@ -108,29 +111,28 @@ export function normalizePost(p: any): FeedPost | null {
   }
 
   /* ================= TEXT ================= */
-  if (p.type === "TEXT") {
-    const message = p.text ?? p.caption;
+if (p.type === "TEXT") {
+  const message = p.text;
 
-    if (!message && !p.scripture) return null;
+  if (!message && !p.scripture) return null;
 
-    return {
-      ...base,
-      type: "text",
-      message: message ?? "", // safer than undefined
+  return {
+    ...base,
+    type: "text",
+    message: message ?? "", // always string
 
-      scripture: p.scripture
-        ? {
-            book: p.scripture.book,
-            chapter: p.scripture.chapter,
-            verseStart: p.scripture.verseStart,
-            verseEnd: p.scripture.verseEnd,
-            translation: p.scripture.translation,
-            text: p.scripture.text,
-          }
-        : undefined,
-    };
-  }
-
+    scripture: p.scripture
+      ? {
+          book: p.scripture.book,
+          chapter: p.scripture.chapter,
+          verseStart: p.scripture.verseStart,
+          verseEnd: p.scripture.verseEnd,
+          translation: p.scripture.translation,
+          text: p.scripture.text,
+        }
+      : undefined,
+  };
+}
   /* ================= BIBLE ================= */
   if (p.type === "BIBLE") {
     if (!p.scripture) return null;

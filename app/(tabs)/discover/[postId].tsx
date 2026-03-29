@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
+import { FeedPost } from "@/types/feedTypes";
 
 export default function PostViewerScreen() {
   const { height, width } = useWindowDimensions();
@@ -24,7 +25,7 @@ export default function PostViewerScreen() {
   const { postId, feedKey } = useLocalSearchParams();
   const { getFeed } = useFeedStore();
 
-  const [feed, setFeed] = useState<Post[]>([]);
+  const [feed, setFeed] = useState<FeedPost[]>([]);
   const [activePostId, setActivePostId] = useState<string | null>(null);
 
   const flatListRef = useRef<FlatList>(null);
@@ -68,7 +69,7 @@ export default function PostViewerScreen() {
   /* UPDATED POSTCARD RENDER (matches Feed screen) */
 
   const renderItem = useCallback(
-    ({ item }: { item: Post }) => (
+    ({ item }: { item: FeedPost}) => (
       <PostCard
         post={item}
         isPlaying={item.id === activePostId}

@@ -122,6 +122,7 @@ export default function BibleSelectorModal({
     try {
       const data = await repository.getBooks();
       setBooks(data);
+      setSearch("");
     } catch {}
   }
 
@@ -138,6 +139,7 @@ export default function BibleSelectorModal({
     try {
       const data = await repository.getChapters(selectedBook);
       setChapters(data);
+      setSearch("");
     } catch {}
   }
 
@@ -147,7 +149,6 @@ export default function BibleSelectorModal({
 
   useEffect(() => {
     if (!visible) return;
-
     setBook(null);
     setChapter(undefined);
     setSelected([]);
@@ -156,27 +157,45 @@ export default function BibleSelectorModal({
   }, [visible]);
 
   /* =========================
-     LOAD VERSES + CACHE CONTROL
+     CACHE-FIRST VERSE LOADING
   ========================= */
 
   useEffect(() => {
     if (!chapter || !book) return;
 
-    loadVerses(book.name, chapter, translation);
-
     const key = ["scripture", book.name, chapter, translation];
 
-    queryClient.fetchQuery({
-      queryKey: key,
-      queryFn: () =>
-        repository.getScripture({
-          book: book.name,
-          chapter,
-          version: translation,
-        }),
-      staleTime: 1000 * 60 * 60,
-    });
+    const cached: any = queryClient.getQueryData(key);
 
+    if (cached?.verses) {
+      setVerses(cached.verses);
+      return;
+    }
+
+    setLoadingVerses(true);
+
+    queryClient
+      .fetchQuery({
+        queryKey: key,
+        queryFn: () =>
+          repository.getScripture({
+            book: book.name,
+            chapter,
+            version: translation,
+          }),
+        staleTime: 1000 * 60 * 60,
+      })
+      .then((data: any) => {
+        setVerses(data?.verses ?? []);
+      })
+      .catch(() => {
+        console.log("Failed to load verses");
+      })
+      .finally(() => {
+        setLoadingVerses(false);
+      });
+
+    /* PREFETCH */
     const nextChapter = chapter + 1;
     const prevChapter = chapter - 1;
 
@@ -204,22 +223,6 @@ export default function BibleSelectorModal({
       });
     }
   }, [chapter, book, translation]);
-
-  async function loadVerses(
-    bookName: string,
-    chapter: number,
-    version: string,
-  ) {
-    try {
-      setLoadingVerses(true);
-      const data = await repository.getVerses(version, bookName, chapter);
-      setVerses(data || []);
-    } catch {
-      console.log("Failed to load verses");
-    } finally {
-      setLoadingVerses(false);
-    }
-  }
 
   /* =========================
      FILTER
@@ -264,7 +267,6 @@ export default function BibleSelectorModal({
     setReaderOpen(true);
   }
 
-
   return (
     <BaseModal visible={visible} onClose={onClose} alignBottom>
       <View style={styles.sheet}>
@@ -296,6 +298,7 @@ export default function BibleSelectorModal({
                 setBook(null);
                 setChapter(undefined);
                 setSelected([]);
+                setSearch("");
               }
             }}
           />
@@ -307,6 +310,7 @@ export default function BibleSelectorModal({
               if (chapter) {
                 setChapter(undefined);
                 setSelected([]);
+                setSearch("");
               }
             }}
           />
@@ -335,8 +339,33 @@ export default function BibleSelectorModal({
             value={search}
             onChangeText={setSearch}
             style={styles.searchInput}
-            placeholder="start typing..."
+            placeholder="Search..."
           />
+        </XStack>
+
+        {/* TESTAMENT TOGGLE */}
+        <XStack marginVertical={10} gap="$2">
+          <Pressable
+            onPress={() => setTestament("old")}
+            style={[
+              styles.testamentBtn,
+              { borderTopLeftRadius: 8, borderBottomLeftRadius: 8 },
+              testament === "old" && styles.testamentActive,
+            ]}
+          >
+            <Text>Old Testament</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setTestament("new")}
+            style={[
+              styles.testamentBtn,
+              { borderTopRightRadius: 8, borderBottomRightRadius: 8 },
+              testament === "new" && styles.testamentActive,
+            ]}
+          >
+            <Text>New Testament</Text>
+          </Pressable>
         </XStack>
 
         {/* BOOKS */}
@@ -400,7 +429,7 @@ export default function BibleSelectorModal({
         chapter={chapter}
         onToggle={toggleVerse}
         onClose={() => setReaderOpen(false)}
-        onDone={async (numbers) => {
+        onDone={(numbers) => {
           const ordered = [...numbers].sort((a, b) => a - b);
 
           if (!chapter || !book || ordered.length === 0) return;
@@ -412,50 +441,13 @@ export default function BibleSelectorModal({
             translation,
           ]);
 
-          if (!cached) {
-            console.log("Scripture not ready, fetching now...");
-
-            const fresh = await queryClient.fetchQuery({
-              queryKey: ["scripture", book.name, chapter, translation],
-              queryFn: () =>
-                repository.getScripture({
-                  book: book.name,
-                  chapter,
-                  version: translation,
-                }),
-            });
-
-            if (!fresh) return;
-
-            const selectedVerses = fresh.verses.filter((v: any) =>
-              ordered.includes(v.number),
-            );
-
-            const text = selectedVerses.map((v: any) => v.text).join(" ");
-
-            onDone({
-              translation,
-              book: fresh.book,
-              chapter: fresh.chapter,
-              verses: ordered,
-              text,
-            });
-
-            setReaderOpen(false);
-            onClose();
-            return;
-          }
+          if (!cached) return;
 
           const selectedVerses = cached.verses.filter((v: any) =>
             ordered.includes(v.number),
           );
 
           const text = selectedVerses.map((v: any) => v.text).join(" ");
-
-          if (text.length > 500) {
-            alert("Selected verses exceed 500 character limit");
-            return;
-          }
 
           onDone({
             translation,
@@ -492,4 +484,15 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1 },
   row: { paddingVertical: 12 },
   verseSelected: { backgroundColor: "black" },
+
+  testamentBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: "transparent",
+    alignItems: "center",
+  },
+  testamentActive: {
+    backgroundColor: "#EAD9F3",
+    borderColor: "#EAD9F3",
+  },
 });
