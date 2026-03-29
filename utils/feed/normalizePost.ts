@@ -11,10 +11,7 @@ function fixMediaUrl(url?: string) {
     "https://storage.googleapis.com/ziona-media-dev/https://storage.googleapis.com/";
 
   if (url.includes(doublePrefix)) {
-    return url.replace(
-      "https://storage.googleapis.com/ziona-media-dev/",
-      ""
-    );
+    return url.replace("https://storage.googleapis.com/ziona-media-dev/", "");
   }
 
   return url;
@@ -41,8 +38,8 @@ export function normalizePost(p: any): FeedPost | null {
           id: p.category.id,
           label: p.category.label,
           slug: p.category.slug,
-          bgColor: p.category.bgColor,
-          bdColor: p.category.bdColor,
+          bgColor: p.category.bgColor ?? "#df0404", 
+          bdColor: p.category.bdColor ?? "#d80606", 
         }
       : undefined,
 
@@ -67,12 +64,10 @@ export function normalizePost(p: any): FeedPost | null {
 
   /* ================= MEDIA ================= */
   if (p.type === "MEDIA") {
-    // IMAGE
     if (p.image?.items?.length) {
       const media = p.image.items
         .map((i: any) => {
           const url = fixMediaUrl(i.url);
-
           if (!url) return null;
 
           return {
@@ -92,10 +87,8 @@ export function normalizePost(p: any): FeedPost | null {
       };
     }
 
-    // VIDEO
     if (p.video?.url) {
       const url = fixMediaUrl(p.video.url);
-
       if (!url) return null;
 
       return {
@@ -118,22 +111,44 @@ export function normalizePost(p: any): FeedPost | null {
   if (p.type === "TEXT") {
     const message = p.text ?? p.caption;
 
-    if (!message) return null;
+    if (!message && !p.scripture) return null;
 
     return {
       ...base,
       type: "text",
-      message,
+      message: message ?? "", // safer than undefined
+
+      scripture: p.scripture
+        ? {
+            book: p.scripture.book,
+            chapter: p.scripture.chapter,
+            verseStart: p.scripture.verseStart,
+            verseEnd: p.scripture.verseEnd,
+            translation: p.scripture.translation,
+            text: p.scripture.text,
+          }
+        : undefined,
     };
   }
 
   /* ================= BIBLE ================= */
   if (p.type === "BIBLE") {
+    if (!p.scripture) return null;
+
     return {
       ...base,
       type: "bible",
+      scripture: {
+        book: p.scripture.book,
+        chapter: p.scripture.chapter,
+        verseStart: p.scripture.verseStart,
+        verseEnd: p.scripture.verseEnd,
+        translation: p.scripture.translation,
+        text: p.scripture.text,
+      },
     };
   }
 
+  /* ================= FALLBACK ================= */
   return null;
 }

@@ -11,13 +11,33 @@ type Props = {
 };
 
 export default function TextPostCard({ post }: Props) {
-  const isBible = post.type === "bible";
-  const { wp, hp, fs } = useResponsive();
-  console.log("caption",  post.caption) 
-   console.log("message",  post.message) 
-    console.log("caption",  post.caption) 
-     console.log("caption",  post.caption) 
-      console.log("caption",  post.caption) 
+  const { wp, hp } = useResponsive();
+
+  /* ================= SAFE DATA ================= */
+
+  const category: Category | undefined = post.category;
+
+  let scriptureText: string | undefined;
+  let translation: string | undefined;
+  let verseText: string | undefined;
+  let testimonyText: string | undefined;
+
+  /* ================= SCRIPTURE ================= */
+
+  if (post.scripture) {
+    const s = post.scripture;
+    scriptureText = `${s.book} ${s.chapter}:${s.verseStart}${s.verseEnd ? `-${s.verseEnd}` : ""}`
+    translation = s.translation;
+    verseText = s.text;
+  }
+
+  /* ================= TEXT ================= */
+
+  if (post.type === "text") {
+    testimonyText = post.message;
+  }
+
+  /* ================= RENDER ================= */
 
   return (
     <YStack
@@ -28,19 +48,11 @@ export default function TextPostCard({ post }: Props) {
       paddingVertical={hp(16)}
     >
       <TextPostCardOutput
-        category={post.category as Category}
-        scripture={
-          isBible
-            ? `${post.scripture.book} ${post.scripture.chapter}:${post.scripture.verseStart}${
-                post.scripture.verseEnd
-                  ? `-${post.scripture.verseEnd}`
-                  : ""
-              }`
-            : undefined
-        }
-        translation={isBible ? post.scripture.translation : undefined}
-        verseText={isBible ? post.scripture.text : undefined}
-        testimonyText={post.type === "text" ? post.message : undefined} 
+        category={category}
+        scripture={scriptureText}
+        translation={translation}
+        verseText={verseText}
+        testimonyText={testimonyText}
       />
     </YStack>
   );

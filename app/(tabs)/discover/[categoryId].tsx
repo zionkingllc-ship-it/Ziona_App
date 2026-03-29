@@ -9,6 +9,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, XStack } from "tamagui";
 import { useDiscoverFeed } from "@/hooks/useDiscover";
 import { FeedPost } from "@/types/feedTypes";
+ 
+
 
 export default function DiscoverCategoryScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();

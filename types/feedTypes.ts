@@ -38,14 +38,12 @@ type BaseFeedPost = {
     isOwner: boolean;
   };
 };
+
 /* =========================
-   TEXT
+   SCRIPTURE SHARED TYPE
 ========================= */
 
-export type FeedTextPost = BaseFeedPost & {
-type: "text";
-message: string;
-scripture?: {
+type Scripture = {
   book: string;
   chapter: number;
   verseStart: number;
@@ -53,7 +51,15 @@ scripture?: {
   translation: string;
   text: string;
 };
-  
+
+/* =========================
+   TEXT
+========================= */
+
+export type FeedTextPost = BaseFeedPost & {
+  type: "text";
+  message: string;
+  scripture?: Scripture; // optional
 };
 
 /* =========================
@@ -75,14 +81,6 @@ export type FeedMediaPost = BaseFeedPost & {
 ========================= */
 
 export type FeedBiblePost = BaseFeedPost & {
-type: "bible";
-message?: string;
-scripture?: {
-  book: string;
-  chapter: number;
-  verseStart: number;
-  verseEnd?: number;
-  translation: string;
-  text: string;
-};
+  type: "bible";
+  scripture: Scripture; // ✅ REQUIRED
 };
