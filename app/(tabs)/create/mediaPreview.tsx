@@ -14,19 +14,24 @@ import { useState } from "react";
 import { ResizeMode, Video } from "expo-av";
 import { Image, TouchableOpacity } from "react-native";
 import { Text, View, XStack, YStack } from "tamagui";
+ 
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function CreateMediaPreviewScreen() {
   const { wp, hp, fs } = useResponsive();
   const { draft } = useCreatePostStore();
 
   const [uploading, setUploading] = useState(false);
+ 
+  const queryClient = useQueryClient();
 
   //  modal state
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<"success" | "failed">("success");
   const [modalMessage, setModalMessage] = useState("");
   const [progress, setProgress] = useState(0);
-  if (!draft || draft.type !== "media") return null;
+
+  if (!draft || draft.type !== "MEDIA") return null;
 
   const mediaDraft = draft;
   const media = mediaDraft.media.items[0];
@@ -50,15 +55,14 @@ export default function CreateMediaPreviewScreen() {
       setUploading(true);
       setProgress(0);
 
-      // fake progress (smooth UX)
       const interval = setInterval(() => {
         setProgress((prev) => {
-          if (prev >= 90) return prev; // stop at 90% until real finish
+          if (prev >= 90) return prev;
           return prev + Math.random() * 10;
         });
       }, 200);
 
-      await publishMediaPost(mediaDraft);
+      await publishMediaPost(mediaDraft, queryClient);
 
       clearInterval(interval);
       setProgress(100);
@@ -97,14 +101,14 @@ export default function CreateMediaPreviewScreen() {
           marginTop: hp(2),
         }}
       >
-        {media?.type === "image" && (
+        {media?.type === "IMAGE" && (
           <Image
             source={{ uri: media.uri }}
             style={{ width: "100%", height: "100%" }}
           />
         )}
 
-        {media?.type === "video" && (
+        {media?.type === "VIDEO" && (
           <Video
             source={{ uri: media.uri }}
             style={{ width: "100%", height: "100%" }}
@@ -172,10 +176,11 @@ export default function CreateMediaPreviewScreen() {
           text={uploading ? "Uploading..." : "Upload"}
           disabled={!canUpload || uploading}
           onPress={handleUpload}
+          color={colors.primary}
+          textColor={colors.buttonText}
         />
       </YStack>
 
-      {/*MODAL */}
       <SuccessModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}

@@ -1,28 +1,27 @@
 import { Image } from "react-native";
-import { Post } from "@/types/post";
+import { FeedPost } from "@/types/feedTypes";
 
-export function preloadPostMedia(post?: Post) {
+export function preloadPostMedia(post?: FeedPost) {
   if (!post) return;
 
-  if (post.type === "image") {
-    const firstItem = post.media.items?.[0];
+  /* ================= MEDIA ================= */
+  if (post.type === "media") {
+    const first = post.media?.[0];
 
-    if (typeof firstItem?.url === "string") {
-      Image.prefetch(firstItem.url);
+    if (!first) return;
+
+    if (typeof first.url === "string") {
+      Image.prefetch(first.url);
+    }
+
+    if (typeof first.thumbnailUrl === "string") {
+      Image.prefetch(first.thumbnailUrl);
     }
   }
 
-  if (post.type === "video") {
-    if (typeof post.media.videoUrl === "string") {
-      Image.prefetch(post.media.videoUrl);
-    }
-  }
-
-  if (post.type === "text") {
-    const bg = post.media?.backgroundImage;
-
-    if (typeof bg === "string") {
-      Image.prefetch(bg);
-    }
+  /* ================= TEXT / BIBLE ================= */
+  if (post.type === "text" || post.type === "bible") {
+    // nothing to preload for now (no background image in new structure)
+    return;
   }
 }

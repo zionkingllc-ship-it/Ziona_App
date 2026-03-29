@@ -11,6 +11,9 @@ import { Text, View, XStack } from "tamagui";
 import { SimpleButton } from "../centerTextButton";
 import CloseButton from "../CloseButton";
 
+
+import { useQueryClient } from "@tanstack/react-query";
+
 const { height } = Dimensions.get("window");
 
 interface Props {
@@ -34,17 +37,32 @@ export default function ScriptureReaderModal({
   onToggle,
   onClose,
   onDone,
+  translation,
+  book,
+  chapter,
 }: Props) {
   const listRef = useRef<FlatList>(null);
 
+   
+  const queryClient = useQueryClient();
+
   /* =========================
-     SAFE VERSES (FIX)
+     USE CACHED SCRIPTURE (FIX)
   ========================= */
 
-  const safeVerses: BibleVerse[] = (verses ?? []).map((v, i) => ({
-    number: typeof v?.number === "number" ? v.number : i + 1, // fallback if backend fails
-    text: v?.text ?? "",
-  }));
+  const cached: any = queryClient.getQueryData([
+    "scripture",
+    book,
+    chapter,
+    translation,
+  ]);
+
+  const safeVerses: BibleVerse[] = cached?.verses?.length
+    ? cached.verses
+    : (verses ?? []).map((v, i) => ({
+        number: typeof v?.number === "number" ? v.number : i + 1,
+        text: v?.text ?? "",
+      }));
 
   /* =========================
      FIND FIRST SELECTED

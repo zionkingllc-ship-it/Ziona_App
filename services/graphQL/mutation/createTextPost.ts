@@ -6,6 +6,7 @@ mutation CreatePost(
   $postType: PostType!
   $caption: String
   $category: String
+
   $scriptureBook: String
   $scriptureChapter: Int
   $scriptureVerseStart: Int
@@ -16,6 +17,7 @@ mutation CreatePost(
     postType: $postType
     caption: $caption
     category: $category
+
     scriptureBook: $scriptureBook
     scriptureChapter: $scriptureChapter
     scriptureVerseStart: $scriptureVerseStart
@@ -25,31 +27,62 @@ mutation CreatePost(
     success
     post {
       id
-      postType
-      caption
+      type
+      text     
+    }
+    error {
+      code
+      message
     }
   }
 }
 `;
 
-export async function createTextPost(variables: any) {
-  console.log("━━━━━━━━ CREATE POST START ━━━━━━━━");
-  console.log("Variables:", variables);
+export async function createTextPost(variables: {
+  postType: "TEXT" | "BIBLE";
+
+  message?: string;
+  caption?: string;
+
+  category: string;
+
+  scriptureBook?: string;
+  scriptureChapter?: number;
+  scriptureVerseStart?: number;
+  scriptureVerseEnd?: number;
+  scriptureTranslation?: string;
+}) {
+  console.log("━━━━━━━ CREATE POST START ━━━━━━━━");
+
+  const payload = {
+    ...variables,
+    caption: variables.message ?? variables.caption,
+  };
+
+  console.log("Final payload:", payload);
 
   const token = useAuthStore.getState().tokens?.accessToken;
 
   const data = await graphqlRequest(
     CREATE_POST_MUTATION,
-    variables,
+    payload,
     token
   );
 
   console.log("CreatePost response:", data);
 
   if (!data?.createPost?.success) {
-    console.error("❌ Backend rejection:", data);
+    console.error("Backend rejection:", data);
     throw new Error("Post creation failed");
   }
 
-  return data.createPost;
+  const post = data.createPost.post;
+
+  return {
+    ...data.createPost,
+    post: {
+      ...post,
+      caption: post.text ?? "", // unify for feed
+    },
+  };
 }

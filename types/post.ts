@@ -70,7 +70,7 @@ export interface TextPost extends BasePost {
   media?: {
     backgroundImage?: string | number;
     thumbnailUrl?: string;
-  };
+  }; 
 
   /* main content */
   text: {

@@ -1,10 +1,10 @@
 import PostThumbnail from "./PostThumbnail";
-import { Post } from "@/types/post";
+import { FeedPost } from "@/types/feedTypes";
 import { FlatList, useWindowDimensions } from "react-native";
 
 type Props = {
-  posts: Post[];
-  onPress: (post: Post) => void;
+  posts: FeedPost[];
+  onPress: (post: FeedPost) => void;
 };
 
 export default function PostGrid({ posts, onPress }: Props) {

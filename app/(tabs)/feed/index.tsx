@@ -2,20 +2,21 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Text, ViewToken } from "react-native";
 import { View } from "tamagui";
-import { InfiniteData } from "@tanstack/react-query";
+import { InfiniteData, useQueryClient } from "@tanstack/react-query";
+import { useFocusEffect } from "@react-navigation/native";
+
 import FeedHeader from "@/components/feedHeader";
 import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
 import { preloadPostMedia } from "@/helpers/preloadMedia";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
-import { useFocusEffect } from "@react-navigation/native";
-
 import { FeedPost } from "@/types/feedTypes";
 import { normalizePost } from "@/utils/feed/normalizePost";
 
 export default function Feed() {
   const tabBarHeight = useBottomTabBarHeight();
   const flatListRef = useRef<FlatList<FeedPost>>(null);
+  const queryClient = useQueryClient();
 
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [feedType, setFeedType] = useState<"forYou" | "following">("forYou");
@@ -26,18 +27,29 @@ export default function Feed() {
   const followingQuery = useFollowingFeed();
   const query = feedType === "forYou" ? forYouQuery : followingQuery;
 
-  const pages = (query.data as InfiniteData<{ posts: FeedPost[] }> | undefined)?.pages ?? [];
+  /* 🔥 SINGLE CLEAN FOCUS EFFECT */
+  useFocusEffect(
+    useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ["feed"], exact: false });
+      setActivePostId(null);
+    }, [queryClient])
+  );
+
+  const pages =
+    (query.data as InfiniteData<{ posts: any[] }> | undefined)?.pages ?? [];
 
   const data: FeedPost[] = pages
     .flatMap((page) => page.posts ?? [])
-    .map(normalizePost)
-    .filter((p): p is FeedPost => p !== null);
+    .map((p) => normalizePost(p))
+    .filter((p): p is FeedPost => {
+      if (!p) return false;
 
-  useFocusEffect(
-    useCallback(() => {
-      return () => setActivePostId(null);
-    }, []),
-  );
+      if (p.type === "media") {
+        return Array.isArray(p.media) && p.media.length > 0;
+      }
+
+      return true;
+    });
 
   useEffect(() => {
     setActivePostId(null);
@@ -64,7 +76,7 @@ export default function Feed() {
         if (data[index + 1]) preloadPostMedia(data[index + 1] as any);
         if (data[index - 1]) preloadPostMedia(data[index - 1] as any);
       }
-    },
+    }
   ).current;
 
   const renderItem = useCallback(
@@ -77,7 +89,7 @@ export default function Feed() {
         tabBarHeight={tabBarHeight}
       />
     ),
-    [activePostId, containerHeight, containerWidth, tabBarHeight],
+    [activePostId, containerHeight, containerWidth, tabBarHeight]
   );
 
   if (query.isLoading) {

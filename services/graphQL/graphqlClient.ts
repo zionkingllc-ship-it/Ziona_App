@@ -8,7 +8,7 @@ export async function graphqlRequest(
   query: string,
   variables?: any,
   token?: string,
-  retries = 1 // 🔥 retry once for cold starts
+  retries = 1 //retry once for cold starts
 ) {
   if (!query) {
     console.error("GraphQL Error: Query is empty");
@@ -61,17 +61,17 @@ export async function graphqlRequest(
      EMPTY RESPONSE HANDLING
   ========================= */
 
-  if (!text || text.trim() === "") {
-    console.error("Empty response from server");
+if (!text || text.trim() === "") {
+  console.warn("Empty response from server — returning null");
 
-    if (retries > 0) {
-      console.log("Retrying due to empty response...");
-      await sleep(1000);
-      return graphqlRequest(query, variables, token, retries - 1);
-    }
-
-    throw new Error("Empty response from server");
+  if (retries > 0) {
+    console.log("Retrying due to empty response...");
+    await sleep(1000);
+    return graphqlRequest(query, variables, token, retries - 1);
   }
+
+  return null; 
+}
 
   /* =========================
      NON-JSON (HTML / ERROR PAGE)
@@ -123,10 +123,9 @@ export async function graphqlRequest(
      GRAPHQL ERROR
   ========================= */
 
-  if (json.errors) {
-    console.error("GraphQL Errors:", json.errors);
-    throw new Error(json.errors[0]?.message || "GraphQL Error");
-  }
+if (json.errors) {
+  console.warn("GraphQL Partial Errors:", json.errors); 
+}
 
   if (!json.data) {
     console.warn("GraphQL Warning: No data returned");

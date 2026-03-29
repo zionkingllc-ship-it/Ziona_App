@@ -1,4 +1,4 @@
-import { FeedPost } from "@/types/feedTypes";
+import { FeedPost, FeedMediaPost } from "@/types/feedTypes";
 import React from "react";
 import {
   useAnimatedStyle,
@@ -40,6 +40,7 @@ export default function PostMedia({
   const triggerHeart = () => {
     heartScale.value = 0;
     heartOpacity.value = 1;
+
     heartScale.value = withTiming(1.2, { duration: 180 }, () => {
       heartScale.value = withTiming(1, { duration: 100 }, () => {
         heartScale.value = withTiming(0, { duration: 200 });
@@ -47,71 +48,50 @@ export default function PostMedia({
       });
     });
   };
- 
-  switch (post.type) {
-    case "media": {
-      // IMAGE
-      if (post.mediaType === "image") {
-        return (
-          <CarouselPostCard
-            post={post}
-            onLike={onLike}
-            heartStyle={heartStyle}
-            triggerHeart={triggerHeart}
-            screenWidth={screenWidth}
-            screenHeight={screenHeight}
-          />
-        );
-      }
 
-      // VIDEO
-      if (post.mediaType === "video") {
-        return (
-          <VideoPostCard
-            post={post}
-            isPlaying={isPlaying}
-            onTogglePlay={onTogglePlay}
-            onLike={onLike}
-            heartStyle={heartStyle}
-            triggerHeart={triggerHeart}
-            screenWidth={screenWidth}
-            screenHeight={screenHeight}
-            tabBarHeight={tabBarHeight}
-          />
-        );
-      }
+  /* ================= MEDIA ================= */
+  if (post.type === "media") {
+    const mediaPost = post as FeedMediaPost;
+    const firstMedia = mediaPost.media?.[0];
 
-      return null;
+    if (!firstMedia || !firstMedia.url) return null;
+
+    if (firstMedia.type === "image") {
+      return (
+        <CarouselPostCard
+          post={mediaPost}
+          onLike={onLike}
+          heartStyle={heartStyle}
+          triggerHeart={triggerHeart}
+          screenWidth={screenWidth}
+          screenHeight={screenHeight}
+        />
+      );
     }
 
-    case "text":
+    if (firstMedia.type === "video") {
       return (
-        <TextPostCard
-          post={post}
+        <VideoPostCard
+          post={mediaPost}
+          isPlaying={isPlaying}
           onTogglePlay={onTogglePlay}
           onLike={onLike}
           heartStyle={heartStyle}
           triggerHeart={triggerHeart}
           screenWidth={screenWidth}
           screenHeight={screenHeight}
+          tabBarHeight={tabBarHeight}
         />
       );
+    }
 
-    case "bible":
-      // reuse text renderer for now
-      return (
-        <TextPostCard
-          post={post}
-          onTogglePlay={onTogglePlay}
-          onLike={onLike}
-          heartStyle={heartStyle}
-          triggerHeart={triggerHeart}
-          screenWidth={screenWidth}
-          screenHeight={screenHeight}
-        />
-      );
-
-    default:
-      return null;
+    return null;
   }
+
+  /* ================= TEXT / BIBLE ================= */
+  if (post.type === "text" || post.type === "bible") {
+    return <TextPostCard post={post} />;
+  }
+
+  return null;
 }

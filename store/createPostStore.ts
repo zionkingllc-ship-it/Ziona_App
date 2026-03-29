@@ -3,12 +3,12 @@ import { BibleVerse, CreatePostDraft, MediaItem } from "@/types/createPost";
 
 import { create } from "zustand";
 
-type StartDraftType = "text" | "media" | "bible";
+type StartDraftType = "TEXT" | "MEDIA" | "BIBLE";
 
 interface CreatePostState {
   draft: CreatePostDraft | null;
 
-  startDraft: (type: StartDraftType, mediaType?: "image" | "video") => void;
+  startDraft: (type: StartDraftType, mediaType?: "IMAGE" | "VIDEO") => void;
 
   setText: (text: string) => void;
 
@@ -35,28 +35,28 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
   startDraft: (type, mediaType) =>
     set((state) => {
       const prevText =
-        state.draft?.type === "text" || state.draft?.type === "bible"
-          ? (state.draft.text ?? "")
+        state.draft?.type === "TEXT" || state.draft?.type === "BIBLE"
+          ? state.draft.text ?? ""
           : "";
 
       const prevCategory = state.draft?.category;
 
-      if (type === "text") {
+      if (type === "TEXT") {
         return {
           draft: {
-            type: "text",
+            type: "TEXT",
             text: prevText,
             category: prevCategory ?? ({} as Category),
           },
         };
       }
 
-      if (type === "media") {
+      if (type === "MEDIA") {
         if (!mediaType) throw new Error("mediaType required");
 
         return {
           draft: {
-            type: "media",
+            type: "MEDIA",
             mediaType,
             media: { items: [] },
             category: prevCategory ?? ({} as Category),
@@ -64,17 +64,18 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
         };
       }
 
-      if (type === "bible") {
+      if (type === "BIBLE") {
         return {
           draft: {
-            type: "bible",
+            type: "BIBLE",
             bibleVerse:
-              state.draft?.type === "bible"
+              state.draft?.type === "BIBLE"
                 ? state.draft.bibleVerse
                 : ({} as BibleVerse),
             text:
-              state.draft?.type === "text" || state.draft?.type === "bible"
-                ? (state.draft.text ?? "")
+              state.draft?.type === "TEXT" ||
+              state.draft?.type === "BIBLE"
+                ? state.draft.text ?? ""
                 : "",
             category: state.draft?.category ?? ({} as Category),
           },
@@ -94,13 +95,13 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
 
       if (text.length > MAX_LENGTH) return state;
 
-      if (state.draft.type === "text") {
+      if (state.draft.type === "TEXT") {
         return {
           draft: { ...state.draft, text },
         };
       }
 
-      if (state.draft.type === "bible") {
+      if (state.draft.type === "BIBLE") {
         return {
           draft: { ...state.draft, text },
         };
@@ -115,7 +116,7 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
 
   setMedia: (items) =>
     set((state) => {
-      if (!state.draft || state.draft.type !== "media") return state;
+      if (!state.draft || state.draft.type !== "MEDIA") return state;
 
       return {
         draft: {
@@ -149,10 +150,10 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
     set((state) => {
       if (!state.draft) return state;
 
-      if (state.draft.type === "text") {
+      if (state.draft.type === "TEXT") {
         return {
           draft: {
-            type: "bible",
+            type: "BIBLE",
             text: state.draft.text,
             bibleVerse: bible,
             category: state.draft.category,
@@ -160,7 +161,7 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
         };
       }
 
-      if (state.draft.type === "bible") {
+      if (state.draft.type === "BIBLE") {
         return {
           draft: {
             ...state.draft,
@@ -178,7 +179,7 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
 
   setCaption: (caption: string) =>
     set((state) => {
-      if (!state.draft || state.draft.type !== "media") return state;
+      if (!state.draft || state.draft.type !== "MEDIA") return state;
 
       return {
         draft: {

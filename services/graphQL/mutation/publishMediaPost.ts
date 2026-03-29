@@ -4,10 +4,10 @@ import { useAuthStore } from "@/store/useAuthStore";
 const CREATE_MEDIA_POST_MUTATION = `
 mutation CreateMediaPost(
   $postType: PostType!
-  $mediaType: MediaType
+  $mediaType: MediaType!
   $caption: String
-  $category: String
-  $mediaUrls: [String!]
+  $category: String!
+  $mediaUrls: [String!]!
 ) {
   createPost(
     postType: $postType
@@ -19,8 +19,15 @@ mutation CreateMediaPost(
     success
     post {
       id
-      postType
-      caption
+      type
+      media {
+        url
+        type
+      }
+    }
+    error {
+      code
+      message
     }
   }
 }
@@ -28,13 +35,13 @@ mutation CreateMediaPost(
 
 export async function createMediaPost(variables: {
   postType: "MEDIA";
-  mediaType: string;
+  mediaType: "IMAGE" | "VIDEO";
   caption?: string | null;
   category: string;
   mediaUrls: string[];
 }) {
   console.log("━━━━━━━━ CREATE MEDIA POST START ━━━━━━━━");
-  console.log("Final GraphQL variables:", variables);
+  console.log("Variables:", variables);
 
   const token = useAuthStore.getState().tokens?.accessToken;
 
@@ -47,9 +54,17 @@ export async function createMediaPost(variables: {
   console.log("CreateMediaPost response:", data);
 
   if (!data?.createPost?.success) {
-    console.error("❌ Backend rejection:", data);
+    console.error("Backend rejection:", data);
     throw new Error("Media post creation failed");
   }
 
-  return data.createPost;
+  const post = data.createPost.post;
+ 
+  return {
+    ...data.createPost,
+    post: {
+      ...post,
+      caption: variables.caption ?? "", // unify with feed
+    },
+  };
 }

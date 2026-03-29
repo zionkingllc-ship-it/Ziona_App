@@ -4,7 +4,7 @@ import { Category } from "./category";
    MEDIA
 ========================= */
 
-export type MediaType = "image" | "video";
+export type MediaType = "IMAGE" | "VIDEO";
 
 export interface MediaItem {
   id: string;
@@ -25,28 +25,28 @@ export interface BibleVerse {
 }
 
 /* =========================
-   DRAFT (CLEAN)
+   DRAFT (STANDARDIZED)
 ========================= */
 
 export type TextDraft = {
-  type: "text";
+  type: "TEXT";
   text: string;
   category: Category;
 };
 
 export type MediaDraft = {
-  type: "media";
-  mediaType: "image" | "video";
+  type: "MEDIA";
+  mediaType: "IMAGE" | "VIDEO";
   media: { items: MediaItem[] };
   category: Category;
   caption?: string;
 };
 
 export type BibleDraft = {
-  type: "bible";
+  type: "BIBLE";
   bibleVerse: BibleVerse;
   category: Category;
-  text?: string; 
+  text?: string;
 };
 
 export type CreatePostDraft =

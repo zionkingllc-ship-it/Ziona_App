@@ -4,41 +4,49 @@ import { createMediaPost } from "../mutation/publishMediaPost";
 import { MediaDraft } from "@/types/createPost";
 import * as FileSystem from "expo-file-system/legacy";
 
+import { QueryClient } from "@tanstack/react-query";
+
 /* =========================
-   MIME TYPE (MINIMAL FIX)
+   MIME TYPE
 ========================= */
 
-function getMimeType(uri: string, type: "image" | "video") {
-  if (type === "image") {
-    return "image/jpg"; // 🔥 ONLY CHANGE (was jpeg)
-  }
-
-  if (type === "video") {
-    return "video/mp4";
-  }
-
+function getMimeType(uri: string, type: "IMAGE" | "VIDEO") {
+  if (type === "IMAGE") return "image/jpg";
+  if (type === "VIDEO") return "video/mp4";
   return "application/octet-stream";
+}
+
+/* =========================
+   EXTRACT PUBLIC URL (REAL FIX)
+========================= */
+
+function extractPublicUrl(uploadUrl: string) {
+  const url = new URL(uploadUrl);
+
+  // Example:
+  // /ziona-media-dev/uploads/...mp4
+  let path = url.pathname;
+
+  // remove leading slash
+  if (path.startsWith("/")) path = path.slice(1);
+
+  return `https://storage.googleapis.com/${path}`;
 }
 
 /* =========================
    MAIN FUNCTION
 ========================= */
 
-export async function publishMediaPost(draft: MediaDraft) {
+export async function publishMediaPost(
+  draft: MediaDraft,
+  queryClient: QueryClient
+) {
   console.log("━━━━━━━━ PUBLISH MEDIA START ━━━━━━━━");
   console.log("Draft received:", draft);
 
-  if (!draft) {
-    throw new Error("Draft is missing");
-  }
-
-  if (!draft.category?.id) {
-    throw new Error("Category is required");
-  }
-
-  if (!draft.media?.items?.length) {
-    throw new Error("Media is required");
-  }
+  if (!draft) throw new Error("Draft is missing");
+  if (!draft.category?.id) throw new Error("Category is required");
+  if (!draft.media?.items?.length) throw new Error("Media is required");
 
   /* =========================
      MEDIA UPLOAD
@@ -49,26 +57,15 @@ export async function publishMediaPost(draft: MediaDraft) {
       console.log(`Uploading item ${index}`, item);
 
       const fileName =
-        item.uri?.split("/").pop() ||
-        `file-${Date.now()}-${index}`;
+        item.uri?.split("/").pop() || `file-${Date.now()}-${index}`;
 
       const fileType = getMimeType(item.uri, item.type);
 
       const fileInfo = await FileSystem.getInfoAsync(item.uri);
 
-      if (!fileInfo.exists) {
-        throw new Error("File does not exist");
-      }
-
-      if (!fileInfo.size || fileInfo.size <= 0) {
+      if (!fileInfo.exists) throw new Error("File does not exist");
+      if (!fileInfo.size || fileInfo.size <= 0)
         throw new Error("Invalid file size");
-      }
-
-      console.log("Upload payload:", {
-        fileName,
-        fileType,
-        size: fileInfo.size,
-      });
 
       const upload = await requestMediaUpload(
         fileName,
@@ -82,9 +79,11 @@ export async function publishMediaPost(draft: MediaDraft) {
         fileType
       );
 
-      const cleanUrl = upload.uploadUrl.split("?")[0];
+      /* 🔥 REAL FIX */
+      const publicUrl = extractPublicUrl(upload.uploadUrl);
 
-      return cleanUrl;
+      return publicUrl;
+
     } catch (err) {
       console.error(`Media upload failed at index ${index}`, err);
       throw err;
@@ -120,6 +119,13 @@ export async function publishMediaPost(draft: MediaDraft) {
     const response = await createMediaPost(input);
 
     console.log("Media post created successfully:", response);
+
+    await queryClient.invalidateQueries({
+      queryKey: ["feed"],
+      exact: false,
+    });
+
+    console.log("Feed invalidated");
     console.log("━━━━━━━━ PUBLISH MEDIA END ━━━━━━━━");
 
     return response;

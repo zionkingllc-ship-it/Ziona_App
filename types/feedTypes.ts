@@ -1,7 +1,4 @@
-export type FeedPost =
-  | FeedTextPost
-  | FeedMediaPost
-  | FeedBiblePost;
+export type FeedPost = FeedTextPost | FeedMediaPost | FeedBiblePost;
 
 /* =========================
    SHARED
@@ -11,7 +8,9 @@ type BaseFeedPost = {
   id: string;
   createdAt: string;
 
-  author: {
+  caption?: string;
+
+  author?: {
     id: string;
     username: string;
     avatarUrl?: string;
@@ -21,30 +20,40 @@ type BaseFeedPost = {
     id: string;
     label: string;
     slug: string;
+    bgColor?: string;
+    bdColor?: string;
   };
 
-  stats: {
+  stats?: {
     likesCount: number;
     commentsCount: number;
     sharesCount: number;
     savesCount: number;
   };
 
-  viewerState: {
+  viewerState?: {
     liked: boolean;
     saved: boolean;
     followingAuthor: boolean;
     isOwner: boolean;
   };
 };
-
 /* =========================
    TEXT
 ========================= */
 
 export type FeedTextPost = BaseFeedPost & {
-  type: "text";
-  caption: string;
+type: "text";
+message: string;
+scripture?: {
+  book: string;
+  chapter: number;
+  verseStart: number;
+  verseEnd?: number;
+  translation: string;
+  text: string;
+};
+  
 };
 
 /* =========================
@@ -53,21 +62,12 @@ export type FeedTextPost = BaseFeedPost & {
 
 export type FeedMediaPost = BaseFeedPost & {
   type: "media";
-  caption?: string;
-
   mediaType: "image" | "video";
-
-  media:
-    | {
-        type: "image";
-        url: string;
-        thumbnailUrl?: string;
-      }[]
-    | {
-        type: "video";
-        url: string;
-        thumbnailUrl?: string;
-      }[];
+  media: {
+    type: "image" | "video";
+    url: string;
+    thumbnailUrl?: string;
+  }[];
 };
 
 /* =========================
@@ -75,14 +75,14 @@ export type FeedMediaPost = BaseFeedPost & {
 ========================= */
 
 export type FeedBiblePost = BaseFeedPost & {
-  type: "bible";
-  caption: string;
-
-  scripture: {
-    book: string;
-    chapter: number;
-    verseStart: number;
-    verseEnd?: number;
-    translation: string;
-  };
+type: "bible";
+message?: string;
+scripture?: {
+  book: string;
+  chapter: number;
+  verseStart: number;
+  verseEnd?: number;
+  translation: string;
+  text: string;
+};
 };

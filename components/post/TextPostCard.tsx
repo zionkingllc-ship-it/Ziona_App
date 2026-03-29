@@ -1,93 +1,47 @@
-import colors from "@/constants/colors";
 import { FeedTextPost, FeedBiblePost } from "@/types/feedTypes";
 import React from "react";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnJS } from "react-native-reanimated";
-import { Text, YStack } from "tamagui";
+import { YStack } from "tamagui";
+
+import TextPostCardOutput from "./TextPostCardOutput";
+import { Category } from "@/types/category";
+import { useResponsive } from "@/hooks/useResponsive";
 
 type Props = {
-  post: FeedTextPost | FeedBiblePost; // supports both
-  onTogglePlay?: () => void;
-  onLike?: () => void;
-  heartStyle: any;
-  triggerHeart: () => void;
-  screenWidth: number;
-  screenHeight: number;
+  post: FeedTextPost | FeedBiblePost;
 };
 
-export default function TextPostCard({
-  post,
-  onTogglePlay,
-  onLike,
-  heartStyle,
-  triggerHeart,
-  screenWidth,
-  screenHeight,
-}: Props) {
-  const doubleTap = Gesture.Tap()
-    .numberOfTaps(2)
-    .onEnd(() => {
-      if (onLike) runOnJS(onLike)();
-      runOnJS(triggerHeart)();
-    });
+export default function TextPostCard({ post }: Props) {
+  const isBible = post.type === "bible";
+  const { wp, hp, fs } = useResponsive();
+  console.log("caption",  post.caption) 
+   console.log("message",  post.message) 
+    console.log("caption",  post.caption) 
+     console.log("caption",  post.caption) 
+      console.log("caption",  post.caption) 
 
   return (
-    <GestureDetector gesture={doubleTap}>
-      <Animated.View
-        style={{
-          flex: 1,
-          width: screenWidth,
-          height: screenHeight,
-          justifyContent: "center",
-          alignItems: "center",
-          paddingHorizontal: 20,
-          backgroundColor: "black",
-        }}
-      >
-        {/*LIKE ANIMATION */}
-        <Animated.View
-          style={[
-            {
-              position: "absolute",
-              alignSelf: "center",
-              top: screenHeight * 0.4,
-            },
-            heartStyle,
-          ]}
-        >
-          <Animated.Image
-            source={require("@/assets/images/likeIcon2.png")}
-            style={{ width: 80, height: 80 }}
-          />
-        </Animated.View>
-
-        <YStack gap="$4" alignItems="center">
-          {/*  Scripture (only for bible) */}
-          {"scripture" in post && post.scripture ? (
-            <Text
-              color={colors.white}
-              fontSize={18}
-              fontWeight="600"
-              textAlign="center"
-            >
-              {post.scripture.book} {post.scripture.chapter}:
-              {post.scripture.verseStart}
-              {post.scripture.verseEnd
-                ? `-${post.scripture.verseEnd}`
-                : ""}
-            </Text>
-          ) : null}
-
-          {/*Caption */}
-          <Text
-            color={colors.white}
-            fontSize={20}
-            textAlign="center"
-          >
-            {post.caption}
-          </Text>
-        </YStack>
-      </Animated.View>
-    </GestureDetector>
+    <YStack
+      flex={1}
+      justifyContent="center"
+      alignItems="center"
+      paddingHorizontal={wp(6)}
+      paddingVertical={hp(16)}
+    >
+      <TextPostCardOutput
+        category={post.category as Category}
+        scripture={
+          isBible
+            ? `${post.scripture.book} ${post.scripture.chapter}:${post.scripture.verseStart}${
+                post.scripture.verseEnd
+                  ? `-${post.scripture.verseEnd}`
+                  : ""
+              }`
+            : undefined
+        }
+        translation={isBible ? post.scripture.translation : undefined}
+        verseText={isBible ? post.scripture.text : undefined}
+        testimonyText={post.type === "text" ? post.message : undefined} 
+      />
+    </YStack>
   );
 }

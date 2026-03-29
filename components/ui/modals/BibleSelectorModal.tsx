@@ -20,6 +20,8 @@ import {
 import { Text, View, XStack } from "tamagui";
 import CloseButton from "../CloseButton";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 const { height } = Dimensions.get("window");
 
 /* =========================
@@ -71,9 +73,8 @@ export default function BibleSelectorModal({
   onClose,
   onDone,
 }: Props) {
-  const repository = useMemo(() => {
-    return new GraphqlBibleRepository();
-  }, []);
+  const repository = useMemo(() => new GraphqlBibleRepository(), []);
+  const queryClient = useQueryClient();
 
   /* =========================
      DATA STATE
@@ -141,21 +142,67 @@ export default function BibleSelectorModal({
   }
 
   /* =========================
-     LOAD VERSES
+     RESET ON OPEN
   ========================= */
+
   useEffect(() => {
     if (!visible) return;
 
-    // force clean start every time modal opens
     setBook(null);
     setChapter(undefined);
     setSelected([]);
     setVerses([]);
     setSearch("");
   }, [visible]);
+
+  /* =========================
+     LOAD VERSES + CACHE CONTROL
+  ========================= */
+
   useEffect(() => {
     if (!chapter || !book) return;
+
     loadVerses(book.name, chapter, translation);
+
+    const key = ["scripture", book.name, chapter, translation];
+
+    queryClient.fetchQuery({
+      queryKey: key,
+      queryFn: () =>
+        repository.getScripture({
+          book: book.name,
+          chapter,
+          version: translation,
+        }),
+      staleTime: 1000 * 60 * 60,
+    });
+
+    const nextChapter = chapter + 1;
+    const prevChapter = chapter - 1;
+
+    if (nextChapter) {
+      queryClient.prefetchQuery({
+        queryKey: ["scripture", book.name, nextChapter, translation],
+        queryFn: () =>
+          repository.getScripture({
+            book: book.name,
+            chapter: nextChapter,
+            version: translation,
+          }),
+      });
+    }
+
+    if (prevChapter > 0) {
+      queryClient.prefetchQuery({
+        queryKey: ["scripture", book.name, prevChapter, translation],
+        queryFn: () =>
+          repository.getScripture({
+            book: book.name,
+            chapter: prevChapter,
+            version: translation,
+          }),
+      });
+    }
   }, [chapter, book, translation]);
 
   async function loadVerses(
@@ -166,7 +213,7 @@ export default function BibleSelectorModal({
     try {
       setLoadingVerses(true);
       const data = await repository.getVerses(version, bookName, chapter);
-      setVerses(data);
+      setVerses(data || []);
     } catch {
       console.log("Failed to load verses");
     } finally {
@@ -217,6 +264,7 @@ export default function BibleSelectorModal({
     setReaderOpen(true);
   }
 
+
   return (
     <BaseModal visible={visible} onClose={onClose} alignBottom>
       <View style={styles.sheet}>
@@ -229,7 +277,6 @@ export default function BibleSelectorModal({
 
         {/* SELECTORS */}
         <XStack gap="$2" justifyContent="center" marginBottom={20}>
-          {/* TRANSLATION */}
           <SelectChip
             label={translation}
             active
@@ -241,7 +288,6 @@ export default function BibleSelectorModal({
             }}
           />
 
-          {/* BOOK */}
           <SelectChip
             label={book?.name || "BOOKS"}
             active={!!book}
@@ -254,7 +300,6 @@ export default function BibleSelectorModal({
             }}
           />
 
-          {/* CHAPTER */}
           <SelectChip
             label={chapter ? String(chapter) : "CHAPTER"}
             active={!!chapter}
@@ -266,7 +311,6 @@ export default function BibleSelectorModal({
             }}
           />
 
-          {/* VERSE */}
           <SelectChip
             label={
               selected.length > 0
@@ -361,36 +405,68 @@ export default function BibleSelectorModal({
 
           if (!chapter || !book || ordered.length === 0) return;
 
-          try {
-            const scripture = await repository.getScripture({
-              book: book.name,
-              chapter,
-              version: translation,
+          const cached: any = queryClient.getQueryData([
+            "scripture",
+            book.name,
+            chapter,
+            translation,
+          ]);
+
+          if (!cached) {
+            console.log("Scripture not ready, fetching now...");
+
+            const fresh = await queryClient.fetchQuery({
+              queryKey: ["scripture", book.name, chapter, translation],
+              queryFn: () =>
+                repository.getScripture({
+                  book: book.name,
+                  chapter,
+                  version: translation,
+                }),
             });
 
-            const selectedVerses = (scripture.verses || []).filter((v: any) =>
+            if (!fresh) return;
+
+            const selectedVerses = fresh.verses.filter((v: any) =>
               ordered.includes(v.number),
             );
 
             const text = selectedVerses.map((v: any) => v.text).join(" ");
-            if (text.length > 500) {
-              alert("Selected verses exceed 500 character limit");
-              return;
-            }
 
             onDone({
               translation,
-              book: scripture.book,
-              chapter: scripture.chapter,
+              book: fresh.book,
+              chapter: fresh.chapter,
               verses: ordered,
               text,
             });
 
             setReaderOpen(false);
             onClose();
-          } catch (err) {
-            console.log("Failed to fetch scripture", err);
+            return;
           }
+
+          const selectedVerses = cached.verses.filter((v: any) =>
+            ordered.includes(v.number),
+          );
+
+          const text = selectedVerses.map((v: any) => v.text).join(" ");
+
+          if (text.length > 500) {
+            alert("Selected verses exceed 500 character limit");
+            return;
+          }
+
+          onDone({
+            translation,
+            book: cached.book,
+            chapter: cached.chapter,
+            verses: ordered,
+            text,
+          });
+
+          setReaderOpen(false);
+          onClose();
         }}
       />
     </BaseModal>

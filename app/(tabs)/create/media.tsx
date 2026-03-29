@@ -9,9 +9,8 @@ import { useResponsive } from "@/hooks/useResponsive";
 
 import { useCreatePostStore } from "@/store/createPostStore";
 import { MediaItem } from "@/types/createPost";
-import { ResizeMode } from "expo-av";
 import { Trash } from "@tamagui/lucide-icons";
-import { Video } from "expo-av";
+import { ResizeMode, Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 
@@ -35,32 +34,13 @@ export default function CreateMediaScreen() {
 
   useEffect(() => {
     if (!draft) {
-      startDraft("media", "image");
+      startDraft("MEDIA", "IMAGE");
     }
   }, []);
 
-  if (!draft || draft.type !== "media") return null;
-
+  if (!draft || draft.type !== "MEDIA") return null;
   const mediaDraft = draft;
   const mediaItems = mediaDraft.media?.items ?? [];
-
-  /* =========================
-     PERMISSION
-  ========================= */
-
-  async function ensurePermission() {
-    const { status } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (status !== "granted") {
-      setError("Permission required");
-      setErrorVisible(true);
-      return false;
-    }
-
-    return true;
-  }
-
   /* =========================
      NORMALIZE MEDIA
   ========================= */
@@ -69,8 +49,24 @@ export default function CreateMediaScreen() {
     return {
       id: asset.assetId ?? asset.uri,
       uri: asset.uri,
-      type: asset.type === "video" ? "video" : "image",
+      type: asset.type === "video" ? "VIDEO" : "IMAGE",
     };
+  }
+
+  /* =========================
+     PERMISSION
+  ========================= */
+
+  async function ensurePermission() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      setError("Permission required");
+      setErrorVisible(true);
+      return false;
+    }
+
+    return true;
   }
 
   /* =========================
@@ -143,7 +139,12 @@ export default function CreateMediaScreen() {
   ========================= */
 
   return (
-    <YStack flex={1} backgroundColor={colors.white} paddingTop={hp(5)} paddingHorizontal={wp(6)}>
+    <YStack
+      flex={1}
+      backgroundColor={colors.white}
+      paddingTop={hp(5)}
+      paddingHorizontal={wp(6)}
+    >
       <Header heading="Add details" />
 
       <YStack>
@@ -151,16 +152,26 @@ export default function CreateMediaScreen() {
           data={mediaItems}
           renderItem={({ item }) => (
             <YStack>
-              {item.type === "video" ? (
+              {item.type === "VIDEO" ? (
                 <Video
                   source={{ uri: item.uri }}
-                  style={{ width: wp(40), height: wp(45), borderRadius: 6, marginRight: wp(2) }}
+                  style={{
+                    width: wp(40),
+                    height: wp(45),
+                    borderRadius: 6,
+                    marginRight: wp(2),
+                  }}
                   resizeMode={ResizeMode.COVER}
                 />
               ) : (
                 <Image
                   source={{ uri: item.uri }}
-                  style={{ width: wp(40), height: wp(45), borderRadius: 6, marginRight: wp(2) }}
+                  style={{
+                    width: wp(40),
+                    height: wp(45),
+                    borderRadius: 6,
+                    marginRight: wp(2),
+                  }}
                 />
               )}
 
@@ -218,6 +229,9 @@ export default function CreateMediaScreen() {
         <SimpleButton
           text="Preview"
           onPress={() => router.push("/create/mediaPreview")}
+          disabled={!mediaDraft.category || mediaItems.length === 0}
+          color={colors.primary}
+          textColor={colors.buttonText}
         />
       </YStack>
 
@@ -230,11 +244,7 @@ export default function CreateMediaScreen() {
         }}
       />
 
-      <ErrorModal
-        visible={false}
-        message=""
-        onClose={() => {}}
-      />
+      <ErrorModal visible={false} message="" onClose={() => {}} />
     </YStack>
   );
 }

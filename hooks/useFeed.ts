@@ -3,13 +3,20 @@ import {
   fetchForYouFeed,
   fetchFollowingFeed,
 } from "@/services/feed/feedServices";
-import { FeedPost } from "@/types/feedTypes";
+
+/* =========================
+   RAW BACKEND SHAPE
+========================= */
 
 type FeedResponse = {
-  posts: FeedPost[];
+  posts: any[]; //raw backend data (NOT FeedPost)
   nextCursor?: string;
   hasMore: boolean;
 };
+
+/* =========================
+   FOR YOU
+========================= */
 
 export function useForYouFeed() {
   return useInfiniteQuery<
@@ -29,6 +36,10 @@ export function useForYouFeed() {
       lastPage.hasMore ? lastPage.nextCursor : undefined,
   });
 }
+
+/* =========================
+   FOLLOWING
+========================= */
 
 export function useFollowingFeed() {
   return useInfiniteQuery<

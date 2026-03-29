@@ -8,6 +8,7 @@ import SuccessModal from "@/components/ui/modals/successModal";
 import colors from "@/constants/colors";
 import { usePostFeedback } from "@/hooks/usePostFeedback";
 import { useResponsive } from "@/hooks/useResponsive";
+import { queryClient } from "@/lib/queryClient";
 import { publishDraftPost } from "@/services/graphQL/publishDraftPost";
 import { useCreatePostStore } from "@/store/createPostStore";
 import { useRef, useState } from "react";
@@ -50,7 +51,7 @@ export default function CreateBiblePostScreen() {
      TYPE SAFETY
   ========================= */
 
-  if (!draft || draft.type !== "bible") {
+  if (!draft || draft.type !== "BIBLE") {
     return null;
   }
 
@@ -100,7 +101,7 @@ export default function CreateBiblePostScreen() {
 
     try {
       setUploading(true);
-      await publishDraftPost(bibleDraft);
+      await publishDraftPost(bibleDraft, queryClient);
       feedback.showSuccess();
     } catch (error: any) {
       feedback.showError(error?.message);

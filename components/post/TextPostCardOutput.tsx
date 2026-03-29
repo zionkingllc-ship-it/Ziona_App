@@ -1,9 +1,10 @@
-import { Text, View, XStack, YStack } from "tamagui";
-import { useResponsive } from "@/hooks/useResponsive";
 import colors from "@/constants/colors";
+import { useResponsive } from "@/hooks/useResponsive";
+import { Category } from "@/types/category";
+import { Text, View, XStack, YStack } from "tamagui";
 
 interface Props {
-  category?: string;
+  category?: Category;
   scripture?: string; // e.g. John 3:16
   translation?: string; // e.g. KJV
   verseText?: string;
@@ -22,7 +23,7 @@ export default function TextPostCardOutput({
   return (
     <XStack
       flex={1}
-      backgroundColor={"#D9C0A0"}
+      backgroundColor={category?.bgColor ? category?.bgColor : "#ffc904b8"}
       padding={hp(1.5)}
       borderRadius={wp(1.5)}
     >
@@ -38,7 +39,6 @@ export default function TextPostCardOutput({
       {/* Content */}
 
       <YStack flex={1} padding={hp(1)}>
-
         {/* HEADER */}
 
         {(category || scripture) && (
@@ -55,47 +55,45 @@ export default function TextPostCardOutput({
                 fontSize={fs(15)}
                 color={colors.black}
               >
-                {category}
+                {category.label}
               </Text>
             )}
 
             <XStack justifyContent="space-between" alignItems="center">
-              {scripture && (
+             
                 <Text
                   fontFamily="$script"
                   fontWeight="600"
                   fontSize={fs(15)}
                   color={colors.black}
                 >
-                  {scripture}
+                  {scripture ?scripture :"scripture:1:1"}
                 </Text>
-              )}
+            
 
-              {translation && (
-                <View
-                  borderWidth={1}
-                  borderColor="#836F8B"
-                  borderRadius={wp(2)}
-                  paddingHorizontal={wp(3)}
-                  paddingVertical={hp(0.6)}
+              <View
+                borderWidth={1}
+                borderColor="#836F8B"
+                borderRadius={wp(2)}
+                paddingHorizontal={wp(3)}
+                paddingVertical={hp(0.6)}
+              >
+                <Text
+                  fontFamily="$body"
+                  fontWeight="600"
+                  fontSize={fs(11)}
+                  color="#836F8B"
                 >
-                  <Text
-                    fontFamily="$body"
-                    fontWeight="600"
-                    fontSize={fs(11)}
-                    color="#836F8B"
-                  >
-                    {translation}
-                  </Text>
-                </View>
-              )}
+                  {translation ? translation : "KJV"}
+                </Text>
+              </View>
             </XStack>
           </YStack>
         )}
 
         {/* VERSE */}
 
-        {verseText && (
+         
           <View
             borderLeftWidth={3}
             borderLeftColor="#62292E"
@@ -110,14 +108,13 @@ export default function TextPostCardOutput({
               color={colors.black}
               lineHeight={fs(25)}
             >
-              {verseText}
+              {verseText?verseText:"verse Should be here"}
             </Text>
           </View>
-        )}
 
         {/* TESTIMONY */}
 
-        {testimonyText && (
+         
           <Text
             fontFamily="$heading"
             fontWeight="400"
@@ -125,9 +122,9 @@ export default function TextPostCardOutput({
             color={colors.black}
             lineHeight={fs(25)}
           >
-            {testimonyText}
+            {testimonyText? testimonyText:"No Text"}
           </Text>
-        )}
+         
       </YStack>
     </XStack>
   );

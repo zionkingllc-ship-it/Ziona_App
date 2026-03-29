@@ -1,47 +1,34 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Image,
-  TouchableOpacity,
-  Text,
-  ImageBackground,
-  StyleSheet,
-} from "react-native";
-import { Post } from "@/types/post";
-import { Ionicons } from "@expo/vector-icons";
 import colors from "@/constants/colors";
 import { generateVideoThumbnail } from "@/helpers/thumbnailGenerator";
+import { FeedPost } from "@/types/feedTypes";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
-  post: Post;
+  post: FeedPost;
   size: number;
   onPress: () => void;
 }
 
-export default function PostThumbnail({
-  post,
-  size,
-  onPress,
-}: Props) {
+export default function PostThumbnail({ post, size, onPress }: Props) {
   const [thumbnailUri, setThumbnailUri] = useState<string | null>(null);
 
+  const isMedia = post.type === "media";
+
   const isCarousel =
-    post.type === "image" && post.media.items.length > 1;
+    isMedia && post.media?.length > 1 && post.media[0]?.type === "image";
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadThumbnail() {
-      if (post.type !== "video") return;
+      if (!isMedia || post.media[0]?.type !== "video") return;
 
-      if (post.media.thumbnailUrl) {
-        if (isMounted) setThumbnailUri(post.media.thumbnailUrl);
-        return;
-      }
+      const videoUrl = post.media[0]?.url;
+      if (!videoUrl) return;
 
-      const generated = await generateVideoThumbnail(
-        post.media.videoUrl
-      );
+      const generated = await generateVideoThumbnail(videoUrl);
 
       if (generated && isMounted) {
         setThumbnailUri(generated);
@@ -56,20 +43,13 @@ export default function PostThumbnail({
   }, [post]);
 
   const renderMedia = () => {
-    /* IMAGE (single or carousel) */
-    if (post.type === "image") {
-      const firstItem = post.media.items[0];
-
-      if (!firstItem) return null;
-
-      const source =
-        typeof firstItem.url === "string"
-          ? { uri: firstItem.url }
-          : firstItem.url;
+    /* IMAGE */
+    if (isMedia && post.media[0]?.type === "image") {
+      const firstItem = post.media[0];
 
       return (
         <Image
-          source={source}
+          source={{ uri: firstItem.url }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
@@ -77,40 +57,27 @@ export default function PostThumbnail({
     }
 
     /* VIDEO */
-    if (post.type === "video" && thumbnailUri) {
-      const source =
-        typeof thumbnailUri === "string"
-          ? { uri: thumbnailUri }
-          : thumbnailUri;
-
+    if (isMedia && post.media[0]?.type === "video" && thumbnailUri) {
       return (
         <Image
-          source={source}
+          source={{ uri: thumbnailUri }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
       );
     }
 
-    /* TEXT */
-    if (post.type === "text") {
-      const source =
-        typeof post.media.backgroundImage === "string"
-          ? { uri: post.media.backgroundImage }
-          : post.media.backgroundImage;
-
+    /* TEXT / BIBLE */
+    if (post.type === "text" || post.type === "bible") {
       return (
-        <ImageBackground
-          source={source}
-          style={{ flex: 1, justifyContent: "center", padding: 10 }}
-          resizeMode="cover"
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 8,
+          }}
         >
-          <View
-            style={{
-              ...StyleSheet.absoluteFillObject,
-              backgroundColor: "rgba(0,0,0,0.25)",
-            }}
-          />
           <Text
             numberOfLines={3}
             style={{
@@ -120,9 +87,13 @@ export default function PostThumbnail({
               textAlign: "center",
             }}
           >
-            {post.text}
+            {post.type === "text"
+              ? post.message
+              : post.type === "bible"
+                ? post.scripture.text
+                : ""}
           </Text>
-        </ImageBackground>
+        </View>
       );
     }
 
@@ -145,16 +116,12 @@ export default function PostThumbnail({
       {renderMedia()}
 
       {/* VIDEO ICON */}
-      {post.type === "video" && (
+      {isMedia && post.media[0]?.type === "video" && (
         <Ionicons
           name="videocam"
           size={18}
           color="white"
-          style={{
-            position: "absolute",
-            top: 6,
-            left: 6,
-          }}
+          style={{ position: "absolute", top: 6, left: 6 }}
         />
       )}
 
@@ -164,11 +131,7 @@ export default function PostThumbnail({
           name="images"
           size={18}
           color="white"
-          style={{
-            position: "absolute",
-            top: 6,
-            left: 6,
-          }}
+          style={{ position: "absolute", top: 6, left: 6 }}
         />
       )}
     </TouchableOpacity>

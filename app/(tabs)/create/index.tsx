@@ -24,13 +24,13 @@ export default function CreateScreen() {
     return true;
   }
 
-  function normalizeMedia(asset: ImagePicker.ImagePickerAsset): MediaItem {
-    return {
-      id: asset.assetId ?? asset.uri,
-      uri: asset.uri,
-      type: asset.type === "video" ? "video" : "image",
-    };
-  }
+function normalizeMedia(asset: ImagePicker.ImagePickerAsset): MediaItem {
+  return {
+    id: asset.assetId ?? asset.uri,
+    uri: asset.uri,
+    type: asset.type === "video" ? "VIDEO" : "IMAGE", 
+  };
+}
 
   async function pickInitialMedia() {
     const allowed = await ensurePermission();
@@ -51,19 +51,16 @@ export default function CreateScreen() {
    VIDEO FLOW
 ========================= */
 
-    if (video) {
-      if (assets.length > 1) {
-        alert("Only one video allowed.");
-        return;
-      }
-
-      startDraft("media", "video");
-
-      setMedia([normalizeMedia(video)]);
-
-      router.push("/create/media");
-      return;
-    }
+   if (video) {
+  if (assets.length > 1) {
+    alert("Only one video allowed.");
+    return;
+  }
+  startDraft("MEDIA", "VIDEO"); 
+  setMedia([normalizeMedia(video)]);
+  router.push("/create/media");
+  return;
+}
 
     /* =========================
    IMAGE FLOW
@@ -75,7 +72,7 @@ export default function CreateScreen() {
       alert("Maximum 5 images allowed.");
     }
 
-    startDraft("media", "image");
+    startDraft("MEDIA", "IMAGE");
 
     setMedia(images.map(normalizeMedia));
 
@@ -83,12 +80,12 @@ export default function CreateScreen() {
   }
 
   function openText() {
-    startDraft("text");
+    startDraft("TEXT");
     router.push("/create/text");
   }
 
   function openBible() {
-    startDraft("bible");
+    startDraft("BIBLE");
     router.push("/create/CreateBiblePostScreen");
   }
 

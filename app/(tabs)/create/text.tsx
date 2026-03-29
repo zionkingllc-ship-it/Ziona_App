@@ -15,9 +15,10 @@ import { publishDraftPost } from "@/services/graphQL/publishDraftPost";
 
 import { useCreatePostStore } from "@/store/createPostStore";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, ScrollView, TouchableOpacity } from "react-native";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Text, XStack, YStack } from "tamagui";
 
 /* =========================
@@ -54,8 +55,6 @@ export default function CreateTextScreen() {
   const [bibleVisible, setBibleVisible] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const uploadLock = useRef(false);
-
   const MAX_LENGTH = 500;
 
   /* =========================
@@ -64,7 +63,7 @@ export default function CreateTextScreen() {
 
   useEffect(() => {
     if (!draft) {
-      startDraft("text");
+      startDraft("TEXT");
     }
   }, []);
 
@@ -74,7 +73,7 @@ export default function CreateTextScreen() {
      DERIVED DATA
   ========================= */
 
-  const verse = draft.type === "bible" ? draft.bibleVerse : undefined;
+  const verse = draft.type === "BIBLE" ? draft.bibleVerse : undefined;
 
   const translation = verse?.translation ?? "";
   const book = verse?.book ?? "";
@@ -87,8 +86,9 @@ export default function CreateTextScreen() {
     book && chapter && verses.length
       ? buildReference(book, chapter, verses)
       : "";
-  console.log("ALL DATA", translation, book, chapter, verse, reference);
-  const textValue = "text" in draft ? draft.text : "";
+
+  const textValue: string =
+    draft.type === "TEXT" || draft.type === "BIBLE" ? (draft.text ?? "") : "";
 
   const cardColor = draft.category?.bgColor ?? "#E6E2C5";
 
@@ -97,6 +97,7 @@ export default function CreateTextScreen() {
   ========================= */
 
   const hasText = textValue.trim().length > 0;
+  const queryClient = useQueryClient();
 
   const canUpload = !!draft.category?.id && (hasText || !!verseText);
 
@@ -116,7 +117,9 @@ export default function CreateTextScreen() {
 
     try {
       setUploading(true);
-      await publishDraftPost(draft);
+
+      await publishDraftPost(draft, queryClient); 
+
       feedback.showSuccess();
     } catch (error: any) {
       feedback.showError(error?.message);
@@ -124,11 +127,12 @@ export default function CreateTextScreen() {
       setUploading(false);
     }
   }
+
   /* =========================
      CHARACTER LIMIT
   ========================= */
-  const combinedLength = (textValue?.length ?? 0) + (verseText?.length ?? 0);
 
+  const combinedLength = (textValue?.length ?? 0) + (verseText?.length ?? 0);
   const remaining = MAX_LENGTH - combinedLength;
 
   return (
@@ -141,7 +145,6 @@ export default function CreateTextScreen() {
 
       <ScrollView style={{ flex: 1 }}>
         <YStack flex={1} paddingHorizontal={wp(6)} paddingTop={hp(2)}>
-          {/* INPUT CARD */}
           <TextPostCardInput
             showInput={true}
             category={draft.category?.label}
@@ -159,7 +162,6 @@ export default function CreateTextScreen() {
             backgroundColor={cardColor}
           />
 
-          {/* ACTIONS */}
           <XStack flex={1} marginTop={hp(7)} marginBottom={hp(4)} gap={wp(3)}>
             <TagSelectorCard
               category={draft.category}
@@ -195,7 +197,6 @@ export default function CreateTextScreen() {
             </TouchableOpacity>
           </XStack>
 
-          {/* POST BUTTON */}
           <SimpleButton
             text={uploading ? "Posting..." : "Post"}
             textColor={colors.buttonText}
@@ -204,7 +205,6 @@ export default function CreateTextScreen() {
             onPress={handleUpload}
           />
 
-          {/* CATEGORY MODAL */}
           <CategoryModal
             visible={categoryVisible}
             onClose={() => setCategoryVisible(false)}
@@ -214,7 +214,6 @@ export default function CreateTextScreen() {
             }}
           />
 
-          {/* BIBLE MODAL */}
           <BibleSelectorModal
             visible={bibleVisible}
             onClose={() => setBibleVisible(false)}
@@ -236,7 +235,6 @@ export default function CreateTextScreen() {
         </YStack>
       </ScrollView>
 
-      {/* SUCCESS MODAL */}
       <SuccessModal
         visible={feedback.visible}
         onClose={feedback.handleClose}

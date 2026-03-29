@@ -11,7 +11,7 @@ import Animated, { runOnJS } from "react-native-reanimated";
 import { Image, View, XStack } from "tamagui";
 
 interface Props {
-  post: FeedMediaPost;  
+  post: FeedMediaPost;
   onLike?: () => void;
   heartStyle: any;
   triggerHeart: () => void;
@@ -31,9 +31,11 @@ export default function CarouselPostCard({
   const [activeIndex, setActiveIndex] = useState(0);
 
   const likeIconActive = require("@/assets/images/likeIcon2.png");
- 
-  const mediaItems =
-    post.mediaType === "image" ? post.media : [];
+
+  // derive from actual media structure
+  const mediaItems = (post.media ?? []).filter(
+    (item) => item.type === "image" && item.url
+  );
 
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max);
@@ -56,6 +58,8 @@ export default function CarouselPostCard({
     setActiveIndex(index);
   };
 
+  if (!mediaItems.length) return null;
+
   return (
     <GestureDetector gesture={doubleTap}>
       <Animated.View
@@ -73,20 +77,17 @@ export default function CarouselPostCard({
           showsHorizontalScrollIndicator={false}
           keyExtractor={(_, index) => index.toString()}
           onMomentumScrollEnd={onScrollEnd}
-          renderItem={({ item }) => {
-            if (!item?.url) return null;
-
-            return (
-              <Image
-                source={{ uri: item.url }}
-                width={screenWidth}
-                height={screenHeight}
-                resizeMode="cover"
-              />
-            );
-          }}
+          renderItem={({ item }) => (
+            <Image
+              source={{ uri: item.url }}
+              width={screenWidth}
+              height={screenHeight}
+              resizeMode="cover"
+            />
+          )}
         />
 
+        {/* LIKE ANIMATION */}
         <Animated.View
           style={[
             {
@@ -107,6 +108,7 @@ export default function CarouselPostCard({
           />
         </Animated.View>
 
+        {/* ● INDICATORS */}
         {mediaItems.length > 1 && (
           <XStack
             position="absolute"

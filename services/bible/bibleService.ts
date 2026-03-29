@@ -22,7 +22,7 @@ export async function getBibleTranslations(): Promise<BibleTranslation[]> {
 }
 
 /* =========================
-   BOOKS (FIXED: MUST PASS TESTAMENT)
+   BOOKS
 ========================= */
 
 const GET_BOOKS = `
@@ -72,46 +72,26 @@ export async function getBibleChapters(book: BibleBook): Promise<number[]> {
 }
 
 /* =========================
-   VERSES (STABLE + SAFE)
+   VERSES (CACHE ONLY - NO FETCH)
 ========================= */
 
-const GET_SCRIPTURE = `
-query GetScripture($book: String!, $chapter: Int!, $version: String!) {
-  scripture(
-    book: $book
-    chapter: $chapter
-    version: $version
-  ) {
-    verses {
-      number
-      text
-    }
-  }
-}
-`;
+import { queryClient } from "@/lib/queryClient";
 
-export async function getBibleVerses(
+export function getBibleVersesFromCache(
   book: string,
   chapter: number,
   version: string
-): Promise<BibleVerse[]> {
-  try {
-    const data = await graphqlRequest(GET_SCRIPTURE, {
-      book,
-      chapter,
-      version,
-    });
+): BibleVerse[] {
+  const key = ["scripture", book, chapter, version];
 
-    const verses = data?.scripture?.verses;
+  const data: any = queryClient.getQueryData(key);
 
-    if (!Array.isArray(verses)) return [];
+  const verses = data?.scripture?.verses;
 
-    return verses.map((v: any) => ({
-      number: v.number,
-      text: v.text,
-    }));
-  } catch (err) {
-    console.log("Scripture fetch failed:", err);
-    return [];
-  }
+  if (!Array.isArray(verses)) return [];
+
+  return verses.map((v: any) => ({
+    number: v.number,
+    text: v.text ?? "",
+  }));
 }

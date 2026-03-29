@@ -12,7 +12,7 @@ import Video from "react-native-video";
 import { View } from "tamagui";
 
 interface Props {
-  post: FeedMediaPost; // ✅ FIXED TYPE
+  post: FeedMediaPost;
   isPlaying: boolean;
   onTogglePlay?: () => void;
   onLike?: () => void;
@@ -36,7 +36,6 @@ export default function VideoPostCard({
   const videoRef = useRef<any>(null);
 
   const [videoDuration, setVideoDuration] = useState(0);
-  const playbackRate = useSharedValue(1);
   const progress = useSharedValue(0);
 
   const likeIconActive = require("@/assets/images/likeIcon2.png");
@@ -61,10 +60,7 @@ export default function VideoPostCard({
   const longPress = Gesture.LongPress()
     .minDuration(250)
     .onStart(() => {
-      playbackRate.value = 2;
-    })
-    .onEnd(() => {
-      playbackRate.value = 1;
+      // optional: you can add rate later properly
     });
 
   const videoGesture = Gesture.Exclusive(doubleTap, singleTap, longPress);
@@ -72,13 +68,16 @@ export default function VideoPostCard({
   const scrubHeight = 7;
   const playButtonSize = Math.min(50, screenWidth * 0.12);
 
-  // ✅ NEW — guaranteed structure from normalizer
+  const videoItem = post.media?.[0];
   const videoUrl =
-    post.mediaType === "video" && post.media?.[0]?.url
-      ? post.media[0].url
-      : undefined;
+    videoItem && videoItem.type === "video" ? videoItem.url : undefined;
 
-  if (!videoUrl) return null; // 🚫 no fallback
+  if (!videoUrl) {
+    console.log(" No video URL:", post);
+    return null;
+  }
+
+  console.log("Playing video:", videoUrl);
 
   return (
     <GestureDetector gesture={videoGesture}>
@@ -93,20 +92,24 @@ export default function VideoPostCard({
           ref={videoRef}
           source={{ uri: videoUrl }}
           style={{ width: "100%", height: "100%" }}
-          resizeMode="contain"
+          resizeMode="cover"
           repeat
-          rate={playbackRate.value}
-          paused={!isPlaying}
-          onLoad={(d) => setVideoDuration(d.duration)}
+          paused={isPlaying === false} 
+          onLoad={(d) => {
+            console.log(" Video loaded:", d.duration);
+            setVideoDuration(d.duration);
+          }}
           onProgress={(d) => {
             if (videoDuration > 0) {
               progress.value = d.currentTime / videoDuration;
             }
           }}
-          onError={(error) => console.error("Video playback error:", error)}
+          onError={(error) => {
+            console.error("Video playback error:", error);
+          }}
         />
 
-        {/* ❤️ LIKE ANIMATION */}
+        {/*LIKE ANIMATION */}
         <Animated.View
           style={[
             {
@@ -124,27 +127,28 @@ export default function VideoPostCard({
         </Animated.View>
 
         {/* ▶ PLAY BUTTON */}
-        <View
-          width={playButtonSize}
-          height={playButtonSize}
-          borderRadius={playButtonSize / 2}
-          backgroundColor="#FFF1DB"
-          position="absolute"
-          justifyContent="center"
-          alignItems="center"
-          alignSelf="center"
-          top={screenHeight * 0.45}
-          opacity={isPlaying ? 0 : 1}
-          pointerEvents="none"
-        >
-          <Play
-            size={playButtonSize * 0.5}
-            color={colors.black}
-            fill={colors.black}
-          />
-        </View>
+        {!isPlaying && (
+          <View
+            width={playButtonSize}
+            height={playButtonSize}
+            borderRadius={playButtonSize / 2}
+            backgroundColor="#FFF1DB"
+            position="absolute"
+            justifyContent="center"
+            alignItems="center"
+            alignSelf="center"
+            top={screenHeight * 0.45}
+            pointerEvents="none"
+          >
+            <Play
+              size={playButtonSize * 0.5}
+              color={colors.black}
+              fill={colors.black}
+            />
+          </View>
+        )}
 
-        {/* ⏱ PROGRESS BAR */}
+        {/* PROGRESS BAR */}
         <Animated.View
           style={{
             position: "absolute",

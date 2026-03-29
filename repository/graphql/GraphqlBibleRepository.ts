@@ -5,7 +5,6 @@ import { BibleRepository } from "../bibleRepository";
 import {
   getBibleBooks,
   getBibleTranslations,
-  getBibleVerses,
 } from "@/services/bible/bibleService";
 
 export class GraphqlBibleRepository implements BibleRepository {
@@ -14,58 +13,75 @@ export class GraphqlBibleRepository implements BibleRepository {
   }
 
   async getBooks(): Promise<BibleBook[]> {
-    const books = await getBibleBooks();
-
-    return books;
+    return getBibleBooks();
   }
 
   async getChapters(book: BibleBook): Promise<number[]> {
     return Array.from({ length: book.chapters }, (_, i) => i + 1);
   }
 
+  /* =========================
+     SINGLE SOURCE OF TRUTH
+  ========================= */
+
+  async getScripture(params: {
+    book: string;
+    chapter: number;
+    version: string;
+  }) {
+    const QUERY = `
+      query GetFullChapter($book: String!, $chapter: Int!) {
+        scripture(
+          book: $book
+          chapter: $chapter
+        ) {
+          book
+          chapter
+          verses {
+            number
+            text
+          }
+        }
+      }
+    `;
+
+    const variables = {
+      book: params.book,
+      chapter: params.chapter,
+    };
+
+    const data = await graphqlRequest(QUERY, variables);
+
+    if (!data?.scripture) {
+      console.warn("No scripture returned from backend");
+      return null;
+    }
+
+    return data.scripture;
+  }
+
+  /* =========================
+     REQUIRED BY INTERFACE (PURE)
+  ========================= */
+
   async getVerses(
     translation: string,
     book: string,
-    chapter: number,
+    chapter: number
   ): Promise<BibleVerse[]> {
-    return getBibleVerses(book, chapter, translation);
+
+
+    const scripture = await this.getScripture({
+      book,
+      chapter,
+      version: translation,
+    });
+
+    if (!scripture?.verses) return [];
+
+    return scripture.verses.map((v: any) => ({
+      number: v.number,
+      text: v.text ?? "",
+    }));
   }
-
- async getScripture(params: {
-  book: string;
-  chapter: number;
-  version: string;
-}) {
-  const QUERY = `
-    query scripture(
-      $book: String!
-      $chapter: Int!
-      $version: String!
-    ) {
-      scripture(
-        book: $book
-        chapter: $chapter
-        version: $version
-      ) {
-        book
-        chapter
-        version
-        verses {
-          number
-          text
-        }
-      }
-    }
-  `;
-
-  const variables = {
-    book: params.book,
-    chapter: params.chapter,
-    version: params.version.toLowerCase(),
-  };
-
-  const data = await graphqlRequest(QUERY, variables);
-
-  return data?.scripture;
-}
 }
