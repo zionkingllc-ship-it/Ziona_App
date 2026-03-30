@@ -1,7 +1,6 @@
 import { PostCard } from "@/components/post/PostCard";
 import { useFeedStore } from "@/components/store/FeedStore";
 import colors from "@/constants/colors";
-import { Post } from "@/types/post";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -15,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 import { FeedPost } from "@/types/feedTypes";
+import { useViewerStore } from "@/store/useViewerStore";
 
 export default function PostViewerScreen() {
   const { height, width } = useWindowDimensions();
@@ -23,7 +23,7 @@ export default function PostViewerScreen() {
   const feedHeight = height - tabBarHeight;
 
   const { postId, feedKey } = useLocalSearchParams();
-  const { getFeed } = useFeedStore();
+  const { getFeed } = useViewerStore();
 
   const [feed, setFeed] = useState<FeedPost[]>([]);
   const [activePostId, setActivePostId] = useState<string | null>(null);
@@ -66,10 +66,8 @@ export default function PostViewerScreen() {
     },
   ).current;
 
-  /* UPDATED POSTCARD RENDER (matches Feed screen) */
-
   const renderItem = useCallback(
-    ({ item }: { item: FeedPost}) => (
+    ({ item }: { item: FeedPost }) => (
       <PostCard
         post={item}
         isPlaying={item.id === activePostId}

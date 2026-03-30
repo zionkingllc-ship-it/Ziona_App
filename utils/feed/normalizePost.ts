@@ -4,17 +4,54 @@ import { FeedPost } from "@/types/feedTypes";
    FIX BAD URLS
 ========================= */
 
-function fixMediaUrl(url?: string) {
-  if (!url) return url;
- 
-  const parts = url.split("https://storage.googleapis.com/");
+function fixMediaUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+
+  const base = "https://storage.googleapis.com/";
+  const parts = url.split(base);
 
   if (parts.length > 2) {
-    return "https://storage.googleapis.com/" + parts.pop();
+    return base + parts.pop();
   }
 
   return url;
 }
+
+/* =========================
+   SAFE MEDIA BUILDER
+========================= */
+
+function buildMediaItem(m: any): {
+  type: "image" | "video";
+  url: string;
+  thumbnailUrl?: string;
+} | null {
+  const url = fixMediaUrl(m?.url);
+  if (!url) return null;
+
+  const rawThumb = fixMediaUrl(m?.thumbnailUrl);
+
+  const isValidThumb =
+    rawThumb &&
+    !rawThumb.endsWith(".mp4") &&
+    !rawThumb.includes(".mp4?");
+
+  let type: "image" | "video" = "image";
+
+  if (typeof m?.type === "string" && m.type.toLowerCase() === "video") {
+    type = "video";
+  }
+
+  return {
+    type,
+    url,
+    thumbnailUrl: isValidThumb ? rawThumb : undefined,
+  };
+}
+
+/* =========================
+   NORMALIZER
+========================= */
 
 export function normalizePost(p: any): FeedPost | null {
   if (!p?.id || !p?.type) return null;
@@ -62,28 +99,19 @@ export function normalizePost(p: any): FeedPost | null {
   };
 
   /* ================= MEDIA ================= */
-  if (p.type === "MEDIA") { 
+
+  if (p.type === "MEDIA") {
+    /* NEW STRUCTURE (p.media[]) */
     if (Array.isArray(p.media) && p.media.length > 0) {
       const media = p.media
-        .map((m: any) => {
-          const url = fixMediaUrl(m.url);
-          if (!url || !m.type) return null;
-
-          const type = m.type.toLowerCase() === "video" ? "video" : "image";
-
-          return {
-            type,
-            url,
-            thumbnailUrl: m.thumbnailUrl ?? url, // ✅ SAFE DEFAULT
-          };
-        })
+        .map(buildMediaItem)
         .filter(Boolean) as {
         type: "image" | "video";
         url: string;
         thumbnailUrl?: string;
       }[];
 
-      if (media.length === 0) return null;
+      if (!media.length) return null;
 
       const hasVideo = media.some((m) => m.type === "video");
 
@@ -95,25 +123,17 @@ export function normalizePost(p: any): FeedPost | null {
       };
     }
 
+    /* IMAGE (p.image.items) */
     if (p.image?.items?.length) {
       const media = p.image.items
-        .map((i: any) => {
-          const url = fixMediaUrl(i.url);
-          if (!url) return null;
-
-          return {
-            type: "image" as const,
-            url,
-            thumbnailUrl: i.thumbnailUrl ?? url,
-          };
-        })
+        .map((i: any) => buildMediaItem({ ...i, type: "image" }))
         .filter(Boolean) as {
         type: "image";
         url: string;
         thumbnailUrl?: string;
       }[];
 
-      if (media.length === 0) return null;
+      if (!media.length) return null;
 
       return {
         ...base,
@@ -123,10 +143,17 @@ export function normalizePost(p: any): FeedPost | null {
       };
     }
 
-    /* 🔁 FALLBACK: legacy video */
+    /* VIDEO (p.video) */
     if (p.video?.url) {
       const url = fixMediaUrl(p.video.url);
+      const rawThumbnail = fixMediaUrl(p.video.thumbnailUrl);
+
       if (!url) return null;
+
+      const isValidThumbnail =
+        rawThumbnail &&
+        !rawThumbnail.endsWith(".mp4") &&
+        !rawThumbnail.includes(".mp4?");
 
       return {
         ...base,
@@ -136,7 +163,7 @@ export function normalizePost(p: any): FeedPost | null {
           {
             type: "video" as const,
             url,
-            thumbnailUrl: p.video.thumbnailUrl ?? url,
+            thumbnailUrl: isValidThumbnail ? rawThumbnail : undefined,
           },
         ],
       };
@@ -146,13 +173,14 @@ export function normalizePost(p: any): FeedPost | null {
   }
 
   /* ================= TEXT ================= */
+
   if (p.type === "TEXT") {
     const message =
-      typeof p.text === "string" && p.text.trim().length > 0
+      typeof p.text === "string" && p.text.trim()
         ? p.text
         : typeof p.caption === "string"
-          ? p.caption
-          : "";
+        ? p.caption
+        : "";
 
     if (!message && !p.scripture) return null;
 
@@ -160,7 +188,6 @@ export function normalizePost(p: any): FeedPost | null {
       ...base,
       type: "text",
       message,
-
       scripture: p.scripture
         ? {
             book: p.scripture.book,
@@ -175,6 +202,7 @@ export function normalizePost(p: any): FeedPost | null {
   }
 
   /* ================= BIBLE ================= */
+
   if (p.type === "BIBLE") {
     if (!p.scripture) return null;
 

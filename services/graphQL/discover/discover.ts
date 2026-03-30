@@ -1,5 +1,9 @@
 import { graphqlRequest } from "@/services/graphQL/graphqlClient";
 
+/* =========================
+   CATEGORIES
+========================= */
+
 export const GET_DISCOVER_CATEGORIES = `
   query GetDiscoverCategories {
     discoverCategories {
@@ -14,43 +18,101 @@ export const GET_DISCOVER_CATEGORIES = `
   }
 `;
 
-export const GET_FOR_YOU_FEED = `
-  query GetForYouFeed($cursor: String, $limit: Int = 20) {
+/* =========================
+   DISCOVER FEED (USE REAL SHAPE)
+========================= */
+
+export const GET_DISCOVER_FEED = `
+  query GetDiscoverFeed($cursor: String, $limit: Int = 20) {
     forYouFeed(cursor: $cursor, limit: $limit) {
+      hasMore
+      nextCursor
       posts {
         id
         type
         caption
         createdAt
+
         category {
           id
           label
           slug
+          bgColor
+          bdColor
         }
+
+        author {
+          id
+          username
+          avatarUrl
+        }
+
         image {
           items {
             url
             thumbnailUrl
           }
         }
+
         video {
           url
           thumbnailUrl
         }
-        text {
-          message
+
+        text
+
+        scripture {
+          book
+          chapter
+          verseStart
+          verseEnd
+          translation
+          text
+        }
+
+        stats {
+          likesCount
+          commentsCount
+          sharesCount
+          savesCount
+        }
+
+        viewerState {
+          liked
+          saved
+          followingAuthor
+          isOwner
         }
       }
     }
   }
 `;
 
+/* =========================
+   FETCHERS
+========================= */
+
 export async function fetchDiscoverCategories(token?: string) {
   const res = await graphqlRequest(GET_DISCOVER_CATEGORIES, {}, token);
   return res?.discoverCategories ?? [];
 }
 
-export async function fetchDiscoverFeed(token?: string) {
-  const res = await graphqlRequest(GET_FOR_YOU_FEED, {}, token);
-  return res?.forYouFeed?.posts ?? [];
+export async function fetchDiscoverFeed({
+  cursor,
+}: {
+  cursor?: string;
+}) {
+  const res = await graphqlRequest(
+    GET_DISCOVER_FEED,
+    {
+      cursor,
+      limit: 20,
+    }
+  );
+
+  return res?.forYouFeed ?? {
+    posts: [],
+    nextCursor: undefined,
+    hasMore: false,
+  };
 }

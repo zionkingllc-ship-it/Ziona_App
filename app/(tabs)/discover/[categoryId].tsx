@@ -9,13 +9,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, XStack } from "tamagui";
 import { useDiscoverFeed } from "@/hooks/useDiscover";
 import { FeedPost } from "@/types/feedTypes";
- 
-
+import { useViewerStore } from "@/store/useViewerStore";
 
 export default function DiscoverCategoryScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const { width } = useWindowDimensions();
-  const { setFeed } = useFeedStore();
+  const { setFeed } = useViewerStore()
 
   const { posts } = useDiscoverFeed(categoryId);
 
@@ -23,6 +22,8 @@ export default function DiscoverCategoryScreen() {
   const [filter, setFilter] = useState<"all" | "images" | "video" | "text">(
     "all"
   );
+
+  /* ================= FILTER ================= */
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post: FeedPost) => {
@@ -44,6 +45,8 @@ export default function DiscoverCategoryScreen() {
 
   const feedKey = `discover:${categoryId}`;
 
+  /* ================= RENDER ================= */
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
       <View style={{ flex: 1 }}>
@@ -53,6 +56,7 @@ export default function DiscoverCategoryScreen() {
           onBackPress={() => router.back()}
         />
 
+        {/* FILTER BAR */}
         <XStack style={{ paddingHorizontal: 16, marginBottom: 12 }} gap="$2">
           {(["all", "images", "video", "text"] as const).map((f) => (
             <Text
@@ -71,6 +75,7 @@ export default function DiscoverCategoryScreen() {
           ))}
         </XStack>
 
+        {/* GRID */}
         <FlatList
           data={filteredPosts}
           keyExtractor={(item) => item.id}
@@ -83,7 +88,7 @@ export default function DiscoverCategoryScreen() {
                 setFeed(feedKey, filteredPosts);
 
                 router.push({
-                  pathname: "/(tabs)/discover/[postId]",
+                  pathname: "/post/[postId]",
                   params: {
                     postId: item.id,
                     feedKey,
@@ -93,6 +98,7 @@ export default function DiscoverCategoryScreen() {
             />
           )}
           contentContainerStyle={{ paddingHorizontal: 8 }}
+          showsVerticalScrollIndicator={false}
         />
       </View>
     </SafeAreaView>

@@ -25,33 +25,43 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
   /* ================= VIDEO THUMBNAIL ================= */
 
   useEffect(() => {
-    let isMounted = true;
+  let isMounted = true;
 
-    async function loadThumbnail() {
-      if (!isMedia || firstMedia?.type !== "video") return;
+  async function loadThumbnail() {
+    if (!isMedia || firstMedia?.type !== "video") return;
 
-      const videoUrl = firstMedia.url;
-      if (!videoUrl) return;
+    const backendThumb = firstMedia.thumbnailUrl;
 
-      try {
-        const generated = await generateVideoThumbnail(videoUrl);
+    // ❌ ignore bad backend thumbnail
+    const isValidBackend =
+      backendThumb &&
+      !backendThumb.endsWith(".mp4") &&
+      !backendThumb.includes(".mp4?");
 
-        if (generated && isMounted) {
-          setThumbnailUri(generated);
-        }
-      } catch (err) {
-        console.warn("Thumbnail generation failed", err);
-      }
+    if (isValidBackend) {
+      setThumbnailUri(backendThumb);
+      return;
     }
 
-    loadThumbnail();
+    try {
+      const generated = await generateVideoThumbnail(firstMedia.url);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [firstMedia?.url]); // ✅ FIXED dependency
+      if (generated && isMounted) {
+        setThumbnailUri(generated);
+      }
+    } catch (err) {
+      console.warn("Thumbnail generation failed", err);
+    }
+  }
 
-  /* ================= RENDER ================= */
+  loadThumbnail();
+
+  return () => {
+    isMounted = false;
+  };
+}, [firstMedia?.url]);
+
+  /* ================= RENDER MEDIA ================= */
 
   const renderMedia = () => {
     /* IMAGE */
@@ -67,11 +77,13 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
 
     /* VIDEO */
     if (isMedia && firstMedia?.type === "video") {
+      if (!thumbnailUri) {
+        return <View style={{ flex: 1, backgroundColor: "#000" }} />;
+      }
+
       return (
         <Image
-          source={{
-            uri: thumbnailUri ?? firstMedia.url, // ✅ fallback to video url
-          }}
+          source={{ uri: thumbnailUri }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
@@ -94,21 +106,22 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
         <View
           style={{
             flex: 1,
+            backgroundColor: post.category?.bgColor ?? "#181419",
             justifyContent: "center",
             alignItems: "center",
-            padding: 8,
+            padding: 10,
           }}
         >
           <Text
             numberOfLines={3}
             style={{
-              color: "white",
+              color: "#fff",
               fontSize: 12,
               fontWeight: "600",
               textAlign: "center",
             }}
           >
-            {text}
+            {text || "Text Post"}
           </Text>
         </View>
       );
@@ -116,6 +129,8 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
 
     return null;
   };
+
+  /* ================= RENDER ================= */
 
   return (
     <TouchableOpacity

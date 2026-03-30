@@ -1,7 +1,23 @@
-import { fetchDiscoverCategories, fetchDiscoverFeed } from "@/services/graphQL/discover/discover";
 import { useEffect, useState } from "react";
-import { FeedPost } from "@/types/feedTypes";
+import { useInfiniteQuery, InfiniteData } from "@tanstack/react-query";
+
+import {
+  fetchDiscoverCategories,
+  fetchDiscoverFeed,
+} from "@/services/graphQL/discover/discover";
+
 import { normalizePost } from "@/utils/feed/normalizePost";
+import { FeedPost } from "@/types/feedTypes";
+
+/* =========================
+   TYPES
+========================= */
+
+type DiscoverResponse = { 
+  posts: any[];
+  nextCursor?: string;
+  hasMore: boolean;
+};
 
 /* =========================
    CATEGORIES
@@ -25,35 +41,59 @@ export function useDiscoverCategories() {
 ========================= */
 
 export function useDiscoverFeed(categoryId?: string) {
-  const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const query = useInfiniteQuery<
+    DiscoverResponse,
+    Error,
+    InfiniteData<DiscoverResponse>,
+    [string, string | undefined],
+    string | undefined
+  >({
+    queryKey: ["discover", categoryId],
 
-  useEffect(() => {
-    fetchDiscoverFeed()
-      .then((data) => {
-        const rawPosts = data ?? [];
+    queryFn: async ({ pageParam }) => {
+      const res = await fetchDiscoverFeed({
+        cursor: pageParam,
+      });
 
-        const normalized = rawPosts
-          .map((p: any) => normalizePost(p))
-          .filter((p): p is FeedPost => {
-            if (p.type === "media") {
-              return p.media && p.media.length > 0;
-            }
-            return true;
-          });
+      return {
+        posts: res?.posts ?? [],
+        nextCursor: res?.nextCursor,
+        hasMore: res?.hasMore ?? false,
+      };
+    },
 
-        if (!categoryId || categoryId === "all") {
-          setPosts(normalized);
-        } else {
-          setPosts(
-            normalized.filter(
-              (p) => p.category?.id === categoryId
-            )
-          );
+    initialPageParam: undefined,
+
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextCursor : undefined,
+  });
+
+  /* =========================
+     NORMALIZE + FILTER
+  ========================== */
+
+  const posts: FeedPost[] =
+    query.data?.pages
+      ?.flatMap((page) => page.posts)
+      .map((p) => normalizePost(p))
+      .filter((p): p is FeedPost => {
+        if (!p) return false;
+
+        // CATEGORY FILTER
+        if (categoryId && categoryId !== "all") {
+          if (p.category?.id !== categoryId) return false;
         }
-      })
-      .finally(() => setLoading(false));
-  }, [categoryId]);
 
-  return { posts, loading };
+        // MEDIA SAFETY
+        if (p.type === "media") {
+          return Array.isArray(p.media) && p.media.length > 0;
+        }
+
+        return true;
+      }) ?? [];
+
+  return {
+    ...query,
+    posts,
+  };
 }

@@ -90,7 +90,7 @@ export default function PostMedia({
 
   /* ================= TEXT / BIBLE ================= */
   if (post.type === "text" || post.type === "bible") {
-    return <TextPostCard post={post} />;
+    return <TextPostCard post={post} onLike={onLike} />;
   }
 
   return null;

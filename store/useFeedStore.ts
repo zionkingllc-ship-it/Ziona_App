@@ -1,10 +1,15 @@
 import { create } from "zustand";
-import { Post } from "@/types/post";
+import { FeedPost } from "@/types/feedTypes";
 
-export type FeedStatus = "idle" | "loading" | "success" | "empty" | "error";
+export type FeedStatus =
+  | "idle"
+  | "loading"
+  | "success"
+  | "empty"
+  | "error";
 
 interface FeedState {
-  data: Post[];
+  data: FeedPost[]; 
   status: FeedStatus;
   error?: string;
   nextPage?: number;
@@ -22,7 +27,7 @@ interface FeedStore {
 }
 
 const initialState: FeedState = {
-  data: [],
+  data: [], // now FeedPost[]
   status: "idle",
   error: undefined,
   nextPage: 0,
