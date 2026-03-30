@@ -1,4 +1,4 @@
-import { FeedPost, FeedMediaPost } from "@/types/feedTypes";
+import { FeedMediaPost, FeedPost } from "@/types/feedTypes";
 import React from "react";
 import {
   useAnimatedStyle,

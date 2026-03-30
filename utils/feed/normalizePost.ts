@@ -6,12 +6,11 @@ import { FeedPost } from "@/types/feedTypes";
 
 function fixMediaUrl(url?: string) {
   if (!url) return url;
+ 
+  const parts = url.split("https://storage.googleapis.com/");
 
-  const doublePrefix =
-    "https://storage.googleapis.com/ziona-media-dev/https://storage.googleapis.com/";
-
-  if (url.includes(doublePrefix)) {
-    return url.replace("https://storage.googleapis.com/ziona-media-dev/", "");
+  if (parts.length > 2) {
+    return "https://storage.googleapis.com/" + parts.pop();
   }
 
   return url;
@@ -38,8 +37,8 @@ export function normalizePost(p: any): FeedPost | null {
           id: p.category.id,
           label: p.category.label,
           slug: p.category.slug,
-          bgColor: p.category.bgColor ?? "#df0404",
-          bdColor: p.category.bdColor ?? "#d80606",
+          bgColor: p.category.bgColor ?? "#e9d0d0",
+          bdColor: p.category.bdColor ?? "#f59797",
         }
       : undefined,
 
@@ -63,7 +62,39 @@ export function normalizePost(p: any): FeedPost | null {
   };
 
   /* ================= MEDIA ================= */
-  if (p.type === "MEDIA") {
+  if (p.type === "MEDIA") { 
+    if (Array.isArray(p.media) && p.media.length > 0) {
+      const media = p.media
+        .map((m: any) => {
+          const url = fixMediaUrl(m.url);
+          if (!url || !m.type) return null;
+
+          const type = m.type.toLowerCase() === "video" ? "video" : "image";
+
+          return {
+            type,
+            url,
+            thumbnailUrl: m.thumbnailUrl ?? url, // ✅ SAFE DEFAULT
+          };
+        })
+        .filter(Boolean) as {
+        type: "image" | "video";
+        url: string;
+        thumbnailUrl?: string;
+      }[];
+
+      if (media.length === 0) return null;
+
+      const hasVideo = media.some((m) => m.type === "video");
+
+      return {
+        ...base,
+        type: "media",
+        mediaType: hasVideo ? "video" : "image",
+        media,
+      };
+    }
+
     if (p.image?.items?.length) {
       const media = p.image.items
         .map((i: any) => {
@@ -73,9 +104,14 @@ export function normalizePost(p: any): FeedPost | null {
           return {
             type: "image" as const,
             url,
+            thumbnailUrl: i.thumbnailUrl ?? url,
           };
         })
-        .filter(Boolean) as { type: "image"; url: string }[];
+        .filter(Boolean) as {
+        type: "image";
+        url: string;
+        thumbnailUrl?: string;
+      }[];
 
       if (media.length === 0) return null;
 
@@ -87,6 +123,7 @@ export function normalizePost(p: any): FeedPost | null {
       };
     }
 
+    /* 🔁 FALLBACK: legacy video */
     if (p.video?.url) {
       const url = fixMediaUrl(p.video.url);
       if (!url) return null;
@@ -99,6 +136,7 @@ export function normalizePost(p: any): FeedPost | null {
           {
             type: "video" as const,
             url,
+            thumbnailUrl: p.video.thumbnailUrl ?? url,
           },
         ],
       };
@@ -113,8 +151,8 @@ export function normalizePost(p: any): FeedPost | null {
       typeof p.text === "string" && p.text.trim().length > 0
         ? p.text
         : typeof p.caption === "string"
-        ? p.caption
-        : "";
+          ? p.caption
+          : "";
 
     if (!message && !p.scripture) return null;
 

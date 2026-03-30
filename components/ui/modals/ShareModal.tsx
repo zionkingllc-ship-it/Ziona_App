@@ -7,7 +7,7 @@ import {
   shareToWhatsApp,
   withHaptic,
 } from "@/services/share/services";
-import { Post } from "@/types/post";
+import { FeedPost } from "@/types/feedTypes";
 import React, { useMemo } from "react";
 import { FlatList, Modal, Pressable } from "react-native";
 import { Image, Text, YStack } from "tamagui";
@@ -15,32 +15,11 @@ import { Image, Text, YStack } from "tamagui";
 type Props = {
   visible: boolean;
   onClose: () => void;
-  post: Post;
+  post: FeedPost;
 };
 
 export default function ShareModal({ visible, onClose, post }: Props) {
   const url = buildPostUrl(post.id);
-
-  const friends = useMemo(
-    () => [
-      {
-        id: "1",
-        name: "Daniel",
-        avatar: require("@/assets/images/profile.png"),
-      },
-      {
-        id: "2",
-        name: "Miriam",
-        avatar: require("@/assets/images/profile.png"),
-      },
-      {
-        id: "3",
-        name: "Elijah",
-        avatar: require("@/assets/images/profile.png"),
-      },
-    ],
-    [],
-  );
 
   const shareTargets = useMemo(
     () => [
@@ -68,7 +47,6 @@ export default function ShareModal({ visible, onClose, post }: Props) {
         icon: require("@/assets/images/gmailIcon.png"),
         action: () => shareToMail(url),
       },
-
       {
         id: "more",
         label: "More",
@@ -76,7 +54,7 @@ export default function ShareModal({ visible, onClose, post }: Props) {
         action: () => openNativeShare(post),
       },
     ],
-    [url],
+    [url]
   );
 
   return (
@@ -91,58 +69,18 @@ export default function ShareModal({ visible, onClose, post }: Props) {
           bottom={0}
           width="100%"
         >
-          <Text
-            fontSize={18}
-            fontFamily={"$body"}
-            fontWeight="600"
-            marginBottom="$3"
-            alignSelf="center"
-          >
+          <Text fontSize={18} fontWeight="600" alignSelf="center">
             Share
           </Text>
 
-          {/* FRIENDS LIST */}
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={friends}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <YStack alignItems="center" marginRight={16}>
-                <Image
-                  source={item.avatar}
-                  width={55}
-                  height={55}
-                  borderRadius={28}
-                />
-                <Text
-                  fontSize={12}
-                  fontFamily={"$body"}
-                  marginTop={4}
-                  color={"#4E4252"}
-                >
-                  {item.name}
-                </Text>
-              </YStack>
-            )}
-          />
-
-          {/* SHARE TARGETS GRID */}
           <FlatList
             data={shareTargets}
             horizontal
-            scrollEnabled
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item.id}
-            style={{ marginTop: 20 }}
             renderItem={({ item }) => (
               <Pressable
-                style={{
-                  flex: 1,
-                  alignItems: "center",
-                  marginBottom: 20,
-                  marginRight: 20,
-                }}
+                style={{ alignItems: "center", marginRight: 20 }}
                 onPress={() =>
                   withHaptic(async () => {
                     await item.action();
@@ -151,12 +89,7 @@ export default function ShareModal({ visible, onClose, post }: Props) {
                 }
               >
                 <Image source={item.icon} width={45} height={45} />
-                <Text
-                  fontSize={12}
-                  fontFamily={"$body"}
-                  marginTop={6}
-                  color={"#4E4252"}
-                >
+                <Text fontSize={12} marginTop={6}>
                   {item.label}
                 </Text>
               </Pressable>

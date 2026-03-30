@@ -70,10 +70,13 @@ export default function CreateTextScreen() {
   if (!draft) return null;
 
   /* =========================
-     DERIVED DATA
+     DERIVED DATA (FIXED)
   ========================= */
 
-  const verse = draft.type === "BIBLE" ? draft.bibleVerse : undefined;
+  const verse =
+    draft.type === "TEXT" || draft.type === "BIBLE"
+      ? draft.bibleVerse
+      : undefined;
 
   const translation = verse?.translation ?? "";
   const book = verse?.book ?? "";
@@ -87,8 +90,8 @@ export default function CreateTextScreen() {
       ? buildReference(book, chapter, verses)
       : "";
 
-  const textValue: string =
-    draft.type === "TEXT" || draft.type === "BIBLE" ? (draft.text ?? "") : "";
+  // ✅ FIX: TEXT only
+  const textValue: string = draft.type === "TEXT" ? (draft.text ?? "") : "";
 
   const cardColor = draft.category?.bgColor ?? "#E6E2C5";
 
@@ -118,7 +121,7 @@ export default function CreateTextScreen() {
     try {
       setUploading(true);
 
-      await publishDraftPost(draft, queryClient); 
+      await publishDraftPost(draft, queryClient);
 
       feedback.showSuccess();
     } catch (error: any) {
@@ -133,6 +136,7 @@ export default function CreateTextScreen() {
   ========================= */
 
   const combinedLength = (textValue?.length ?? 0) + (verseText?.length ?? 0);
+
   const remaining = MAX_LENGTH - combinedLength;
 
   return (
@@ -223,7 +227,7 @@ export default function CreateTextScreen() {
 
               if (newVerseLength + currentTextLength > MAX_LENGTH) {
                 feedback.showError(
-                  "Selected bible verse too long, Please select fewer verses to stay under 300 characters",
+                  "Selected bible verse too long, Please select fewer verses to stay under 500 characters",
                 );
                 return;
               }

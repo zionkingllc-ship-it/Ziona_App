@@ -1,9 +1,9 @@
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useFocusEffect } from "@react-navigation/native";
+import { InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, FlatList, Text, ViewToken } from "react-native";
 import { View } from "tamagui";
-import { InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { useFocusEffect } from "@react-navigation/native";
 
 import FeedHeader from "@/components/feedHeader";
 import { PostCard } from "@/components/post/PostCard";
@@ -23,16 +23,16 @@ export default function Feed() {
   const [containerHeight, setContainerHeight] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
 
+  const [pausedPostId, setPausedPostId] = useState<string | null>(null);
   const forYouQuery = useForYouFeed();
   const followingQuery = useFollowingFeed();
   const query = feedType === "forYou" ? forYouQuery : followingQuery;
 
-  /* 🔥 SINGLE CLEAN FOCUS EFFECT */
   useFocusEffect(
     useCallback(() => {
       queryClient.invalidateQueries({ queryKey: ["feed"], exact: false });
       setActivePostId(null);
-    }, [queryClient])
+    }, [queryClient]),
   );
 
   const pages =
@@ -64,7 +64,7 @@ export default function Feed() {
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (!viewableItems.length) return;
-
+      setPausedPostId(null);
       const current = viewableItems[0].item;
       if (!current?.id) return;
 
@@ -76,21 +76,28 @@ export default function Feed() {
         if (data[index + 1]) preloadPostMedia(data[index + 1] as any);
         if (data[index - 1]) preloadPostMedia(data[index - 1] as any);
       }
-    }
+    },
   ).current;
 
-  const renderItem = useCallback(
-    ({ item }: { item: FeedPost }) => (
-      <PostCard
-        post={item}
-        isPlaying={item.id === activePostId}
-        screenHeight={containerHeight}
-        screenWidth={containerWidth}
-        tabBarHeight={tabBarHeight}
-      />
-    ),
-    [activePostId, containerHeight, containerWidth, tabBarHeight]
-  );
+const renderItem = useCallback(
+  ({ item }: { item: FeedPost }) => (
+    <PostCard
+      post={item}
+      isPlaying={
+        item.id === activePostId && item.id !== pausedPostId
+      }
+      onTogglePlay={() => {
+        setPausedPostId((prev) =>
+          prev === item.id ? null : item.id
+        );
+      }}
+      screenHeight={containerHeight}
+      screenWidth={containerWidth}
+      tabBarHeight={tabBarHeight}
+    />
+  ),
+  [activePostId, pausedPostId, containerHeight, containerWidth, tabBarHeight]
+);
 
   if (query.isLoading) {
     return (

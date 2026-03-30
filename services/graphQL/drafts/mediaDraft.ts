@@ -49,6 +49,21 @@ export async function publishMediaPost(
   if (!draft.media?.items?.length) throw new Error("Media is required");
 
   /* =========================
+     🔥 DERIVE MEDIA TYPE (SOURCE OF TRUTH FIX)
+  ========================= */
+
+  const firstItem = draft.media.items[0];
+
+  if (!firstItem?.type) {
+    throw new Error("Invalid media item: missing type");
+  }
+
+  const derivedMediaType: "IMAGE" | "VIDEO" =
+    firstItem.type === "VIDEO" ? "VIDEO" : "IMAGE";
+
+  console.log("Derived mediaType:", derivedMediaType);
+
+  /* =========================
      MEDIA UPLOAD
   ========================= */
 
@@ -79,7 +94,6 @@ export async function publishMediaPost(
         fileType
       );
 
-      /* 🔥 REAL FIX */
       const publicUrl = extractPublicUrl(upload.uploadUrl);
 
       return publicUrl;
@@ -95,12 +109,12 @@ export async function publishMediaPost(
   console.log("All media uploaded. URLs:", mediaUrls);
 
   /* =========================
-     FINAL PAYLOAD
+     FINAL PAYLOAD (FIXED)
   ========================= */
 
   const input: any = {
     postType: "MEDIA",
-    mediaType: draft.mediaType.toUpperCase(),
+    mediaType: derivedMediaType, // ✅ FIXED (DO NOT TRUST draft.mediaType)
     category: String(draft.category.id),
     mediaUrls,
   };

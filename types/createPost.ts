@@ -32,6 +32,7 @@ export type TextDraft = {
   type: "TEXT";
   text: string;
   category: Category;
+  bibleVerse?: BibleVerse; 
 };
 
 export type MediaDraft = {
@@ -46,8 +47,11 @@ export type BibleDraft = {
   type: "BIBLE";
   bibleVerse: BibleVerse;
   category: Category;
-  text?: string;
 };
+
+/* =========================
+   UNION
+========================= */
 
 export type CreatePostDraft =
   | TextDraft

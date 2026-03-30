@@ -35,7 +35,7 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
   startDraft: (type, mediaType) =>
     set((state) => {
       const prevText =
-        state.draft?.type === "TEXT" || state.draft?.type === "BIBLE"
+        state.draft?.type === "TEXT"
           ? state.draft.text ?? ""
           : "";
 
@@ -72,11 +72,8 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
               state.draft?.type === "BIBLE"
                 ? state.draft.bibleVerse
                 : ({} as BibleVerse),
-            text:
-              state.draft?.type === "TEXT" ||
-              state.draft?.type === "BIBLE"
-                ? state.draft.text ?? ""
-                : "",
+
+            //  NO TEXT IN BIBLE POSTS
             category: state.draft?.category ?? ({} as Category),
           },
         };
@@ -101,12 +98,7 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
         };
       }
 
-      if (state.draft.type === "BIBLE") {
-        return {
-          draft: { ...state.draft, text },
-        };
-      }
-
+      // BIBLE should NOT accept text
       return state;
     }),
 
@@ -150,17 +142,17 @@ export const useCreatePostStore = create<CreatePostState>((set) => ({
     set((state) => {
       if (!state.draft) return state;
 
+      /* ================= TEXT ================= */
       if (state.draft.type === "TEXT") {
         return {
           draft: {
-            type: "BIBLE",
-            text: state.draft.text,
-            bibleVerse: bible,
-            category: state.draft.category,
+            ...state.draft,
+            bibleVerse: bible, // ✅ ADD, DO NOT SWITCH TYPE
           },
         };
       }
 
+      /* ================= BIBLE ================= */
       if (state.draft.type === "BIBLE") {
         return {
           draft: {

@@ -1,8 +1,8 @@
 import { Share, Linking } from "react-native";
 import Clipboard from "@react-native-clipboard/clipboard";
 import * as Haptics from "expo-haptics";
-import { Post } from "@/types/post";
-
+import { Post } from "@/types/post"; 
+import { SharePayload } from "./adapter";
 const DOMAIN = "https://dev.ziona.app";
 
 export function buildPostUrl(postId: string) {
@@ -42,13 +42,12 @@ export function copyLink(url: string) {
   Clipboard.setString(url);
 }
 
-export async function openNativeShare(post: Post) {
-  const url = buildPostUrl(post.id);
+export async function openNativeShare(post: SharePayload) {
+  const message =
+    post.text || post.mediaUrl || "Check this out";
 
   await Share.share({
-    title: "Shared from Ziona",
-    message: `View this post on Ziona:\n${url}`,
-    url,
+    message,
   });
 }
 

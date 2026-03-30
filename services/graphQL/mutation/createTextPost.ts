@@ -28,7 +28,7 @@ mutation CreatePost(
     post {
       id
       type
-      text     
+      text
     }
     error {
       code
@@ -40,7 +40,6 @@ mutation CreatePost(
 
 export async function createTextPost(variables: {
   postType: "TEXT" | "BIBLE";
-
   message?: string;
   category: string;
 
@@ -54,7 +53,10 @@ export async function createTextPost(variables: {
 
   const payload = {
     postType: variables.postType,
-    caption: variables.message, 
+
+    // ✅ MAP MESSAGE → CAPTION (API REQUIREMENT)
+    caption: variables.message ?? null,
+
     category: variables.category,
 
     scriptureBook: variables.scriptureBook,
@@ -87,7 +89,7 @@ export async function createTextPost(variables: {
     ...data.createPost,
     post: {
       ...post,
-      text: post.text ?? "", 
+      text: post.text ?? "",
     },
   };
 }

@@ -82,5 +82,5 @@ export type FeedMediaPost = BaseFeedPost & {
 
 export type FeedBiblePost = BaseFeedPost & {
   type: "bible";
-  scripture: Scripture; // ✅ REQUIRED
+  scripture: Scripture;
 };
