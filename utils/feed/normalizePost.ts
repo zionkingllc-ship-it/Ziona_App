@@ -20,9 +20,6 @@ function fixMediaUrl(url?: string) {
 export function normalizePost(p: any): FeedPost | null {
   if (!p?.id || !p?.type) return null;
 
-  console.log("TEXT LENGTH:", p.text?.length);
-console.log("TEXT VALUE:", p.text);
-
   const base = {
     id: p.id,
     createdAt: p.createdAt,
@@ -41,8 +38,8 @@ console.log("TEXT VALUE:", p.text);
           id: p.category.id,
           label: p.category.label,
           slug: p.category.slug,
-          bgColor: p.category.bgColor ?? "#df0404", 
-          bdColor: p.category.bdColor ?? "#d80606", 
+          bgColor: p.category.bgColor ?? "#df0404",
+          bdColor: p.category.bdColor ?? "#d80606",
         }
       : undefined,
 
@@ -111,28 +108,34 @@ console.log("TEXT VALUE:", p.text);
   }
 
   /* ================= TEXT ================= */
-if (p.type === "TEXT") {
-  const message = p.text;
+  if (p.type === "TEXT") {
+    const message =
+      typeof p.text === "string" && p.text.trim().length > 0
+        ? p.text
+        : typeof p.caption === "string"
+        ? p.caption
+        : "";
 
-  if (!message && !p.scripture) return null;
+    if (!message && !p.scripture) return null;
 
-  return {
-    ...base,
-    type: "text",
-    message: message ?? "", // always string
+    return {
+      ...base,
+      type: "text",
+      message,
 
-    scripture: p.scripture
-      ? {
-          book: p.scripture.book,
-          chapter: p.scripture.chapter,
-          verseStart: p.scripture.verseStart,
-          verseEnd: p.scripture.verseEnd,
-          translation: p.scripture.translation,
-          text: p.scripture.text,
-        }
-      : undefined,
-  };
-}
+      scripture: p.scripture
+        ? {
+            book: p.scripture.book,
+            chapter: p.scripture.chapter,
+            verseStart: p.scripture.verseStart,
+            verseEnd: p.scripture.verseEnd,
+            translation: p.scripture.translation,
+            text: p.scripture.text,
+          }
+        : undefined,
+    };
+  }
+
   /* ================= BIBLE ================= */
   if (p.type === "BIBLE") {
     if (!p.scripture) return null;
@@ -151,6 +154,5 @@ if (p.type === "TEXT") {
     };
   }
 
-  /* ================= FALLBACK ================= */
   return null;
 }

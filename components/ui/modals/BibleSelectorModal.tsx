@@ -167,7 +167,7 @@ export default function BibleSelectorModal({
 
     const cached: any = queryClient.getQueryData(key);
 
-    if (cached?.verses) {
+    if (cached?.verses && cached.verses.length > 0) {
       setVerses(cached.verses);
       return;
     }
@@ -259,13 +259,23 @@ export default function BibleSelectorModal({
     );
   }
 
-  function selectVerse(v: number) {
-    if (loadingVerses || verses.length === 0) return;
+function selectVerse(v: number) {
+  if (loadingVerses || verses.length === 0) return;
 
+  // FIRST selection → open reader immediately
+  if (selected.length === 0) {
     setSelected([v]);
-    setSearch("");
     setReaderOpen(true);
+    return;
   }
+
+  // AFTER reader is open → just toggle
+  setSelected((prev) =>
+    prev.includes(v)
+      ? prev.filter((n) => n !== v)
+      : [...prev, v],
+  );
+}
 
   return (
     <BaseModal visible={visible} onClose={onClose} alignBottom>
@@ -431,6 +441,8 @@ export default function BibleSelectorModal({
         onClose={() => setReaderOpen(false)}
         onDone={(numbers) => {
           const ordered = [...numbers].sort((a, b) => a - b);
+          const verseStart = ordered[0];
+          const verseEnd = ordered[ordered.length - 1];
 
           if (!chapter || !book || ordered.length === 0) return;
 

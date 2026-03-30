@@ -30,26 +30,27 @@ export class GraphqlBibleRepository implements BibleRepository {
     version: string;
   }) {
     const QUERY = `
-      query GetFullChapter($book: String!, $chapter: Int!) {
-        scripture(
-          book: $book
-          chapter: $chapter
-        ) {
-          book
-          chapter
-          verses {
-            number
-            text
-          }
-        }
-      }
-    `;
+query GetFullChapter($book: String!, $chapter: Int!, $translation: String!) {
+  scripture(
+    book: $book
+    chapter: $chapter
+    translation: $translation
+  ) {
+    book
+    chapter
+    verses {
+      number
+      text
+    }
+  }
+}
+`;
 
     const variables = {
       book: params.book,
       chapter: params.chapter,
+      translation: params.version,
     };
-
     const data = await graphqlRequest(QUERY, variables);
 
     if (!data?.scripture) {
@@ -67,10 +68,8 @@ export class GraphqlBibleRepository implements BibleRepository {
   async getVerses(
     translation: string,
     book: string,
-    chapter: number
+    chapter: number,
   ): Promise<BibleVerse[]> {
-
-
     const scripture = await this.getScripture({
       book,
       chapter,
