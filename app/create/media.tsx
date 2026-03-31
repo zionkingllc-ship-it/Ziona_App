@@ -225,11 +225,11 @@ export default function CreateMediaScreen() {
         />
       </XStack>
 
-      <YStack marginTop="auto" marginBottom={hp(4)}>
+      <YStack marginTop={hp(7)} marginBottom={hp(4)}>
         <SimpleButton
           text="Preview"
           onPress={() => router.push("/create/mediaPreview")}
-          disabled={!mediaDraft.category || mediaItems.length === 0}
+          disabled={!mediaDraft.category.id || mediaItems.length === 0}
           color={colors.primary}
           textColor={colors.buttonText}
         />

@@ -3,12 +3,14 @@ import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
 import { preloadPostMedia } from "@/helpers/preloadMedia";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
+import { usePostActionsStore } from "@/store/usePostActionStore";
 import { FeedPost } from "@/types/feedTypes";
 import { normalizePost } from "@/utils/feed/normalizePost";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import { InfiniteData, useQueryClient } from "@tanstack/react-query";
-import React,{ useCallback, useEffect, useRef, useState } from "react";
+import { mergePostState } from "@/utils/post/mergePostState";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
@@ -16,7 +18,7 @@ import {
   Text,
   ViewToken,
 } from "react-native";
-import { View } from "tamagui"; 
+import { View } from "tamagui";
 
 export default function Feed() {
   const tabBarHeight = useBottomTabBarHeight();
@@ -32,18 +34,20 @@ export default function Feed() {
   const forYouQuery = useForYouFeed();
   const followingQuery = useFollowingFeed();
   const query = feedType === "forYou" ? forYouQuery : followingQuery;
+  const likedMap = usePostActionsStore((s) => s.likedPosts);
+  const savedMap = usePostActionsStore((s) => s.savedPosts);
 
   useFocusEffect(
-  React.useCallback(() => {
-    return () => { 
-      setActivePostId(null);
-    };
-  }, [])
-);
+    React.useCallback(() => {
+      return () => {
+        setActivePostId(null);
+      };
+    }, []),
+  );
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
-      if (state !== "active") { 
+      if (state !== "active") {
         setActivePostId(null);
       }
     });
@@ -62,18 +66,21 @@ export default function Feed() {
   const pages =
     (query.data as InfiniteData<{ posts: any[] }> | undefined)?.pages ?? [];
 
-  const data: FeedPost[] = pages
-    .flatMap((page) => page.posts ?? [])
-    .map((p) => normalizePost(p))
-    .filter((p): p is FeedPost => {
-      if (!p) return false;
+const data: FeedPost[] = pages
+  .flatMap((page) => page.posts ?? [])
+  .map((p) => normalizePost(p))
+  .filter((p): p is FeedPost => {
+    if (!p) return false;
 
-      if (p.type === "media") {
-        return Array.isArray(p.media) && p.media.length > 0;
-      }
+    if (p.type === "media") {
+      return Array.isArray(p.media) && p.media.length > 0;
+    }
 
-      return true;
-    });
+    return true;
+  })
+  .map((post) =>
+    mergePostState(post, likedMap[post.id], savedMap[post.id])
+  );
 
   useEffect(() => {
     setActivePostId(null);

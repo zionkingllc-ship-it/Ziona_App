@@ -1,19 +1,12 @@
 import { Stack } from "expo-router";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function CreateLayout() {
   return (
-    <SafeAreaProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="media" />
-        <Stack.Screen name="text" />
-        <Stack.Screen name="CreateBiblePostScreen" />
-      </Stack>
-    </SafeAreaProvider>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_right",
+      }}
+    />
   );
 }

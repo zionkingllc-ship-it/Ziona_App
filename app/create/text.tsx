@@ -90,7 +90,7 @@ export default function CreateTextScreen() {
       ? buildReference(book, chapter, verses)
       : "";
 
-  // ✅ FIX: TEXT only
+  
   const textValue: string = draft.type === "TEXT" ? (draft.text ?? "") : "";
 
   const cardColor = draft.category?.bgColor ?? "#E6E2C5";

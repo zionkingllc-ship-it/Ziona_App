@@ -56,52 +56,49 @@ function buildMediaItem(m: any): {
 export function normalizePost(p: any): FeedPost | null {
   if (!p?.id || !p?.type) return null;
 
-  const base = {
-    id: p.id,
-    createdAt: p.createdAt,
-    caption: p.caption ?? undefined,
+ const base = {
+  id: p.id,
+  createdAt: p.createdAt,
 
-    author: p.author
-      ? {
-          id: p.author.id,
-          username: p.author.username,
-          avatarUrl: p.author.avatarUrl ?? undefined,
-        }
-      : undefined,
+  author: p.author
+    ? {
+        id: p.author.id,
+        username: p.author.username,
+        avatarUrl: p.author.avatarUrl ?? undefined,
+      }
+    : undefined,
 
-    category: p.category
-      ? {
-          id: p.category.id,
-          label: p.category.label,
-          slug: p.category.slug,
-          bgColor: p.category.bgColor ?? "#e9d0d0",
-          bdColor: p.category.bdColor ?? "#f59797",
-        }
-      : undefined,
+  category: p.category
+    ? {
+        id: p.category.id,
+        label: p.category.label,
+        slug: p.category.slug,
+        bgColor: p.category.bgColor ?? "#e9d0d0",
+        bdColor: p.category.bdColor ?? "#f59797",
+      }
+    : undefined,
 
-    stats: p.stats
-      ? {
-          likesCount: p.stats.likesCount ?? 0,
-          commentsCount: p.stats.commentsCount ?? 0,
-          sharesCount: p.stats.sharesCount ?? 0,
-          savesCount: p.stats.savesCount ?? 0,
-        }
-      : undefined,
+  stats: p.stats
+    ? {
+        likesCount: p.stats.likesCount ?? 0,
+        commentsCount: p.stats.commentsCount ?? 0,
+        sharesCount: p.stats.sharesCount ?? 0,
+        savesCount: p.stats.savesCount ?? 0,
+      }
+    : undefined,
 
-    viewerState: p.viewerState
-      ? {
-          liked: p.viewerState.liked ?? false,
-          saved: p.viewerState.saved ?? false,
-          followingAuthor: p.viewerState.followingAuthor ?? false,
-          isOwner: p.viewerState.isOwner ?? false,
-        }
-      : undefined,
-  };
-
+  viewerState: p.viewerState
+    ? {
+        liked: p.viewerState.liked ?? false,
+        saved: p.viewerState.saved ?? false,
+        followingAuthor: p.viewerState.followingAuthor ?? false,
+        isOwner: p.viewerState.isOwner ?? false,
+      }
+    : undefined,
+};
   /* ================= MEDIA ================= */
 
   if (p.type === "MEDIA") {
-    /* NEW STRUCTURE (p.media[]) */
     if (Array.isArray(p.media) && p.media.length > 0) {
       const media = p.media
         .map(buildMediaItem)
@@ -178,8 +175,6 @@ export function normalizePost(p: any): FeedPost | null {
     const message =
       typeof p.text === "string" && p.text.trim()
         ? p.text
-        : typeof p.caption === "string"
-        ? p.caption
         : "";
 
     if (!message && !p.scripture) return null;
