@@ -14,6 +14,13 @@ export default function DiscoverScreen() {
 
   const { categories, loading } = useDiscoverCategories();
 
+  const handleCategoryPress = (categoryId: string) => {
+    router.push({
+      pathname: "/(tabs)/discover/[categoryId]",
+      params: { categoryId },
+    });
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
       <YStack flex={1}>
@@ -26,12 +33,7 @@ export default function DiscoverScreen() {
         ) : (
           <CategoryGrid
             categories={categories}
-            onCategoryPress={(categoryId) =>
-              router.push({
-                pathname: "/(tabs)/discover/[categoryId]",
-                params: { categoryId },
-              })
-            }
+            onCategoryPress={handleCategoryPress}
           />
         )}
       </YStack>

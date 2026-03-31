@@ -1,8 +1,9 @@
 import { Stack } from "expo-router";
 
-export default function FeedLayout() {
+export default function DiscoverCategoryLayout() {
+ 
 
-  return (
+    return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
     </Stack>

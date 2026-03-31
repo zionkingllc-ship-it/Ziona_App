@@ -1,6 +1,5 @@
 import PostThumbnail from "@/components/discover/PostThumbnail";
 import SearchHeader from "@/components/SearchHeader";
-import { useFeedStore } from "@/components/store/FeedStore";
 import colors from "@/constants/colors";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
@@ -9,21 +8,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, XStack } from "tamagui";
 import { useDiscoverFeed } from "@/hooks/useDiscover";
 import { FeedPost } from "@/types/feedTypes";
-import { useViewerStore } from "@/store/useViewerStore";
 
 export default function DiscoverCategoryScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const { width } = useWindowDimensions();
-  const { setFeed } = useViewerStore()
 
   const { posts } = useDiscoverFeed(categoryId);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filter, setFilter] = useState<"all" | "images" | "video" | "text">(
-    "all"
-  );
-
-  /* ================= FILTER ================= */
+  const [filter, setFilter] = useState<
+    "all" | "images" | "video" | "text"
+  >("all");
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post: FeedPost) => {
@@ -43,10 +38,6 @@ export default function DiscoverCategoryScreen() {
     });
   }, [posts, filter]);
 
-  const feedKey = `discover:${categoryId}`;
-
-  /* ================= RENDER ================= */
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
       <View style={{ flex: 1 }}>
@@ -56,7 +47,6 @@ export default function DiscoverCategoryScreen() {
           onBackPress={() => router.back()}
         />
 
-        {/* FILTER BAR */}
         <XStack style={{ paddingHorizontal: 16, marginBottom: 12 }} gap="$2">
           {(["all", "images", "video", "text"] as const).map((f) => (
             <Text
@@ -75,7 +65,6 @@ export default function DiscoverCategoryScreen() {
           ))}
         </XStack>
 
-        {/* GRID */}
         <FlatList
           data={filteredPosts}
           keyExtractor={(item) => item.id}
@@ -85,20 +74,17 @@ export default function DiscoverCategoryScreen() {
               post={item}
               size={width / 3 - 9}
               onPress={() => {
-                setFeed(feedKey, filteredPosts);
-
                 router.push({
-                  pathname: "/post/[postId]",
+                  pathname: `/(tabs)/discover/post/${item.id}`,
                   params: {
-                    postId: item.id,
-                    feedKey,
+                    categoryId,
+                    filter,  
                   },
                 });
               }}
             />
           )}
           contentContainerStyle={{ paddingHorizontal: 8 }}
-          showsVerticalScrollIndicator={false}
         />
       </View>
     </SafeAreaView>
