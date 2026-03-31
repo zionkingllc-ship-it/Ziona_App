@@ -1,19 +1,19 @@
+import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useInfiniteQuery, InfiniteData } from "@tanstack/react-query";
 
 import {
   fetchDiscoverCategories,
   fetchDiscoverFeed,
 } from "@/services/graphQL/discover/discover";
 
-import { normalizePost } from "@/utils/feed/normalizePost";
 import { FeedPost } from "@/types/feedTypes";
+import { normalizePost } from "@/utils/feed/normalizePost";
 
 /* =========================
    TYPES
 ========================= */
 
-type DiscoverResponse = { 
+type DiscoverResponse = {
   posts: any[];
   nextCursor?: string;
   hasMore: boolean;
@@ -80,7 +80,9 @@ export function useDiscoverFeed(categoryId?: string) {
         if (!p) return false;
 
         // CATEGORY FILTER
-        if (categoryId && categoryId !== "all") {
+        const isAllCategory = categoryId === "all" || categoryId === "1"; // backend "All"
+
+        if (!isAllCategory && categoryId) {
           if (p.category?.id !== categoryId) return false;
         }
 

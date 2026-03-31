@@ -1,10 +1,3 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useFocusEffect } from "@react-navigation/native";
-import { InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Text, ViewToken } from "react-native";
-import { View } from "tamagui";
-
 import FeedHeader from "@/components/feedHeader";
 import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
@@ -12,6 +5,18 @@ import { preloadPostMedia } from "@/helpers/preloadMedia";
 import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
 import { FeedPost } from "@/types/feedTypes";
 import { normalizePost } from "@/utils/feed/normalizePost";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useFocusEffect } from "@react-navigation/native";
+import { InfiniteData, useQueryClient } from "@tanstack/react-query";
+import React,{ useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  AppState,
+  FlatList,
+  Text,
+  ViewToken,
+} from "react-native";
+import { View } from "tamagui"; 
 
 export default function Feed() {
   const tabBarHeight = useBottomTabBarHeight();
@@ -29,8 +34,27 @@ export default function Feed() {
   const query = feedType === "forYou" ? forYouQuery : followingQuery;
 
   useFocusEffect(
+  React.useCallback(() => {
+    return () => { 
+      setActivePostId(null);
+    };
+  }, [])
+);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") { 
+        setActivePostId(null);
+      }
+    });
+
+    return () => sub.remove();
+  }, []);
+
+  useFocusEffect(
     useCallback(() => {
       queryClient.invalidateQueries({ queryKey: ["feed"], exact: false });
+
       setActivePostId(null);
     }, [queryClient]),
   );
@@ -79,25 +103,21 @@ export default function Feed() {
     },
   ).current;
 
-const renderItem = useCallback(
-  ({ item }: { item: FeedPost }) => (
-    <PostCard
-      post={item}
-      isPlaying={
-        item.id === activePostId && item.id !== pausedPostId
-      }
-      onTogglePlay={() => {
-        setPausedPostId((prev) =>
-          prev === item.id ? null : item.id
-        );
-      }}
-      screenHeight={containerHeight}
-      screenWidth={containerWidth}
-      tabBarHeight={tabBarHeight}
-    />
-  ),
-  [activePostId, pausedPostId, containerHeight, containerWidth, tabBarHeight]
-);
+  const renderItem = useCallback(
+    ({ item }: { item: FeedPost }) => (
+      <PostCard
+        post={item}
+        isPlaying={item.id === activePostId && item.id !== pausedPostId}
+        onTogglePlay={() => {
+          setPausedPostId((prev) => (prev === item.id ? null : item.id));
+        }}
+        screenHeight={containerHeight}
+        screenWidth={containerWidth}
+        tabBarHeight={tabBarHeight}
+      />
+    ),
+    [activePostId, pausedPostId, containerHeight, containerWidth, tabBarHeight],
+  );
 
   if (query.isLoading) {
     return (

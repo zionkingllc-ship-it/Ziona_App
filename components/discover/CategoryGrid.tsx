@@ -17,7 +17,7 @@ export default function CategoryGrid({ categories, onCategoryPress }: Props) {
       renderItem={({ item }) => (
         <CategoryCard
           category={item}
-          onPress={() => onCategoryPress(item.slug)}
+          onPress={() => onCategoryPress(item.id)}
         />
       )}
       showsVerticalScrollIndicator={false}

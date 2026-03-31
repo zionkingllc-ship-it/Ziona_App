@@ -28,11 +28,15 @@ export default function CategoryCard({ category, onPress }: Props) {
       <Text fontWeight="600" fontFamily="$heading" fontSize={20}>
         {category.label}
       </Text>
-
+ 
       <Image
-        source={category.icon}
+        source={
+          typeof category.icon === "string"
+            ? { uri: category.icon }
+            : category.icon
+        }
         resizeMode="contain"
-        style={{ width: 60, height: 70, marginBottom: 8 }}
+        style={{ width: 50, height: 50, marginBottom: 8 }}
       />
     </TouchableOpacity>
   );

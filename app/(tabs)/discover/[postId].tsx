@@ -2,7 +2,7 @@ import { PostCard } from "@/components/post/PostCard";
 import { useFeedStore } from "@/components/store/FeedStore";
 import colors from "@/constants/colors";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,29 +14,29 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { YStack } from "tamagui";
 import { FeedPost } from "@/types/feedTypes";
-import { useViewerStore } from "@/store/useViewerStore";
 
 export default function PostViewerScreen() {
   const { height, width } = useWindowDimensions();
   const tabBarHeight = useBottomTabBarHeight();
-
   const feedHeight = height - tabBarHeight;
 
   const { postId, feedKey } = useLocalSearchParams();
-  const { getFeed } = useViewerStore();
+  const { getFeed } = useFeedStore();
 
   const [feed, setFeed] = useState<FeedPost[]>([]);
   const [activePostId, setActivePostId] = useState<string | null>(null);
 
   const flatListRef = useRef<FlatList>(null);
 
-  /* LOAD FEED */
+  /* ================= LOAD FEED ================= */
+
   useEffect(() => {
     const savedFeed = getFeed(feedKey as string) || [];
     setFeed(savedFeed);
   }, [feedKey, getFeed]);
 
-  /* SCROLL TO SELECTED POST */
+  /* ================= SCROLL TO SELECTED ================= */
+
   useEffect(() => {
     if (!feed.length) return;
 
@@ -54,6 +54,20 @@ export default function PostViewerScreen() {
     }
   }, [feed, postId]);
 
+  /* ================= FOCUS FIX ================= */
+
+  useFocusEffect(
+    useCallback(() => {
+      // screen is focused → do nothing
+      return () => {
+        // screen lost focus → pause all videos
+        setActivePostId(null);
+      };
+    }, [])
+  );
+
+  /* ================= VIEWABILITY ================= */
+
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 80,
   }).current;
@@ -63,8 +77,10 @@ export default function PostViewerScreen() {
       if (viewableItems.length > 0) {
         setActivePostId(viewableItems[0].item.id);
       }
-    },
+    }
   ).current;
+
+  /* ================= RENDER ================= */
 
   const renderItem = useCallback(
     ({ item }: { item: FeedPost }) => (
@@ -76,7 +92,7 @@ export default function PostViewerScreen() {
         tabBarHeight={tabBarHeight}
       />
     ),
-    [activePostId, feedHeight, width, tabBarHeight],
+    [activePostId, feedHeight, width, tabBarHeight]
   );
 
   let content: React.ReactNode;

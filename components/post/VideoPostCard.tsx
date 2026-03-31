@@ -9,7 +9,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import Video from "react-native-video";
-import { Text, View } from "tamagui";
+import { View } from "tamagui";
 
 interface Props {
   post: FeedMediaPost;
@@ -37,79 +37,51 @@ export default function VideoPostCard({
 
   const [videoDuration, setVideoDuration] = useState(0);
   const progress = useSharedValue(0);
-  const [rate, setRate] = useState<number>(1);
-  const likeIconActive = require("@/assets/images/likeIcon2.png");
 
   const progressStyle = useAnimatedStyle(() => ({
     width: progress.value * (screenWidth * 0.9),
   }));
 
   /* =========================
-     GESTURES 
+     GESTURES (FIXED)
   ========================= */
 
-  let singleTapTimeout: any = null;
-  let doubleTapTriggered = false;
-
-  const singleTap = Gesture.Tap()
-    .numberOfTaps(1)
-    .onEnd((_, success) => {
-      if (!success) return;
-
-      singleTapTimeout = setTimeout(() => {
-        if (!doubleTapTriggered && onTogglePlay) {
-          runOnJS(onTogglePlay)();
-        }
-        doubleTapTriggered = false; // reset
-      }, 200);
-    });
-
+  // DOUBLE TAP → LIKE ONLY
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
-    .onStart(() => {
-      doubleTapTriggered = true;
-    })
-    .onEnd((_, success) => {
-      if (!success) return;
-
-      if (singleTapTimeout) {
-        clearTimeout(singleTapTimeout);
-        singleTapTimeout = null;
-      }
-
+    .maxDelay(250)
+    .onEnd(() => {
       if (onLike) runOnJS(onLike)();
       runOnJS(triggerHeart)();
     });
 
-  const longPress = Gesture.LongPress()
-    .minDuration(300)
-    .onStart(() => {
-      runOnJS(setRate)(2);
-    })
+  // SINGLE TAP → PLAY/PAUSE ONLY
+  const singleTap = Gesture.Tap()
+    .numberOfTaps(1)
+    .maxDelay(250)
     .onEnd(() => {
-      runOnJS(setRate)(1);
+      if (onTogglePlay) runOnJS(onTogglePlay)();
     });
 
-  const videoGesture = Gesture.Simultaneous(singleTap, doubleTap, longPress);
+  // IMPORTANT: double tap must take priority
+  const gesture = Gesture.Exclusive(doubleTap, singleTap);
 
   /* =========================
-     VIDEO
+     VIDEO SOURCE
   ========================= */
 
   const videoItem = post.media?.[0];
   const videoUrl =
     videoItem && videoItem.type === "video" ? videoItem.url : undefined;
 
-  if (!videoUrl) {
-    console.log("No video URL:", post);
-    return null;
-  }
+  if (!videoUrl) return null;
 
-  const scrubHeight = 7;
-  const playButtonSize = Math.min(50, screenWidth * 0.12);
+  /* =========================
+     RENDER
+  ========================= */
 
   return (
-    <GestureDetector gesture={videoGesture}>
+    <GestureDetector gesture={gesture}>
       <Animated.View
         style={{
           flex: 1,
@@ -119,32 +91,30 @@ export default function VideoPostCard({
       >
         <Video
           ref={videoRef}
-          rate={rate}
           source={{ uri: videoUrl }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
           repeat
+
+          // 🔥 CORE FIX: controlled playback
           paused={!isPlaying}
+
           onLoad={(d) => {
             setVideoDuration(d.duration);
           }}
+
           onProgress={(d) => {
             if (videoDuration > 0) {
               progress.value = d.currentTime / videoDuration;
             }
           }}
+
           onError={(error) => {
             console.error("Video playback error:", error);
           }}
         />
-        {rate === 2 && (
-          <View position="absolute" top={screenHeight * 0.1} alignSelf="center">
-            <Text color="white" fontSize={14}>
-              2x
-            </Text>
-          </View>
-        )}
-        {/*LIKE ANIMATION */}
+
+        {/* ❤️ LIKE ANIMATION */}
         <Animated.View
           style={[
             {
@@ -156,17 +126,17 @@ export default function VideoPostCard({
           ]}
         >
           <Animated.Image
-            source={likeIconActive}
+            source={require("@/assets/images/likeIcon2.png")}
             style={{ width: 80, height: 80 }}
           />
         </Animated.View>
 
-        {/* PLAY BUTTON */}
+        {/* ▶ PLAY BUTTON */}
         {!isPlaying && (
           <View
-            width={playButtonSize}
-            height={playButtonSize}
-            borderRadius={playButtonSize / 2}
+            width={50}
+            height={50}
+            borderRadius={25}
             backgroundColor="#FFF1DB"
             position="absolute"
             justifyContent="center"
@@ -175,21 +145,17 @@ export default function VideoPostCard({
             top={screenHeight * 0.45}
             pointerEvents="none"
           >
-            <Play
-              size={playButtonSize * 0.5}
-              color={colors.black}
-              fill={colors.black}
-            />
+            <Play size={24} color={colors.black} fill={colors.black} />
           </View>
         )}
 
-        {/*PROGRESS BAR */}
+        {/* PROGRESS BAR */}
         <Animated.View
           style={{
             position: "absolute",
             bottom: 0,
             width: screenWidth,
-            height: scrubHeight,
+            height: 6,
             backgroundColor: "rgba(255,255,255,0.3)",
             overflow: "hidden",
           }}
