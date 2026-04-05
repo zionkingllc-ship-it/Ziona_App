@@ -1,24 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { graphqlRequest } from "@/services/graphQL/graphqlClient";
 import { useAuthStore } from "@/store/useAuthStore";
-
-type UserProfile = {
-  id: string;
-  username: string;
-  fullName?: string;
-  bio?: string;
-  avatarUrl?: string;
-  location?: string;
-  stats?: {
-    followersCount: number;
-    followingCount: number;
-    postsCount: number;
-  };
-  viewerState?: {
-    followingAuthor: boolean;
-    isOwner: boolean;
-  };
-};
+import { UserProfile } from "@/types/userProfile";
 
 const GET_USER_PROFILE = `
 query GetUserProfile($userId: String!) {
@@ -35,6 +18,21 @@ query GetUserProfile($userId: String!) {
 }
 `;
 
+function normalizeUserProfile(raw: any): UserProfile | null {
+  if (!raw) return null;
+
+  return {
+    ...raw,
+    stats: raw.stats
+      ? {
+          followersCount: Number(raw.stats.followersCount || 0),
+          followingCount: Number(raw.stats.followingCount || 0),
+          postsCount: Number(raw.stats.postsCount || 0),
+        }
+      : undefined,
+  };
+}
+
 export function useUserProfile(
   userId?: string,
   options?: { enabled?: boolean }
@@ -42,13 +40,15 @@ export function useUserProfile(
   const token = useAuthStore((s) => s.tokens?.accessToken);
 
   return useQuery<UserProfile | null>({
-    queryKey: ["userProfile", userId, token],
+    queryKey: ["userProfile", userId],
     enabled: !!userId && !!token && options?.enabled !== false,
+
     refetchOnMount: true,
     refetchOnReconnect: true,
+
     queryFn: async () => {
       const data = await graphqlRequest(GET_USER_PROFILE, { userId });
-      return data?.userProfile ?? null;
+      return normalizeUserProfile(data?.userProfile);
     },
   });
 }

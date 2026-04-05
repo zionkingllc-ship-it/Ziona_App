@@ -10,14 +10,10 @@ import colors from "@/constants/colors";
 
 import { usePostFeedback } from "@/hooks/usePostFeedback";
 import { useResponsive } from "@/hooks/useResponsive";
-
 import { publishDraftPost } from "@/services/graphQL/publishDraftPost";
-
 import { useCreatePostStore } from "@/store/createPostStore";
-
 import { useEffect, useState } from "react";
 import { Image, ScrollView, TouchableOpacity } from "react-native";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { Text, XStack, YStack } from "tamagui";
 
@@ -90,7 +86,6 @@ export default function CreateTextScreen() {
       ? buildReference(book, chapter, verses)
       : "";
 
-  
   const textValue: string = draft.type === "TEXT" ? (draft.text ?? "") : "";
 
   const cardColor = draft.category?.bgColor ?? "#E6E2C5";
@@ -147,8 +142,14 @@ export default function CreateTextScreen() {
         <Header heading="Create Post" />
       </XStack>
 
-      <ScrollView style={{ flex: 1 }}>
-        <YStack flex={1} paddingHorizontal={wp(6)} paddingTop={hp(2)}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: wp(6),
+          paddingTop: hp(1),
+        }}
+      >
+        <YStack>
           <TextPostCardInput
             showInput={true}
             category={draft.category?.label}
@@ -166,7 +167,7 @@ export default function CreateTextScreen() {
             backgroundColor={cardColor}
           />
 
-          <XStack flex={1} marginTop={hp(7)} marginBottom={hp(4)} gap={wp(3)}>
+          <XStack marginTop={hp(7)} marginBottom={hp(4)} gap={wp(3)}>
             <TagSelectorCard
               category={draft.category}
               onPress={() => setCategoryVisible(true)}
@@ -208,37 +209,35 @@ export default function CreateTextScreen() {
             disabled={uploading || !canUpload}
             onPress={handleUpload}
           />
-
-          <CategoryModal
-            visible={categoryVisible}
-            onClose={() => setCategoryVisible(false)}
-            onSelect={(category) => {
-              setCategory(category);
-              setCategoryVisible(false);
-            }}
-          />
-
-          <BibleSelectorModal
-            visible={bibleVisible}
-            onClose={() => setBibleVisible(false)}
-            onDone={(data) => {
-              const newVerseLength = data.text.length;
-              const currentTextLength = textValue.length;
-
-              if (newVerseLength + currentTextLength > MAX_LENGTH) {
-                feedback.showError(
-                  "Selected bible verse too long, Please select fewer verses to stay under 500 characters",
-                );
-                return;
-              }
-
-              setBibleVerse(data);
-              setBibleVisible(false);
-            }}
-          />
         </YStack>
       </ScrollView>
+      <CategoryModal
+        visible={categoryVisible}
+        onClose={() => setCategoryVisible(false)}
+        onSelect={(category) => {
+          setCategory(category);
+          setCategoryVisible(false);
+        }}
+      />
 
+      <BibleSelectorModal
+        visible={bibleVisible}
+        onClose={() => setBibleVisible(false)}
+        onDone={(data) => {
+          const newVerseLength = data.text.length;
+          const currentTextLength = textValue.length;
+
+          if (newVerseLength + currentTextLength > MAX_LENGTH) {
+            feedback.showError(
+              "Selected bible verse too long, Please select fewer verses to stay under 500 characters",
+            );
+            return;
+          }
+
+          setBibleVerse(data);
+          setBibleVisible(false);
+        }}
+      />
       <SuccessModal
         visible={feedback.visible}
         onClose={feedback.handleClose}

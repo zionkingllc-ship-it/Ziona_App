@@ -59,7 +59,7 @@
     "expo-video": "~3.0.16",
     "expo-video-thumbnails": "~10.0.8",
     "expo-web-browser": "~15.0.10",
-    "fix": "^0.0.6",
+    "fix": "^0.0.3",
     "install": "^0.13.0",
     "moti": "^0.30.0",
     "react": "19.1.0",

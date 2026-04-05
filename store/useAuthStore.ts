@@ -4,6 +4,7 @@ import { AuthState, AuthTokens, User } from "@/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { queryClient } from "@/lib/queryClient";
 
 type AuthStore = AuthState & {
   isBootstrapping: boolean;
@@ -40,6 +41,7 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: true,
           mode: "authenticated",
         });
+          queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       },
 
       /* -------- TOKEN REFRESH -------- */

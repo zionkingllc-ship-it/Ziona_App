@@ -1,15 +1,7 @@
 import { updateAvatar, updateProfile } from "@/services/profile/profileService";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-type UserProfile = {
-  id: string;
-  username: string;
-  fullName?: string;
-  bio?: string;
-  avatarUrl?: string;
-  location?: string;
-};
+import { UserProfile } from "@/types/userProfile";
 
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
@@ -18,16 +10,15 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: updateProfile,
 
-    onSuccess: (user: UserProfile) => {
+    onSuccess: (user: Partial<UserProfile>) => {
       if (!userId) return;
 
-      //update cache immediately
       queryClient.setQueryData(
         ["userProfile", userId],
-        (prev: UserProfile | null) => ({
-          ...prev,
-          ...user,
-        }),
+        (prev: UserProfile | null) => {
+          if (!prev) return prev;
+          return { ...prev, ...user };
+        }
       );
 
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
@@ -54,7 +45,7 @@ export function useUpdateAvatar() {
             ...prev,
             avatarUrl,
           };
-        },
+        }
       );
 
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
