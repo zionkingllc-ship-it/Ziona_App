@@ -108,11 +108,11 @@ export default function CarouselPostCard({
           />
         </Animated.View>
 
-        {/* ● INDICATORS */}
+        {/* INDICATORS */}
         {mediaItems.length > 1 && (
           <XStack
             position="absolute"
-            bottom={wp(28)}
+            bottom={wp(50)}
             alignSelf="center"
             gap={wp(2)}
           >

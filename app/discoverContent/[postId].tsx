@@ -12,11 +12,13 @@ import { useDiscoverFeed } from "@/hooks/useDiscover";
 import { useResponsive } from "@/hooks/useResponsive";
 
 export default function PostViewerScreen() {
-  const tabBarHeight = 0
-  const { postId, categoryId, filter } = useLocalSearchParams<{
+  const tabBarHeight = 0;
+
+  const { postId, categoryId, filter, index } = useLocalSearchParams<{
     postId: string;
     categoryId: string;
     filter?: "all" | "images" | "video" | "text";
+    index?: string;
   }>();
 
   const { posts, isLoading } = useDiscoverFeed(categoryId);
@@ -27,6 +29,7 @@ export default function PostViewerScreen() {
   const [pausedPostId, setPausedPostId] = useState<string | null>(null);
 
   const { viewportHeight, viewportWidth } = useResponsive();
+
   const hasScrolledRef = useRef(false);
 
   /* ================= FILTER ================= */
@@ -47,32 +50,38 @@ export default function PostViewerScreen() {
     return true;
   });
 
-  /* ================= RESET SCROLL WHEN NEW POST ================= */
+  /* ================= RESET ================= */
 
   useEffect(() => {
     hasScrolledRef.current = false;
   }, [postId]);
 
-  /* ================= INITIAL SCROLL (RUN ONCE) ================= */
+  /* ================= INITIAL SCROLL (INDEX-BASED) ================= */
 
   useEffect(() => {
-    if (hasScrolledRef.current || !filteredPosts.length || viewportHeight === 0)
+    if (hasScrolledRef.current) return;
+    if (!filteredPosts.length) return;
+    if (!viewportHeight) return;
+
+    const initialIndex = Number(index ?? 0);
+
+    if (initialIndex < 0 || initialIndex >= filteredPosts.length) {
+      console.warn("Invalid index passed to PostViewer:", index);
       return;
+    }
 
-    const index = filteredPosts.findIndex((p) => p.id === postId);
-
-    if (flatListRef.current && index >= 0) {
-      flatListRef.current.scrollToOffset({
-        offset: index * viewportHeight,
+    requestAnimationFrame(() => {
+      flatListRef.current?.scrollToOffset({
+        offset: initialIndex * viewportHeight,
         animated: false,
       });
 
-      setActivePostId(filteredPosts[index]?.id ?? null);
+      setActivePostId(filteredPosts[initialIndex]?.id ?? null);
       hasScrolledRef.current = true;
-    }
-  }, [filteredPosts, postId, viewportHeight]);
+    });
+  }, [filteredPosts, index, viewportHeight]);
 
-  /* ================= FOCUS / APP STATE ================= */
+  /* ================= FOCUS ================= */
 
   useFocusEffect(
     useCallback(() => {
@@ -134,12 +143,12 @@ export default function PostViewerScreen() {
         onTogglePlay={() => {
           setPausedPostId((prev) => (prev === item.id ? null : item.id));
         }}
-        screenHeight={viewportHeight} 
+        screenHeight={viewportHeight}
         screenWidth={viewportWidth}
         tabBarHeight={tabBarHeight}
       />
     ),
-    [activePostId, pausedPostId, tabBarHeight],
+    [activePostId, pausedPostId, viewportHeight, viewportWidth],
   );
 
   if (isLoading || !filteredPosts.length) {
@@ -154,23 +163,24 @@ export default function PostViewerScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
-      <View
-        style={{ flex: 1 }}
-      >
+      <View style={{ flex: 1 }}>
         <FlatList
           ref={flatListRef}
           data={filteredPosts}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
+          contentContainerStyle={{
+            paddingBottom: viewportHeight * 0.07, 
+          }}
           pagingEnabled
           decelerationRate="fast"
           showsVerticalScrollIndicator={false}
           snapToInterval={viewportHeight}
           snapToAlignment="start"
-          getItemLayout={(_, index) => ({
+          getItemLayout={(_, i) => ({
             length: viewportHeight,
-            offset: viewportHeight * index,
-            index,
+            offset: viewportHeight * i,
+            index: i,
           })}
           viewabilityConfig={viewabilityConfig}
           onViewableItemsChanged={onViewableItemsChanged}

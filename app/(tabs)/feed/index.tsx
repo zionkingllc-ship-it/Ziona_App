@@ -163,7 +163,7 @@ export default function Feed() {
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             pagingEnabled
-            decelerationRate="fast"
+            decelerationRate="normal"
             snapToInterval={containerHeight}
             viewabilityConfig={viewabilityConfig}
             onViewableItemsChanged={onViewableItemsChanged}

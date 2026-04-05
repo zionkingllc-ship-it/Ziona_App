@@ -26,7 +26,6 @@ export default function DiscoverCategoryScreen() {
     "all" | "images" | "video" | "text"
   >("all");
 
-  // pull-to-refresh hook
   const { refreshing, onRefresh } = usePullToRefresh([
     ["discoverFeed", categoryId],
   ]);
@@ -80,7 +79,7 @@ export default function DiscoverCategoryScreen() {
           data={filteredPosts}
           keyExtractor={(item) => item.id}
           numColumns={3}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => ( // ✅ FIXED
             <PostThumbnail
               post={item}
               size={width / 3 - 9}
@@ -90,13 +89,13 @@ export default function DiscoverCategoryScreen() {
                   params: {
                     categoryId,
                     filter,
+                    index: String(index), 
                   },
                 });
               }}
             />
           )}
           contentContainerStyle={{ paddingHorizontal: 8 }}
-           
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
