@@ -7,9 +7,10 @@ import { Text, YStack } from "tamagui"
 interface Props {
   category?: DiscoverCategory
   onPress: () => void
+  disabled?:boolean
 }
 
-export default function TagSelectorCard({ category, onPress }: Props) {
+export default function TagSelectorCard({ category, onPress, disabled }: Props) {
   const { wp, hp, fs } = useResponsive()
 
   const icon =
@@ -22,6 +23,7 @@ export default function TagSelectorCard({ category, onPress }: Props) {
   return (
     <TouchableOpacity
       onPress={onPress}
+      disabled={disabled}
       style={{
         flex: 0.4,
         backgroundColor: "#F4F3F4",

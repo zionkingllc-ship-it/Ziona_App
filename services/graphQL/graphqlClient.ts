@@ -6,78 +6,95 @@ async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function refreshAccessToken() {
+  const store = useAuthStore.getState();
+  const refreshToken = store.tokens?.refreshToken;
+
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(GRAPHQL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: `
+          mutation RefreshToken($refreshToken: String!) {
+            refreshToken(refreshToken: $refreshToken) {
+              accessToken
+              refreshToken
+            }
+          }
+        `,
+        variables: { refreshToken },
+      }),
+    });
+
+    const json = await res.json();
+
+    const newTokens = json?.data?.refreshToken;
+
+    if (newTokens?.accessToken) {
+      useAuthStore.getState().setTokens?.(newTokens);
+      return newTokens.accessToken;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function graphqlRequest(
   query: string,
   variables?: any,
   retries = 1
 ) {
-  if (!query) {
-    console.error("GraphQL Error: Query is empty");
-    throw new Error("GraphQL query is empty");
-  }
-
   const store = useAuthStore.getState();
-  const token = store.tokens?.accessToken;
+  let token = store.tokens?.accessToken;
 
-  const finalPayload = {
-    query: String(query),
-    variables: variables ?? {},
-  };
-
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("GRAPHQL REQUEST");
-  console.log("Token Present:", !!token);
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-  let res: Response;
-
-  try {
-    res = await fetch(GRAPHQL_URL, {
+  const makeRequest = async (accessToken?: string) => {
+    return fetch(GRAPHQL_URL, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : {}),
       },
-      body: JSON.stringify(finalPayload),
+      body: JSON.stringify({
+        query: String(query),
+        variables: variables ?? {},
+      }),
     });
-  } catch (err) {
-    if (retries > 0) {
-      await sleep(1000);
-      return graphqlRequest(query, variables, retries - 1);
+  };
+
+  let res = await makeRequest(token);
+  let json = await res.json();
+ 
+  const isAuthError =
+    json?.errors?.some((err: any) =>
+      String(err.message).toLowerCase().includes("auth")
+    ) || res.status === 401;
+
+  if (isAuthError) {
+    console.warn("Token expired — attempting refresh");
+
+    const newAccessToken = await refreshAccessToken();
+
+    if (newAccessToken) {
+      console.log("Token refreshed — retrying request");
+
+      res = await makeRequest(newAccessToken);
+      json = await res.json();
+    } else {
+      console.warn("Refresh failed — logging out");
+      useAuthStore.getState().logout?.();
+      throw new Error("Session expired");
     }
-    throw new Error("Network request failed");
   }
 
-  const text = await res.text();
-
-  if (!text || text.trim() === "") {
-    if (retries > 0) {
-      await sleep(1000);
-      return graphqlRequest(query, variables, retries - 1);
-    }
-    return null;
-  }
-
-  let json: any;
-
-  try {
-    json = JSON.parse(text);
-  } catch {
-    if (retries > 0) {
-      await sleep(1000);
-      return graphqlRequest(query, variables, retries - 1);
-    }
-    throw new Error("Invalid JSON response");
-  }
-
-  if (!res.ok) {
-    throw new Error(`Network error: ${res.status}`);
-  }
-
-  if (json.errors) {
-    console.warn("GraphQL Partial Errors:", json.errors);
-  }
-
-  return json.data;
+  return json?.data;
 }

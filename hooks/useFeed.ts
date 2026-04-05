@@ -5,11 +5,11 @@ import {
 } from "@/services/feed/feedServices";
 
 /* =========================
-   RAW BACKEND SHAPE
+   TYPES
 ========================= */
 
 type FeedResponse = {
-  posts: any[]; //raw backend data (NOT FeedPost)
+  posts: any[];
   nextCursor?: string;
   hasMore: boolean;
 };
@@ -23,10 +23,12 @@ export function useForYouFeed() {
     FeedResponse,
     Error,
     FeedResponse,
-    [string, string],
+    [string],
     string | undefined
   >({
-    queryKey: ["feed", "forYou"],
+    // ✅ FIXED: clean, explicit key
+    queryKey: ["forYouFeed"],
+
     queryFn: ({ pageParam }) =>
       fetchForYouFeed({ pageParam }),
 
@@ -46,10 +48,12 @@ export function useFollowingFeed() {
     FeedResponse,
     Error,
     FeedResponse,
-    [string, string],
+    [string],
     string | undefined
   >({
-    queryKey: ["feed", "following"],
+    // clean, explicit key
+    queryKey: ["followingFeed"],
+
     queryFn: ({ pageParam }) =>
       fetchFollowingFeed({ pageParam }),
 

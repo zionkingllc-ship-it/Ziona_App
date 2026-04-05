@@ -168,7 +168,7 @@ export default function CreateMediaPreviewScreen() {
       )}
 
       <XStack justifyContent="center" marginTop={hp(5)}>
-        <TagSelectorCard category={mediaDraft.category} onPress={() => {}} />
+        <TagSelectorCard category={mediaDraft.category} disabled onPress={()=>{}} />
       </XStack>
 
       <YStack marginTop={hp(3)}>

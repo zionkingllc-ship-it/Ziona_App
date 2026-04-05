@@ -1,5 +1,4 @@
 import { graphqlRequest } from "../graphqlClient";
-import { getToken } from "../actions/token";
 
 /* =========================
    UPDATE PROFILE
@@ -10,8 +9,6 @@ export async function updateProfile(input: {
   bio?: string;
   location?: string;
 }) {
-  const token = getToken();
-
   const query = `
     mutation UpdateProfile($input: UpdateProfileInput!) {
       updateProfile(input: $input) {
@@ -29,7 +26,7 @@ export async function updateProfile(input: {
     }
   `;
 
-  const data = await graphqlRequest(query, { input }, token);
+  const data = await graphqlRequest(query, { input });
 
   const res = data?.updateProfile;
 
@@ -45,8 +42,6 @@ export async function updateProfile(input: {
 ========================= */
 
 export async function updateAvatar(file: any) {
-  const token = getToken();
-
   const query = `
     mutation UpdateAvatar($file: Upload!) {
       updateAvatar(file: $file) {
@@ -57,7 +52,7 @@ export async function updateAvatar(file: any) {
     }
   `;
 
-  const data = await graphqlRequest(query, { file }, token);
+  const data = await graphqlRequest(query, { file });
 
   const res = data?.updateAvatar;
 

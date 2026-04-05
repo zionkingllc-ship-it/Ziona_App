@@ -19,6 +19,7 @@ import {
   ViewToken,
 } from "react-native";
 import { View } from "tamagui";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 export default function Feed() {
   const tabBarHeight = useBottomTabBarHeight();

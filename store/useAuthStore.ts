@@ -5,12 +5,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-
 type AuthStore = AuthState & {
   isBootstrapping: boolean;
   isInitializing: boolean;
 
   setAuth: (user: User, tokens: AuthTokens) => void;
+  setTokens: (tokens: AuthTokens) => void; 
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
 };
@@ -42,6 +42,19 @@ export const useAuthStore = create<AuthStore>()(
         });
       },
 
+      /* -------- TOKEN REFRESH -------- */
+
+      setTokens: (tokens) => {
+        setAuthTokens({
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+        });
+
+        set({
+          tokens,
+        });
+      },
+
       /* -------- LOGOUT -------- */
 
       logout: async () => {
@@ -51,16 +64,17 @@ export const useAuthStore = create<AuthStore>()(
         } catch (err) {
           console.log("Backend logout failed, continuing anyway");
         }
-        /* clear axios tokens */ clearAuthTokens();
-        /* clear zustand state */ set({
+
+        clearAuthTokens();
+
+        set({
           user: null,
           tokens: null,
           isAuthenticated: false,
           mode: "unauthenticated",
         });
-        /* clear persisted storage */ await AsyncStorage.removeItem(
-          "auth-storage",
-        );
+
+        await AsyncStorage.removeItem("auth-storage");
       },
 
       /* -------- APP START AUTH CHECK -------- */
@@ -68,7 +82,6 @@ export const useAuthStore = create<AuthStore>()(
       initializeAuth: async () => {
         const state = get();
 
-        /* prevent double initialization */
         if (state.isInitializing) return;
 
         set({ isInitializing: true });
@@ -83,7 +96,6 @@ export const useAuthStore = create<AuthStore>()(
           return;
         }
 
-        /* restore axios tokens */
         setAuthTokens({
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
@@ -102,7 +114,6 @@ export const useAuthStore = create<AuthStore>()(
         } catch (err) {
           console.log("Auth verification failed, keeping stored session");
 
-          /* do NOT logout automatically */
           set({
             isAuthenticated: false,
             mode: "authenticated",
@@ -123,6 +134,6 @@ export const useAuthStore = create<AuthStore>()(
         isAuthenticated: state.isAuthenticated,
         mode: state.mode,
       }),
-    },
-  ),
+    }
+  )
 );

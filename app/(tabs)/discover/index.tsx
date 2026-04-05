@@ -16,7 +16,7 @@ export default function DiscoverScreen() {
 
   const handleCategoryPress = (categoryId: string) => {
     router.push({
-      pathname: "/(tabs)/discover/[categoryId]",
+      pathname: "/[categoryId]",
       params: { categoryId },
     });
   };

@@ -32,7 +32,7 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
 
     const backendThumb = firstMedia.thumbnailUrl;
 
-    // ❌ ignore bad backend thumbnail
+    // ignore bad backend thumbnail
     const isValidBackend =
       backendThumb &&
       !backendThumb.endsWith(".mp4") &&

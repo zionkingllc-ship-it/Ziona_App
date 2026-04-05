@@ -48,7 +48,8 @@ export function useDiscoverFeed(categoryId?: string) {
     [string, string | undefined],
     string | undefined
   >({
-    queryKey: ["discover", categoryId],
+    // ✅ FIXED: consistent key
+    queryKey: ["discoverFeed", categoryId],
 
     queryFn: async ({ pageParam }) => {
       const res = await fetchDiscoverFeed({
@@ -79,14 +80,13 @@ export function useDiscoverFeed(categoryId?: string) {
       .filter((p): p is FeedPost => {
         if (!p) return false;
 
-        // CATEGORY FILTER
-        const isAllCategory = categoryId === "all" || categoryId === "1"; // backend "All"
+        const isAllCategory =
+          categoryId === "all" || categoryId === "1";
 
         if (!isAllCategory && categoryId) {
           if (p.category?.id !== categoryId) return false;
         }
 
-        // MEDIA SAFETY
         if (p.type === "media") {
           return Array.isArray(p.media) && p.media.length > 0;
         }

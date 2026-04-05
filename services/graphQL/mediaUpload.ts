@@ -1,5 +1,4 @@
 import { graphqlRequest } from "./graphqlClient";
-import { useAuthStore } from "@/store/useAuthStore";
 
 const REQUEST_UPLOAD_MUTATION = `
 mutation UploadMedia($fileName: String!, $fileType: String!, $fileSize: Int!) {
@@ -20,21 +19,18 @@ export async function requestMediaUpload(
   fileType: string,
   fileSize: number
 ) {
-  const token = useAuthStore.getState().tokens?.accessToken;
-
   const data = await graphqlRequest(
     REQUEST_UPLOAD_MUTATION,
     {
       fileName,
       fileType,
       fileSize,
-    },
-    token
+    }
   );
 
-  const payload = data.uploadMedia;
+  const payload = data?.uploadMedia;
 
-  if (!payload.success) {
+  if (!payload?.success) {
     throw new Error("Media upload request failed");
   }
 
@@ -42,7 +38,7 @@ export async function requestMediaUpload(
 }
 
 /* =========================
-   File UPLOAd
+   FILE UPLOAD
 ========================= */
 
 export async function uploadFileToStorage(

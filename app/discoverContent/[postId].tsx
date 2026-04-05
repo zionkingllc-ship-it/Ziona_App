@@ -1,24 +1,18 @@
 import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useLocalSearchParams, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  ViewToken,
-  AppState,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { YStack, View } from "tamagui";
 import { FeedPost } from "@/types/feedTypes";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, AppState, FlatList, ViewToken } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { View } from "tamagui";
 
-import { useDiscoverFeed } from "@/hooks/useDiscover";
 import { preloadPostMedia } from "@/helpers/preloadMedia";
+import { useDiscoverFeed } from "@/hooks/useDiscover";
+import { useResponsive } from "@/hooks/useResponsive";
 
 export default function PostViewerScreen() {
-  const tabBarHeight = useBottomTabBarHeight();
-
+  const tabBarHeight = 0
   const { postId, categoryId, filter } = useLocalSearchParams<{
     postId: string;
     categoryId: string;
@@ -32,9 +26,7 @@ export default function PostViewerScreen() {
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [pausedPostId, setPausedPostId] = useState<string | null>(null);
 
-  const [containerHeight, setContainerHeight] = useState(0);
-  const [containerWidth, setContainerWidth] = useState(0);
-
+  const { viewportHeight, viewportWidth } = useResponsive();
   const hasScrolledRef = useRef(false);
 
   /* ================= FILTER ================= */
@@ -64,25 +56,21 @@ export default function PostViewerScreen() {
   /* ================= INITIAL SCROLL (RUN ONCE) ================= */
 
   useEffect(() => {
-    if (
-      hasScrolledRef.current ||
-      !filteredPosts.length ||
-      !containerHeight
-    )
+    if (hasScrolledRef.current || !filteredPosts.length || viewportHeight === 0)
       return;
 
     const index = filteredPosts.findIndex((p) => p.id === postId);
 
     if (flatListRef.current && index >= 0) {
       flatListRef.current.scrollToOffset({
-        offset: index * containerHeight,
+        offset: index * viewportHeight,
         animated: false,
       });
 
       setActivePostId(filteredPosts[index]?.id ?? null);
-      hasScrolledRef.current = true; // ✅ prevent snap-back
+      hasScrolledRef.current = true;
     }
-  }, [filteredPosts, postId, containerHeight]);
+  }, [filteredPosts, postId, viewportHeight]);
 
   /* ================= FOCUS / APP STATE ================= */
 
@@ -91,7 +79,7 @@ export default function PostViewerScreen() {
       return () => {
         setActivePostId(null);
       };
-    }, [])
+    }, []),
   );
 
   useEffect(() => {
@@ -132,7 +120,7 @@ export default function PostViewerScreen() {
           preloadPostMedia(filteredPosts[index - 1] as any);
         }
       }
-    }
+    },
   ).current;
 
   /* ================= RENDER ================= */
@@ -141,16 +129,17 @@ export default function PostViewerScreen() {
     ({ item }: { item: FeedPost }) => (
       <PostCard
         post={item}
+        liked={item.viewerState.liked}
         isPlaying={item.id === activePostId && item.id !== pausedPostId}
         onTogglePlay={() => {
           setPausedPostId((prev) => (prev === item.id ? null : item.id));
         }}
-        screenHeight={containerHeight}
-        screenWidth={containerWidth}
+        screenHeight={viewportHeight} 
+        screenWidth={viewportWidth}
         tabBarHeight={tabBarHeight}
       />
     ),
-    [activePostId, pausedPostId, containerHeight, containerWidth, tabBarHeight]
+    [activePostId, pausedPostId, tabBarHeight],
   );
 
   if (isLoading || !filteredPosts.length) {
@@ -165,39 +154,32 @@ export default function PostViewerScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
-      <YStack style={{ flex: 1 }}>
-        <View
-          style={{ flex: 1 }}
-          onLayout={(e) => {
-            const { height, width } = e.nativeEvent.layout;
-            if (height !== containerHeight) setContainerHeight(height);
-            if (width !== containerWidth) setContainerWidth(width);
-          }}
-        >
-          <FlatList
-            ref={flatListRef}
-            data={filteredPosts}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            pagingEnabled
-            decelerationRate="fast"
-            showsVerticalScrollIndicator={false}
-            snapToInterval={containerHeight}
-            snapToAlignment="start"
-            getItemLayout={(_, index) => ({
-              length: containerHeight,
-              offset: containerHeight * index,
-              index,
-            })}
-            viewabilityConfig={viewabilityConfig}
-            onViewableItemsChanged={onViewableItemsChanged}
-            windowSize={3}
-            initialNumToRender={2}
-            maxToRenderPerBatch={2}
-            removeClippedSubviews
-          />
-        </View>
-      </YStack>
+      <View
+        style={{ flex: 1 }}
+      >
+        <FlatList
+          ref={flatListRef}
+          data={filteredPosts}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          pagingEnabled
+          decelerationRate="fast"
+          showsVerticalScrollIndicator={false}
+          snapToInterval={viewportHeight}
+          snapToAlignment="start"
+          getItemLayout={(_, index) => ({
+            length: viewportHeight,
+            offset: viewportHeight * index,
+            index,
+          })}
+          viewabilityConfig={viewabilityConfig}
+          onViewableItemsChanged={onViewableItemsChanged}
+          windowSize={3}
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          removeClippedSubviews
+        />
+      </View>
     </SafeAreaView>
   );
 }

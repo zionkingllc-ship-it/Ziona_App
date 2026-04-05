@@ -3,11 +3,17 @@ import SearchHeader from "@/components/SearchHeader";
 import colors from "@/constants/colors";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { FlatList, useWindowDimensions, View } from "react-native";
+import {
+  FlatList,
+  useWindowDimensions,
+  View,
+  RefreshControl,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, XStack } from "tamagui";
 import { useDiscoverFeed } from "@/hooks/useDiscover";
 import { FeedPost } from "@/types/feedTypes";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 export default function DiscoverCategoryScreen() {
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
@@ -19,6 +25,11 @@ export default function DiscoverCategoryScreen() {
   const [filter, setFilter] = useState<
     "all" | "images" | "video" | "text"
   >("all");
+
+  // pull-to-refresh hook
+  const { refreshing, onRefresh } = usePullToRefresh([
+    ["discoverFeed", categoryId],
+  ]);
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post: FeedPost) => {
@@ -75,16 +86,20 @@ export default function DiscoverCategoryScreen() {
               size={width / 3 - 9}
               onPress={() => {
                 router.push({
-                  pathname: `/(tabs)/discover/post/${item.id}`,
+                  pathname: `/discoverContent/${item.id}`,
                   params: {
                     categoryId,
-                    filter,  
+                    filter,
                   },
                 });
               }}
             />
           )}
           contentContainerStyle={{ paddingHorizontal: 8 }}
+           
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       </View>
     </SafeAreaView>
