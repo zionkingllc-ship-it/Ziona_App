@@ -1,17 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { usePostActionsStore } from "@/store/usePostActionStore";
-
-/* replace with your real API */
-async function toggleLikeApi(postId: string, like: boolean) {
-  try {
-    // simulate request (replace later)
-    await new Promise((res) => setTimeout(res, 300));
-
-    return { success: true };
-  } catch (e) {
-    throw new Error("Failed");
-  }
-}
+import { likePost, unlikePost } from "@/services/graphQL/actions/index";
 
 export function useToggleLike() {
   const toggleLikeStore = usePostActionsStore((s) => s.toggleLike);
@@ -19,32 +8,40 @@ export function useToggleLike() {
   return useMutation({
     mutationFn: async ({
       postId,
-      currentLiked,
     }: {
       postId: string;
-      currentLiked: boolean;
     }) => {
-      const next = !currentLiked;
+      const state = usePostActionsStore.getState();
+      const currentLiked = state.likedPosts[postId];
 
-      return toggleLikeApi(postId, next);
+      if (currentLiked === undefined) {
+        // fallback → treat as not liked
+        return likePost(postId);
+      }
+
+      return currentLiked
+        ? unlikePost(postId)
+        : likePost(postId);
     },
 
-    onMutate: async ({ postId, currentLiked }) => {
-      //  optimistic update
-      toggleLikeStore(postId, currentLiked);
+    onMutate: ({ postId }) => {
+      const state = usePostActionsStore.getState();
+
+      const currentLiked = state.likedPosts[postId] ?? false;
+
+      const next = !currentLiked;
+
+      // optimistic
+      toggleLikeStore(postId, next);
 
       return { postId, previous: currentLiked };
     },
 
-    onError: (err, variables, context) => {
-      if (!context) return;
+    onError: (_err, _vars, ctx) => {
+      if (!ctx) return;
 
-      //  rollback
-      toggleLikeStore(context.postId, !context.previous);
-    },
-
-    onSuccess: () => {
-      // optional: invalidate queries later
+      // rollback
+      toggleLikeStore(ctx.postId, ctx.previous);
     },
   });
 }

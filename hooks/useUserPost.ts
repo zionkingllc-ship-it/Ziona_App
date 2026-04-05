@@ -1,7 +1,7 @@
-import { useInfiniteQuery, InfiniteData } from "@tanstack/react-query";
-import { normalizePost } from "@/utils/feed/normalizePost";
-import { FeedPost } from "@/types/feedTypes";
 import { useAuthStore } from "@/store/useAuthStore";
+import { FeedPost } from "@/types/feedTypes";
+import { normalizePost } from "@/utils/feed/normalizePost";
+import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 
 /* =========================
    TYPES
@@ -19,7 +19,7 @@ type UserPostsResponse = {
 
 async function fetchUserPostsFallback(
   userId: string,
-  cursor?: string
+  cursor?: string,
 ): Promise<UserPostsResponse> {
   try {
     // Replace with real backend later
@@ -44,7 +44,6 @@ async function fetchUserPostsFallback(
 export function useUserPosts(overrideUserId?: string) {
   const authUser = useAuthStore((state) => state.user);
 
-  
   const userId = overrideUserId ?? authUser?.id;
 
   const query = useInfiniteQuery<
@@ -56,7 +55,7 @@ export function useUserPosts(overrideUserId?: string) {
   >({
     queryKey: ["userPosts", userId],
 
-    enabled: !!userId, 
+    enabled: !!userId,
 
     queryFn: async ({ pageParam }) => {
       if (!userId) {
@@ -103,6 +102,6 @@ export function useUserPosts(overrideUserId?: string) {
   return {
     ...query,
     posts,
-    userId, 
+    userId,
   };
 }

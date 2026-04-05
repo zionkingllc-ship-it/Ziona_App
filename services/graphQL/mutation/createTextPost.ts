@@ -1,10 +1,8 @@
 import { graphqlRequest } from "@/services/graphQL/graphqlClient";
-import { useAuthStore } from "@/store/useAuthStore";
 
 const CREATE_POST_MUTATION = `
 mutation CreatePost(
   $postType: PostType!
-  $caption: String
   $category: String
 
   $scriptureBook: String
@@ -15,7 +13,6 @@ mutation CreatePost(
 ) {
   createPost(
     postType: $postType
-    caption: $caption
     category: $category
 
     scriptureBook: $scriptureBook
@@ -53,10 +50,6 @@ export async function createTextPost(variables: {
 
   const payload = {
     postType: variables.postType,
-
-    // ✅ MAP MESSAGE → CAPTION (API REQUIREMENT)
-    caption: variables.message ?? null,
-
     category: variables.category,
 
     scriptureBook: variables.scriptureBook,
@@ -68,13 +61,7 @@ export async function createTextPost(variables: {
 
   console.log("Final payload:", payload);
 
-  const token = useAuthStore.getState().tokens?.accessToken;
-
-  const data = await graphqlRequest(
-    CREATE_POST_MUTATION,
-    payload,
-    token
-  );
+  const data = await graphqlRequest(CREATE_POST_MUTATION, payload);
 
   console.log("CreatePost response:", data);
 

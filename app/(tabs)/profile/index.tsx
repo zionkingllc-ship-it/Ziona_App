@@ -2,7 +2,9 @@ import Header from "@/components/layout/header";
 import CenteredMessage from "@/components/ui/CenteredMessage";
 import colors from "@/constants/colors";
 import { generateVideoThumbnail } from "@/helpers/thumbnailGenerator";
+import { useUserPosts } from "@/hooks/useUserPost";
 import { usePostActionsStore } from "@/store/usePostActionStore";
+import { FeedPost } from "@/types/feedTypes"; 
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -14,9 +16,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image, Text, XStack, YStack } from "tamagui";
-import { getPostState } from "@/utils/post/getPostState";
-import { FeedPost } from "@/types/feedTypes";
-import { useUserPosts } from "@/hooks/useUserPost";
 
 export default function ProfileScreen() {
   const { width } = useWindowDimensions();
@@ -25,15 +24,13 @@ export default function ProfileScreen() {
   const { posts, isLoading } = useUserPosts(); // ✅ NO MOCK
 
   const [activeTab, setActiveTab] = useState<"posts" | "liked" | "bookmarks">(
-    "posts"
+    "posts",
   );
   const [videoThumbnails, setVideoThumbnails] = useState<
     Record<string, string>
   >({});
 
-  const likes = usePostActionsStore((state: any) => state.likes);
-  const bookmarks = usePostActionsStore((state: any) => state.bookmarks);
-
+ 
   const postInActive = require("@/assets/images/postsIcon.png");
   const postActive = require("@/assets/images/postIconActive.png");
   const likedPostActive = require("@/assets/images/heartIconActive.png");
@@ -43,71 +40,70 @@ export default function ProfileScreen() {
   const settingIcon = require("@/assets/images/settingsIcon.png");
   const profileShareIcon = require("@/assets/images/shareProfileIcon.png");
 
-
-  
   /* ================= VIDEO THUMBNAILS ================= */
 
   useEffect(() => {
-  if (!posts.length) return;
+    if (!posts.length) return;
 
-  let isMounted = true;
+    let isMounted = true;
 
-  async function generateThumbnails() {
-    const thumbnails: Record<string, string> = {};
+    async function generateThumbnails() {
+      const thumbnails: Record<string, string> = {};
 
-    for (const post of posts) {
-      if (post.type === "media") {
-        const media = post.media?.[0];
-        if (!media) continue;
+      for (const post of posts) {
+        if (post.type === "media") {
+          const media = post.media?.[0];
+          if (!media) continue;
 
-        if (media.type === "video") {
-          if (media.thumbnailUrl) {
-            thumbnails[post.id] = media.thumbnailUrl;
-          } else if (media.url) {
-            const generated = await generateVideoThumbnail(media.url);
-            if (generated) thumbnails[post.id] = generated;
+          if (media.type === "video") {
+            if (media.thumbnailUrl) {
+              thumbnails[post.id] = media.thumbnailUrl;
+            } else if (media.url) {
+              const generated = await generateVideoThumbnail(media.url);
+              if (generated) thumbnails[post.id] = generated;
+            }
           }
         }
       }
+
+      if (isMounted) {
+        setVideoThumbnails((prev) => {
+          const prevKeys = Object.keys(prev);
+          const newKeys = Object.keys(thumbnails);
+
+          if (
+            prevKeys.length === newKeys.length &&
+            prevKeys.every((k) => prev[k] === thumbnails[k])
+          ) {
+            return prev;
+          }
+
+          return thumbnails;
+        });
+      }
     }
 
-    if (isMounted) {
-      setVideoThumbnails((prev) => {
-        const prevKeys = Object.keys(prev);
-        const newKeys = Object.keys(thumbnails);
+    generateThumbnails();
 
-        if (
-          prevKeys.length === newKeys.length &&
-          prevKeys.every((k) => prev[k] === thumbnails[k])
-        ) {
-          return prev;
-        }
-
-        return thumbnails;
-      });
-    }
-  }
-
-  generateThumbnails();
-
-  return () => {
-    isMounted = false;
-  };
-}, [posts]);
+    return () => {
+      isMounted = false;
+    };
+  }, [posts]);
 
   /* ================= FILTER ================= */
 
   const filteredPosts = useMemo(() => {
   if (activeTab === "liked") {
-    return posts.filter((post) => getPostState(post).liked);
+    return posts.filter((post) => post.viewerState.liked);
   }
 
   if (activeTab === "bookmarks") {
-    return posts.filter((post) => getPostState(post).saved);
+    return posts.filter((post) => post.viewerState.saved);
   }
 
   return posts;
 }, [activeTab, posts]);
+
   /* ================= THUMBNAIL ================= */
 
   const getPostThumbnail = (post: FeedPost) => {
@@ -133,8 +129,7 @@ export default function ProfileScreen() {
   const renderPost = ({ item }: { item: FeedPost }) => {
     const thumbnailSource = getPostThumbnail(item);
 
-    const isVideo =
-      item.type === "media" && item.media?.[0]?.type === "video";
+    const isVideo = item.type === "media" && item.media?.[0]?.type === "video";
 
     const isCarousel =
       item.type === "media" && item.media && item.media.length > 1;
@@ -259,9 +254,7 @@ export default function ProfileScreen() {
           color={colors.gray}
           fontWeight={"400"}
         >
-          Christian worshipper sharing moments of praise, reflection, and
-          growth. Here to connect with others, grow in faith, and celebrate
-          worship as a daily lifestyle.
+          no bio
         </Text>
       </YStack>
 
@@ -278,7 +271,7 @@ export default function ProfileScreen() {
 
         <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
           <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
-            20
+            0
           </Text>
           <Text fontFamily={"$body"} fontSize={13} color={colors.gray}>
             Followers
@@ -287,7 +280,7 @@ export default function ProfileScreen() {
 
         <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
           <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
-            9
+            0
           </Text>
           <Text fontFamily={"$body"} fontSize={"$3"} color={colors.gray}>
             Following

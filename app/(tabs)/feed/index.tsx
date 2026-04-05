@@ -6,10 +6,10 @@ import { useFollowingFeed, useForYouFeed } from "@/hooks/useFeed";
 import { usePostActionsStore } from "@/store/usePostActionStore";
 import { FeedPost } from "@/types/feedTypes";
 import { normalizePost } from "@/utils/feed/normalizePost";
+import { mergePostState } from "@/utils/post/postState/mergePostState";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import { InfiniteData, useQueryClient } from "@tanstack/react-query";
-import { mergePostState } from "@/utils/post/mergePostState";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -29,20 +29,22 @@ export default function Feed() {
   const [feedType, setFeedType] = useState<"forYou" | "following">("forYou");
   const [containerHeight, setContainerHeight] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
-
   const [pausedPostId, setPausedPostId] = useState<string | null>(null);
+
   const forYouQuery = useForYouFeed();
   const followingQuery = useFollowingFeed();
   const query = feedType === "forYou" ? forYouQuery : followingQuery;
+
   const likedMap = usePostActionsStore((s) => s.likedPosts);
   const savedMap = usePostActionsStore((s) => s.savedPosts);
+  const followedMap = usePostActionsStore((s) => s.followedUsers);
 
   useFocusEffect(
-    React.useCallback(() => {
-      return () => {
-        setActivePostId(null);
-      };
-    }, []),
+    useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ["feed"], exact: false });
+      
+      setActivePostId(null);
+    }, [queryClient]),
   );
 
   useEffect(() => {
@@ -55,37 +57,26 @@ export default function Feed() {
     return () => sub.remove();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      queryClient.invalidateQueries({ queryKey: ["feed"], exact: false });
-
-      setActivePostId(null);
-    }, [queryClient]),
-  );
-
   const pages =
     (query.data as InfiniteData<{ posts: any[] }> | undefined)?.pages ?? [];
 
-const data: FeedPost[] = pages
-  .flatMap((page) => page.posts ?? [])
-  .map((p) => normalizePost(p))
-  .filter((p): p is FeedPost => {
-    if (!p) return false;
-
-    if (p.type === "media") {
-      return Array.isArray(p.media) && p.media.length > 0;
-    }
-
-    return true;
-  })
-  .map((post) =>
-    mergePostState(post, likedMap[post.id], savedMap[post.id])
-  );
-
-  useEffect(() => {
-    setActivePostId(null);
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [feedType]);
+  const data: FeedPost[] = pages
+    .flatMap((page) => page.posts ?? [])
+    .map((p) => normalizePost(p))
+    .filter((p): p is FeedPost => {
+      if (!p) return false;
+      if (p.type === "media") {
+        return Array.isArray(p.media) && p.media.length > 0;
+      }
+      return true;
+    })
+    .map((post) =>
+      mergePostState(post, {
+        likedPosts: likedMap,
+        savedPosts: savedMap,
+        followedUsers: followedMap,
+      }),
+    );
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 80,
@@ -95,7 +86,9 @@ const data: FeedPost[] = pages
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (!viewableItems.length) return;
+
       setPausedPostId(null);
+
       const current = viewableItems[0].item;
       if (!current?.id) return;
 
@@ -114,9 +107,12 @@ const data: FeedPost[] = pages
     ({ item }: { item: FeedPost }) => (
       <PostCard
         post={item}
+         liked={item.viewerState.liked}
         isPlaying={item.id === activePostId && item.id !== pausedPostId}
         onTogglePlay={() => {
-          setPausedPostId((prev) => (prev === item.id ? null : item.id));
+          setPausedPostId((prev) =>
+            prev === item.id ? null : item.id,
+          );
         }}
         screenHeight={containerHeight}
         screenWidth={containerWidth}
@@ -154,39 +150,22 @@ const data: FeedPost[] = pages
       >
         {data.length === 0 ? (
           <View flex={1} justifyContent="center" alignItems="center">
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 16,
-                fontFamily: "$body",
-                fontWeight: "400",
-              }}
-            >
-              No posts yet, be the first to create a post
+            <Text style={{ color: colors.text }}>
+              No posts yet
             </Text>
           </View>
         ) : (
           <FlatList
             ref={flatListRef}
             data={data}
+             extraData={likedMap} 
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             pagingEnabled
             decelerationRate="fast"
-            showsVerticalScrollIndicator={false}
             snapToInterval={containerHeight}
-            snapToAlignment="start"
-            getItemLayout={(_, index) => ({
-              length: containerHeight,
-              offset: containerHeight * index,
-              index,
-            })}
             viewabilityConfig={viewabilityConfig}
             onViewableItemsChanged={onViewableItemsChanged}
-            windowSize={3}
-            initialNumToRender={2}
-            maxToRenderPerBatch={2}
-            removeClippedSubviews
           />
         )}
       </View>

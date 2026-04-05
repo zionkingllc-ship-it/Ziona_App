@@ -9,6 +9,6 @@ export interface Category {
 
   bgColor: string;
   bdColor: string;
-
+  textPostBg: string;
   order?: number;
 }

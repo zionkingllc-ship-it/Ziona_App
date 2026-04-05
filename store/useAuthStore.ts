@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+
 type AuthStore = AuthState & {
   isBootstrapping: boolean;
   isInitializing: boolean;

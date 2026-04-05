@@ -259,23 +259,21 @@ export default function BibleSelectorModal({
     );
   }
 
-function selectVerse(v: number) {
-  if (loadingVerses || verses.length === 0) return;
+  function selectVerse(v: number) {
+    if (loadingVerses || verses.length === 0) return;
 
-  // FIRST selection → open reader immediately
-  if (selected.length === 0) {
-    setSelected([v]);
-    setReaderOpen(true);
-    return;
+    // FIRST selection → open reader immediately
+    if (selected.length === 0) {
+      setSelected([v]);
+      setReaderOpen(true);
+      return;
+    }
+
+    // AFTER reader is open → just toggle
+    setSelected((prev) =>
+      prev.includes(v) ? prev.filter((n) => n !== v) : [...prev, v],
+    );
   }
-
-  // AFTER reader is open → just toggle
-  setSelected((prev) =>
-    prev.includes(v)
-      ? prev.filter((n) => n !== v)
-      : [...prev, v],
-  );
-}
 
   return (
     <BaseModal visible={visible} onClose={onClose} alignBottom>
@@ -354,29 +352,32 @@ function selectVerse(v: number) {
         </XStack>
 
         {/* TESTAMENT TOGGLE */}
-        <XStack marginVertical={10} gap="$2">
-          <Pressable
-            onPress={() => setTestament("old")}
-            style={[
-              styles.testamentBtn,
-              { borderTopLeftRadius: 8, borderBottomLeftRadius: 8 },
-              testament === "old" && styles.testamentActive,
-            ]}
-          >
-            <Text>Old Testament</Text>
-          </Pressable>
 
-          <Pressable
-            onPress={() => setTestament("new")}
-            style={[
-              styles.testamentBtn,
-              { borderTopRightRadius: 8, borderBottomRightRadius: 8 },
-              testament === "new" && styles.testamentActive,
-            ]}
-          >
-            <Text>New Testament</Text>
-          </Pressable>
-        </XStack>
+        {!book && (
+          <XStack marginVertical={10} gap="$2">
+            <Pressable
+              onPress={() => setTestament("old")}
+              style={[
+                styles.testamentBtn,
+                { borderTopLeftRadius: 8, borderBottomLeftRadius: 8 },
+                testament === "old" && styles.testamentActive,
+              ]}
+            >
+              <Text>Old Testament</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setTestament("new")}
+              style={[
+                styles.testamentBtn,
+                { borderTopRightRadius: 8, borderBottomRightRadius: 8 },
+                testament === "new" && styles.testamentActive,
+              ]}
+            >
+              <Text>New Testament</Text>
+            </Pressable>
+          </XStack>
+        )}
 
         {/* BOOKS */}
         {!book && (

@@ -1,3 +1,5 @@
+import { useAuthStore } from "@/store/useAuthStore";
+
 const GRAPHQL_URL = "https://ziona-api-staging.onrender.com/graphql/";
 
 async function sleep(ms: number) {
@@ -7,13 +9,15 @@ async function sleep(ms: number) {
 export async function graphqlRequest(
   query: string,
   variables?: any,
-  token?: string,
-  retries = 1 //retry once for cold starts
+  retries = 1
 ) {
   if (!query) {
     console.error("GraphQL Error: Query is empty");
     throw new Error("GraphQL query is empty");
   }
+
+  const store = useAuthStore.getState();
+  const token = store.tokens?.accessToken;
 
   const finalPayload = {
     query: String(query),
@@ -22,11 +26,7 @@ export async function graphqlRequest(
 
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("GRAPHQL REQUEST");
-  console.log("URL:", GRAPHQL_URL);
-  console.log("Query:", query);
-  console.log("Variables:", variables ?? {});
   console.log("Token Present:", !!token);
-  console.log("FINAL PAYLOAD SENT:", JSON.stringify(finalPayload));
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
   let res: Response;
@@ -42,51 +42,21 @@ export async function graphqlRequest(
       body: JSON.stringify(finalPayload),
     });
   } catch (err) {
-    console.error("GraphQL Network Error:", err);
-
     if (retries > 0) {
-      console.log("Retrying due to network error...");
       await sleep(1000);
-      return graphqlRequest(query, variables, token, retries - 1);
+      return graphqlRequest(query, variables, retries - 1);
     }
-
     throw new Error("Network request failed");
   }
 
   const text = await res.text();
 
-  console.log("RAW RESPONSE TEXT:", text);
-
-  /* =========================
-     EMPTY RESPONSE HANDLING
-  ========================= */
-
-if (!text || text.trim() === "") {
-  console.warn("Empty response from server — returning null");
-
-  if (retries > 0) {
-    console.log("Retrying due to empty response...");
-    await sleep(1000);
-    return graphqlRequest(query, variables, token, retries - 1);
-  }
-
-  return null; 
-}
-
-  /* =========================
-     NON-JSON (HTML / ERROR PAGE)
-  ========================= */
-
-  if (text.startsWith("<!DOCTYPE") || text.startsWith("<html")) {
-    console.error("Server returned HTML instead of JSON");
-
+  if (!text || text.trim() === "") {
     if (retries > 0) {
-      console.log("Retrying due to HTML response...");
       await sleep(1000);
-      return graphqlRequest(query, variables, token, retries - 1);
+      return graphqlRequest(query, variables, retries - 1);
     }
-
-    throw new Error("Server error (HTML response)");
+    return null;
   }
 
   let json: any;
@@ -94,41 +64,19 @@ if (!text || text.trim() === "") {
   try {
     json = JSON.parse(text);
   } catch {
-    console.error("GraphQL Invalid JSON Response:", text);
-
     if (retries > 0) {
-      console.log("Retrying due to invalid JSON...");
       await sleep(1000);
-      return graphqlRequest(query, variables, token, retries - 1);
+      return graphqlRequest(query, variables, retries - 1);
     }
-
-    throw new Error("Invalid JSON response from server");
+    throw new Error("Invalid JSON response");
   }
 
-  console.log("GRAPHQL RESPONSE STATUS:", res.status);
-  console.log("GRAPHQL RESPONSE BODY:", json);
-
-  /* =========================
-     HTTP ERROR
-  ========================= */
-
   if (!res.ok) {
-    console.error("GraphQL HTTP Error:", res.status);
-    console.error("Response:", json);
-
     throw new Error(`Network error: ${res.status}`);
   }
 
-  /* =========================
-     GRAPHQL ERROR
-  ========================= */
-
-if (json.errors) {
-  console.warn("GraphQL Partial Errors:", json.errors); 
-}
-
-  if (!json.data) {
-    console.warn("GraphQL Warning: No data returned");
+  if (json.errors) {
+    console.warn("GraphQL Partial Errors:", json.errors);
   }
 
   return json.data;

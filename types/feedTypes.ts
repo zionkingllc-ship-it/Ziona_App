@@ -22,16 +22,17 @@ type BaseFeedPost = {
     slug: string;
     bgColor?: string;
     bdColor?: string;
+    textPostBg: string;
   };
-
-  stats?: {
+ 
+  stats: {
     likesCount: number;
     commentsCount: number;
     sharesCount: number;
     savesCount: number;
   };
-
-  viewerState?: {
+ 
+  viewerState: {
     liked: boolean;
     saved: boolean;
     followingAuthor: boolean;
@@ -59,7 +60,7 @@ type Scripture = {
 export type FeedTextPost = BaseFeedPost & {
   type: "text";
   message: string;
-  scripture?: Scripture; // optional
+  scripture?: Scripture;
 };
 
 /* =========================

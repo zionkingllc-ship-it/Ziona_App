@@ -2,7 +2,6 @@ import colors from "@/constants/colors";
 import { useResponsiveSize } from "@/hooks/useResponsiveSize";
 import { useBookmarksStore } from "@/store/useBookmarkStore";
 import { FeedPost } from "@/types/feedTypes";
-import { getPostState } from "@/utils/post/getPostState";
 import { MoreHorizontal } from "@tamagui/lucide-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
@@ -32,6 +31,7 @@ const shareIcon = require("@/assets/images/shareIcon.png");
 
 type Props = {
   post: FeedPost;
+  liked: boolean;
   isPlaying: boolean;
   screenHeight: number;
   onTogglePlay?: () => void;
@@ -46,6 +46,7 @@ export function PostCard({
   onTogglePlay,
   screenWidth,
   tabBarHeight,
+  liked,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [commentsVisible, setCommentsVisible] = useState(false);
@@ -56,8 +57,8 @@ export function PostCard({
   const [createVisible, setCreateVisible] = useState(false);
   const [shareVisible, setShareVisible] = useState(false);
 
- const liked = post.viewerState?.liked ?? false;
-const likeCount = post.stats?.likesCount ?? 0;
+  const likedState = liked;
+  const likeCount = post.stats.likesCount;
 
   const toggleLikeMutation = useToggleLike();
 
@@ -76,193 +77,196 @@ const likeCount = post.stats?.likesCount ?? 0;
   const handleLike = () => {
     toggleLikeMutation.mutate({
       postId: post.id,
-      currentLiked: liked,
     });
   };
 
   return (
-  <YStack height={screenHeight} width="100%" backgroundColor="black">
-    {/* MEDIA */}
-    <PostMedia
-      post={post}
-      isPlaying={isPlaying}
-      onTogglePlay={onTogglePlay}
-      screenWidth={screenWidth}
-      screenHeight={screenHeight}
-      tabBarHeight={tabBarHeight}
-      onLike={handleLike}
-    />
+    <YStack height={screenHeight} width="100%" backgroundColor="black">
+      {/* MEDIA */}
+      <PostMedia
+        post={post}
+        isPlaying={isPlaying}
+        onTogglePlay={onTogglePlay}
+        screenWidth={screenWidth}
+        screenHeight={screenHeight}
+        tabBarHeight={tabBarHeight}
+        onLike={handleLike}
+      />
 
-    {/*SINGLE OVERLAY*/}
-    <YStack position="absolute" bottom={34} width="100%">
-      <XStack padding="$4" alignItems="flex-end">
-        <YStack flex={1} gap="$2">
-          {/* PROFILE ROW */}
-          <XStack gap="$4" alignItems="center">
-            <XStack gap="$2" alignItems="center">
-              <Image
-                source={
-                  post.author?.avatarUrl
-                    ? { uri: post.author.avatarUrl }
-                    : require("@/assets/images/profile.png")
-                }
-                width={30}
-                height={30}
-                borderRadius={15}
-              />
+      {/*SINGLE OVERLAY*/}
+      <YStack position="absolute" bottom={34} width="100%">
+        <XStack padding="$4" alignItems="flex-end">
+          <YStack flex={1} gap="$2">
+            {/* PROFILE ROW */}
+            <XStack gap="$4" alignItems="center">
+              <XStack gap="$2" alignItems="center">
+                <Image
+                  source={
+                    post.author?.avatarUrl
+                      ? { uri: post.author.avatarUrl }
+                      : require("@/assets/images/profile.png")
+                  }
+                  width={30}
+                  height={30}
+                  borderRadius={15}
+                />
 
-              <Text color={colors.white} fontSize={16} fontWeight="500">
-                {post.author?.username ?? "user"}
-              </Text>
-            </XStack>
-
-            {!post.viewerState?.isOwner && (
-              <TouchableOpacity
-                style={{
-                  borderWidth: 1,
-                  borderColor: colors.white,
-                  height: 22,
-                  borderRadius: 8,
-                  paddingHorizontal: 6,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text color={colors.white} fontSize={13} fontWeight="500">
-                  {post.viewerState?.followingAuthor
-                    ? "following"
-                    : "follow"}
+                <Text color={colors.white} fontSize={16} fontWeight="500">
+                  {post.author?.username ?? "user"}
                 </Text>
-              </TouchableOpacity>
-            )}
-          </XStack>
+              </XStack>
 
-          {/* CAPTION */}
-          {"caption" in post && post.caption && (
-            <XStack maxWidth="80%" alignItems="flex-end">
-              <Text
-                color={colors.white}
-                fontSize={16}
-                numberOfLines={expanded ? undefined : 3}
-              >
-                {post.caption}
-              </Text>
-
-              {post.caption.length > 90 && (
-                <Pressable onPress={() => setExpanded((p) => !p)}>
-                  <LinearGradient
-                    colors={["transparent", "rgba(55, 55, 55, 0.6)"]}
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      height: 24,
-                      width: "100%",
-                    }}
-                  />
-
-                  <Text
-                    color={colors.white}
-                    fontSize={14}
-                    fontWeight="600"
-                    alignSelf="flex-end"
-                  >
-                    {expanded ? "less" : "more"}
+              {!post.viewerState?.isOwner && (
+                <TouchableOpacity
+                  style={{
+                    borderWidth: 1,
+                    borderColor: colors.white,
+                    height: 22,
+                    borderRadius: 8,
+                    paddingHorizontal: 6,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text color={colors.white} fontSize={13} fontWeight="500">
+                    {post.viewerState?.followingAuthor ? "following" : "follow"}
                   </Text>
-                </Pressable>
+                </TouchableOpacity>
               )}
             </XStack>
-          )}
-        </YStack>
 
-        {/* ACTIONS */}
-        <YStack gap="$4">
-          <Pressable onPress={handleLike}>
-            <Image
-              source={liked ? likeIconActive : likeIcon}
-              width={24}
-              height={24}
-            />
-          </Pressable>
+            {/* CAPTION */}
+            {"caption" in post && post.caption && (
+              <XStack maxWidth="80%" alignItems="flex-end">
+                <Text
+                  color={colors.white}
+                  fontSize={16}
+                  numberOfLines={expanded ? undefined : 3}
+                >
+                  {post.caption}
+                </Text>
 
-          <Pressable onPress={() => setCommentsVisible(true)}>
-            <Image source={commentIcon} width={24} height={24} />
-          </Pressable>
+                {post.caption.length > 90 && (
+                  <Pressable onPress={() => setExpanded((p) => !p)}>
+                    <LinearGradient
+                      colors={["transparent", "rgba(55, 55, 55, 0.6)"]}
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        height: 24,
+                        width: "100%",
+                      }}
+                    />
 
-          <Pressable onPress={() => setFoldersVisible(true)}>
-            <Image
-              source={isBookmarked ? bookmarkIconActive : bookmarkIcon}
-              width={24}
-              height={24}
-            />
-          </Pressable>
+                    <Text
+                      color={colors.white}
+                      fontSize={14}
+                      fontWeight="600"
+                      alignSelf="flex-end"
+                    >
+                      {expanded ? "less" : "more"}
+                    </Text>
+                  </Pressable>
+                )}
+              </XStack>
+            )}
+          </YStack>
 
-          <Pressable onPress={() => setShareVisible(true)}>
-            <Image source={shareIcon} width={24} height={24} />
-          </Pressable>
+          {/* ACTIONS */}
+          <YStack gap="$4">
+            <YStack justifyContent="center" alignItems="center">
+              <Pressable onPress={handleLike}>
+                <Image
+                  source={likedState ? likeIconActive : likeIcon}
+                  width={24}
+                  height={24}
+                />
+              </Pressable>
+              <Text color={colors.white} fontFamily={"$body"} fontSize={12}>
+                {likeCount}
+              </Text>
+            </YStack>
 
-          <Pressable onPress={() => setConfirmVisible(true)}>
-            <MoreHorizontal size={28} color={colors.white} />
-          </Pressable>
-        </YStack>
-      </XStack>
+            <Pressable onPress={() => setCommentsVisible(true)}>
+              <Image source={commentIcon} width={24} height={24} />
+            </Pressable>
+
+            <Pressable onPress={() => setFoldersVisible(true)}>
+              <Image
+                source={isBookmarked ? bookmarkIconActive : bookmarkIcon}
+                width={24}
+                height={24}
+              />
+            </Pressable>
+
+            <Pressable onPress={() => setShareVisible(true)}>
+              <Image source={shareIcon} width={24} height={24} />
+            </Pressable>
+
+            <Pressable onPress={() => setConfirmVisible(true)}>
+              <MoreHorizontal size={28} color={colors.white} />
+            </Pressable>
+          </YStack>
+        </XStack>
+      </YStack>
+
+      {/* MODALS (UNCHANGED) */}
+      <CommentsSheet
+        visible={commentsVisible}
+        onClose={() => setCommentsVisible(false)}
+      />
+
+      <ConfirmReportModal
+        visible={confirmVisible}
+        onClose={() => setConfirmVisible(false)}
+        onConfirm={() => {
+          setConfirmVisible(false);
+          setReasonsVisible(true);
+        }}
+      />
+
+      <ReportReasonsModal
+        visible={reasonsVisible}
+        onClose={() => setReasonsVisible(false)}
+        onSelectReason={() => {
+          setReasonsVisible(false);
+          setSuccessVisible(true);
+        }}
+        onSelectOther={() => {}}
+      />
+
+      <ShareModal
+        visible={shareVisible}
+        onClose={() => setShareVisible(false)}
+        post={post}
+      />
+
+      <SuccessModal
+        visible={successVisible}
+        onClose={() => setSuccessVisible(false)}
+      />
+
+      <BookmarkFoldersModal
+        visible={foldersVisible}
+        folders={folders}
+        savedFolderIds={savedFolderIds}
+        onClose={() => setFoldersVisible(false)}
+        onToggleFolder={(id) => toggleBookmark(post.id, id)}
+        onCreateNew={() => {
+          setFoldersVisible(false);
+          setCreateVisible(true);
+        }}
+      />
+
+      <CreateFolderModal
+        visible={createVisible}
+        post={post}
+        onClose={() => setCreateVisible(false)}
+        onSave={(name) => {
+          createFolder(name, "", post.id);
+          setCreateVisible(false);
+        }}
+      />
     </YStack>
-
-    {/* MODALS (UNCHANGED) */}
-    <CommentsSheet
-      visible={commentsVisible}
-      onClose={() => setCommentsVisible(false)}
-    />
-
-    <ConfirmReportModal
-      visible={confirmVisible}
-      onClose={() => setConfirmVisible(false)}
-      onConfirm={() => {
-        setConfirmVisible(false);
-        setReasonsVisible(true);
-      }}
-    />
-
-    <ReportReasonsModal
-      visible={reasonsVisible}
-      onClose={() => setReasonsVisible(false)}
-      onSelectReason={() => {
-        setReasonsVisible(false);
-        setSuccessVisible(true);
-      }}
-      onSelectOther={() => {}}
-    />
-
-    <ShareModal
-      visible={shareVisible}
-      onClose={() => setShareVisible(false)}
-      post={post}
-    />
-
-    <SuccessModal
-      visible={successVisible}
-      onClose={() => setSuccessVisible(false)}
-    />
-
-    <BookmarkFoldersModal
-      visible={foldersVisible}
-      folders={folders}
-      savedFolderIds={savedFolderIds}
-      onClose={() => setFoldersVisible(false)}
-      onToggleFolder={(id) => toggleBookmark(post.id, id)}
-      onCreateNew={() => {
-        setFoldersVisible(false);
-        setCreateVisible(true);
-      }}
-    />
-
-    <CreateFolderModal
-      visible={createVisible}
-      post={post}
-      onClose={() => setCreateVisible(false)}
-      onSave={(name) => {
-        createFolder(name, "", post.id);
-        setCreateVisible(false);
-      }}
-    />
-  </YStack>
-)}
+  );
+}

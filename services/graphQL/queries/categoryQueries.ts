@@ -7,6 +7,7 @@ query DiscoverCategories {
     icon
     bdColor
     bgColor
+    textPostBg
     order
   }
 }

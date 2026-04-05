@@ -1,10 +1,10 @@
-import { FeedTextPost, FeedBiblePost } from "@/types/feedTypes";
+import { FeedBiblePost, FeedTextPost } from "@/types/feedTypes";
 import React from "react";
 import { YStack } from "tamagui";
 
-import TextPostCardOutput from "./TextPostCardOutput";
-import { Category } from "@/types/category";
 import { useResponsive } from "@/hooks/useResponsive";
+import { Category } from "@/types/category";
+import TextPostCardOutput from "./TextPostCardOutput";
 
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -13,6 +13,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import colors from "@/constants/colors";
 
 type Props = {
   post: FeedTextPost | FeedBiblePost;
@@ -24,7 +25,7 @@ export default function TextPostCard({ post, onLike }: Props) {
 
   /* ================= SAFE DATA ================= */
 
-  const category: Category | undefined = post.category;
+  const category = post.category;
 
   let scriptureText: string | undefined;
   let translation: string | undefined;
@@ -74,7 +75,7 @@ export default function TextPostCard({ post, onLike }: Props) {
     .onEnd((_, success) => {
       if (success) {
         if (onLike) runOnJS(onLike)();
-        runOnJS(triggerHeart)(); // 🔥 animation
+        runOnJS(triggerHeart)();
       }
     });
 
@@ -84,7 +85,7 @@ export default function TextPostCard({ post, onLike }: Props) {
 
   return (
     <GestureDetector gesture={doubleTap}>
-      <Animated.View style={{ flex: 1 }}>
+      <Animated.View style={{ flex: 1, backgroundColor: category?.textPostBg ? category?.textPostBg : "#270C1F"}}>
         <YStack
           flex={1}
           justifyContent="center"
@@ -93,7 +94,7 @@ export default function TextPostCard({ post, onLike }: Props) {
           paddingVertical={hp(16)}
         >
           <TextPostCardOutput
-            category={category}
+            category={category as Category}
             scripture={scriptureText}
             translation={translation}
             verseText={verseText}
@@ -101,14 +102,14 @@ export default function TextPostCard({ post, onLike }: Props) {
           />
         </YStack>
 
-        {/* ❤️ HEART ANIMATION */}
+        {/* HEART ANIMATION */}
         <Animated.View
           style={[
             {
               position: "absolute",
               alignSelf: "center",
               top: hp(40),
-            },
+            }, 
             heartStyle,
           ]}
         >

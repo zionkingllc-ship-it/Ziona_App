@@ -7,20 +7,19 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
-
     "androidNavigationBar": {
       "backgroundColor": "#ffffff",
       "barStyle": "dark-content"
     },
-
     "ios": {
       "bundleIdentifier": "com.zionking.ziona",
-      "associatedDomains": ["applinks:ziona.app"],
+      "associatedDomains": [
+        "applinks:ziona.app"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
-
     "android": {
       "softwareKeyboardLayoutMode": "resize",
       "package": "com.zionking.ziona",
@@ -34,7 +33,10 @@
               "pathPrefix": "/post"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "permissions": [
@@ -42,7 +44,6 @@
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
-
     "plugins": [
       "expo-router",
       "expo-video",
@@ -60,16 +61,15 @@
           }
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "expo-asset"
     ],
-
     "extra": {
       "router": {},
       "eas": {
         "projectId": "ae56ecb7-5133-4048-849f-b5f191d82d6a"
       }
     },
-
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"

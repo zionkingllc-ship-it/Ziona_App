@@ -93,10 +93,10 @@ export default function VideoPostCard({
           ref={videoRef}
           source={{ uri: videoUrl }}
           style={{ width: "100%", height: "100%" }}
-          resizeMode="cover"
+          resizeMode="contain"
           repeat
 
-          // 🔥 CORE FIX: controlled playback
+          //  CORE FIX: controlled playback
           paused={!isPlaying}
 
           onLoad={(d) => {
@@ -114,7 +114,7 @@ export default function VideoPostCard({
           }}
         />
 
-        {/* ❤️ LIKE ANIMATION */}
+        {/*  LIKE ANIMATION */}
         <Animated.View
           style={[
             {
@@ -131,7 +131,7 @@ export default function VideoPostCard({
           />
         </Animated.View>
 
-        {/* ▶ PLAY BUTTON */}
+        {/*  PLAY BUTTON */}
         {!isPlaying && (
           <View
             width={50}

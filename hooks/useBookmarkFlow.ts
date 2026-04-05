@@ -1,70 +1,32 @@
-import { useState, useMemo } from "react";
-import { Folder, Bookmark } from "@/types/folder";
+import { useState } from "react";
+import { useToggleSave } from "./useToggleSave";
 
-export function useBookmarkFlow(postId: string) {
+export function useBookmarkFlow(postId: string, isSaved: boolean) {
   const [foldersVisible, setFoldersVisible] = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
 
-  const [folders, setFolders] = useState<Folder[]>([
-    {
-      id: "1",
-      name: "Churches",
-      cover: "https://picsum.photos/200",
-      createdAt: new Date().toISOString(),
-    },
-  ]);
-
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-
-  /* ================= DERIVED ================= */
-
-  const savedFolderIds = useMemo(() => {
-    return bookmarks
-      .filter((b) => b.postId === postId)
-      .map((b) => b.folderId);
-  }, [bookmarks, postId]);
+  const toggleSaveMutation = useToggleSave();
 
   /* ================= ACTIONS ================= */
 
   const openFolders = () => setFoldersVisible(true);
 
-  const toggleFolder = (folderId: string) => {
-    const existing = bookmarks.find(
-      (b) => b.postId === postId && b.folderId === folderId
-    );
+  const toggleFolder = (folderId?: string) => {
+    toggleSaveMutation.mutate({
+      postId,
+      currentSaved: isSaved,
+      folderId,
+    });
 
-    if (existing) {
-      // remove bookmark
-      setBookmarks((prev) =>
-        prev.filter((b) => b.id !== existing.id)
-      );
-    } else {
-      const newBookmark: Bookmark = {
-        id: Date.now().toString(),
-        postId,
-        folderId,
-        createdAt: new Date().toISOString(),
-      };
-
-      setBookmarks((prev) => [...prev, newBookmark]);
-    }
+    setFoldersVisible(false);
   };
 
   const createFolder = (name: string) => {
-    const newFolder: Folder = {
-      id: Date.now().toString(),
-      name,
-      cover: "https://picsum.photos/200",
-      createdAt: new Date().toISOString(),
-    };
-
-    setFolders((prev) => [...prev, newFolder]);
+    console.log("Create folder:", name);
     setCreateVisible(false);
   };
 
   return {
-    folders,
-    savedFolderIds,
     foldersVisible,
     createVisible,
     openFolders,

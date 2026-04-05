@@ -82,7 +82,7 @@ export default function CarouselPostCard({
               source={{ uri: item.url }}
               width={screenWidth}
               height={screenHeight}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           )}
         />

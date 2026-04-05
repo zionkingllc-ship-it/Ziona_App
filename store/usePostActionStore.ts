@@ -1,34 +1,35 @@
 import { create } from "zustand";
 
-type PostActionsState = {
+type State = {
   likedPosts: Record<string, boolean>;
   savedPosts: Record<string, boolean>;
+  followedUsers: Record<string, boolean>;
 
-  toggleLike: (postId: string, currentValue?: boolean) => void;
-  toggleSave: (postId: string, currentValue?: boolean) => void;
+  toggleLike: (postId: string, value: boolean) => void;
+  toggleSave: (postId: string, value: boolean) => void;
 
-  clear: () => void;
+   
 };
 
-export const usePostActionsStore = create<PostActionsState>((set) => ({
+export const usePostActionsStore = create<State>((set) => ({
   likedPosts: {},
   savedPosts: {},
+  followedUsers: {},
 
-  toggleLike: (postId, currentValue) =>
+  toggleLike: (postId, value) =>
     set((state) => ({
       likedPosts: {
         ...state.likedPosts,
-        [postId]: !(state.likedPosts[postId] ?? currentValue ?? false),
+        [postId]: value,
       },
     })),
 
-  toggleSave: (postId, currentValue) =>
+  toggleSave: (postId, value) =>
     set((state) => ({
       savedPosts: {
         ...state.savedPosts,
-        [postId]: !(state.savedPosts[postId] ?? currentValue ?? false),
+        [postId]: value,
       },
     })),
-
-  clear: () => set({ likedPosts: {}, savedPosts: {} }),
+ 
 }));
