@@ -1,29 +1,23 @@
 import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useLocalSearchParams, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  ViewToken,
-  AppState,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { YStack, View } from "tamagui";
-import { FeedPost } from "@/types/feedTypes";
-
-import { useUserPosts } from "@/hooks/useUserPost";
 import { preloadPostMedia } from "@/helpers/preloadMedia";
-
+import { useUserPosts } from "@/hooks/useUserPost";
+import { FeedPost } from "@/types/feedTypes";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, AppState, FlatList, ViewToken } from "react-native";
+import { View } from "tamagui";
+import { SnapListContainer } from "@/components/layout/SnapListContainer";
+import { FlatListProps } from "react-native";
+ 
 export default function ProfilePostViewerScreen() {
+  const { postId } = useLocalSearchParams<{ postId: string }>();
   const tabBarHeight = useBottomTabBarHeight();
 
-  const { postId } = useLocalSearchParams<{ postId: string }>();
+  const { posts, isLoading } = useUserPosts();
 
-  const { posts, isLoading } = useUserPosts(); // 🔥 scoped to current user
-
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<FeedPost>>(null);
 
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [pausedPostId, setPausedPostId] = useState<string | null>(null);
@@ -33,50 +27,38 @@ export default function ProfilePostViewerScreen() {
 
   const hasScrolledRef = useRef(false);
 
-  /* ================= RESET ON NEW POST ================= */
-
-  useEffect(() => {
-    hasScrolledRef.current = false;
-  }, [postId]);
-
   /* ================= INITIAL SCROLL ================= */
 
   useEffect(() => {
-    if (
-      hasScrolledRef.current ||
-      !posts.length ||
-      !containerHeight
-    )
-      return;
+    if (hasScrolledRef.current) return;
+    if (!posts.length) return;
+    if (!containerHeight) return;
 
     const index = posts.findIndex((p) => p.id === postId);
+    if (index < 0) return;
 
-    if (flatListRef.current && index >= 0) {
-      flatListRef.current.scrollToOffset({
+    requestAnimationFrame(() => {
+      flatListRef.current?.scrollToOffset({
         offset: index * containerHeight,
         animated: false,
       });
 
       setActivePostId(posts[index]?.id ?? null);
       hasScrolledRef.current = true;
-    }
+    });
   }, [posts, postId, containerHeight]);
 
-  /* ================= FOCUS / APP STATE ================= */
+  /* ================= FOCUS ================= */
 
   useFocusEffect(
     useCallback(() => {
-      return () => {
-        setActivePostId(null);
-      };
-    }, [])
+      return () => setActivePostId(null);
+    }, []),
   );
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
-      if (state !== "active") {
-        setActivePostId(null);
-      }
+      if (state !== "active") setActivePostId(null);
     });
 
     return () => sub.remove();
@@ -103,79 +85,50 @@ export default function ProfilePostViewerScreen() {
       const index = posts.findIndex((p) => p.id === current.id);
 
       if (index >= 0) {
-        if (posts[index + 1]) {
-          preloadPostMedia(posts[index + 1] as any);
-        }
-        if (posts[index - 1]) {
-          preloadPostMedia(posts[index - 1] as any);
-        }
+        if (posts[index + 1]) preloadPostMedia(posts[index + 1] as any);
+        if (posts[index - 1]) preloadPostMedia(posts[index - 1] as any);
       }
-    }
+    },
   ).current;
 
-  /* ================= RENDER ================= */
+  /* ================= LOADING ================= */
 
-  const renderItem = useCallback(
-    ({ item }: { item: FeedPost }) => (
-      <PostCard
-        post={item}
-        isPlaying={item.id === activePostId && item.id !== pausedPostId}
-        onTogglePlay={() => {
-          setPausedPostId((prev) => (prev === item.id ? null : item.id));
-        }}
-        screenHeight={containerHeight}
-        screenWidth={containerWidth}
-        tabBarHeight={tabBarHeight}
-      />
-    ),
-    [activePostId, pausedPostId, containerHeight, containerWidth, tabBarHeight]
-  );
-
-  if (isLoading || !posts.length) {
+  if (isLoading) {
     return (
-      <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
-        <View flex={1} justifyContent="center" alignItems="center">
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      </SafeAreaView>
+      <View flex={1} justifyContent="center" alignItems="center">
+        <ActivityIndicator size={40} color={colors.primary} />
+      </View>
     );
   }
 
+  /* ================= MAIN ================= */
+
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1 }}>
-      <YStack style={{ flex: 1 }}>
-        <View
-          style={{ flex: 1 }}
-          onLayout={(e) => {
-            const { height, width } = e.nativeEvent.layout;
-            if (height !== containerHeight) setContainerHeight(height);
-            if (width !== containerWidth) setContainerWidth(width);
+    <SnapListContainer
+      flatListRef={flatListRef}
+      data={posts}
+      keyExtractor={(item) => item.id}
+      viewabilityConfig={viewabilityConfig}
+      onViewableItemsChanged={onViewableItemsChanged}
+      onLayoutReady={({ height, width }) => {
+        setContainerHeight(height);
+        setContainerWidth(width);
+      }}
+      renderItem={({ item }) => (
+        <PostCard
+          post={item}
+          liked={item.viewerState.liked}
+          isPlaying={item.id === activePostId && item.id !== pausedPostId}
+          onTogglePlay={() => {
+            setPausedPostId((prev) =>
+              prev === item.id ? null : item.id,
+            );
           }}
-        >
-          <FlatList
-            ref={flatListRef}
-            data={posts}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            pagingEnabled
-            decelerationRate="fast"
-            showsVerticalScrollIndicator={false}
-            snapToInterval={containerHeight}
-            snapToAlignment="start"
-            getItemLayout={(_, index) => ({
-              length: containerHeight,
-              offset: containerHeight * index,
-              index,
-            })}
-            viewabilityConfig={viewabilityConfig}
-            onViewableItemsChanged={onViewableItemsChanged}
-            windowSize={3}
-            initialNumToRender={2}
-            maxToRenderPerBatch={2}
-            removeClippedSubviews
-          />
-        </View>
-      </YStack>
-    </SafeAreaView>
+          screenHeight={containerHeight}
+          screenWidth={containerWidth}
+          tabBarHeight={tabBarHeight}
+        />
+      )}
+    />
   );
 }

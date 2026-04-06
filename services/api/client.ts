@@ -18,38 +18,23 @@ export const clearAuthTokens = () => {
 
 export const api = axios.create({
   baseURL: "https://ziona-api-staging.onrender.com/api",
-  timeout: 60000, // increased for Render cold start
+  timeout: 60000,
 });
 
-/* ---------------- REQUEST INTERCEPTOR ---------------- */
+/* REQUEST */
 
 api.interceptors.request.use((config) => {
-  console.log("🟦 API REQUEST:", config.method?.toUpperCase(), config.url);
-
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
-
   return config;
 });
 
-/* ---------------- RESPONSE INTERCEPTOR ---------------- */
+/* RESPONSE */
 
 api.interceptors.response.use(
-  (response) => {
-    console.log("🟩 API RESPONSE:", response.config.url, response.status);
-    return response;
-  },
-
+  (response) => response,
   async (error) => {
-    console.error("🟥 API ERROR");
-
-    console.log("message:", error.message);
-    console.log("code:", error.code);
-    console.log("url:", error.config?.url);
-    console.log("response status:", error.response?.status);
-    console.log("response data:", error.response?.data);
-
     const originalRequest = error.config;
 
     if (
@@ -60,13 +45,11 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        console.log("🔁 Attempting token refresh");
-
         const response = await axios.post(
           "https://ziona-api-staging.onrender.com/api/auth/refresh",
           {
             refresh_token: refreshToken,
-          },
+          }
         );
 
         const newTokens = response.data;
@@ -79,16 +62,11 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
 
         return api(originalRequest);
-      } catch (refreshError) {
-        console.log("❌ Token refresh failed");
+      } catch {
         clearAuthTokens();
       }
     }
 
-    if (error.response) {
-      return Promise.reject(error.response.data);
-    }
-
-    return Promise.reject(error);
-  },
+    return Promise.reject(error.response?.data || error);
+  }
 );

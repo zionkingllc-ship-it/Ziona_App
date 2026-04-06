@@ -20,6 +20,8 @@ import ShareModal from "../ui/modals/ShareModal";
 import SuccessModal from "../ui/modals/successModal";
 
 import { useToggleLike } from "@/hooks/useToggleLike";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 
 /* ICONS */
 const likeIcon = require("@/assets/images/likeIcon.png");
@@ -28,6 +30,8 @@ const commentIcon = require("@/assets/images/commentIcon.png");
 const bookmarkIcon = require("@/assets/images/bookmarkIcon.png");
 const bookmarkIconActive = require("@/assets/images/bookmarkIconActive.png");
 const shareIcon = require("@/assets/images/shareIcon.png");
+
+
 
 type Props = {
   post: FeedPost;
@@ -59,6 +63,7 @@ export function PostCard({
 
   const likedState = liked;
   const likeCount = post.stats.likesCount;
+  const insets = useSafeAreaInsets();
 
   const toggleLikeMutation = useToggleLike();
 
@@ -94,7 +99,7 @@ export function PostCard({
       />
 
       {/*SINGLE OVERLAY*/}
-      <YStack position="absolute" bottom={34} width="100%">
+      <YStack position="absolute" bottom={tabBarHeight/3} width="100%">
         <XStack padding="$4" alignItems="flex-end">
           <YStack flex={1} gap="$2">
             {/* PROFILE ROW */}

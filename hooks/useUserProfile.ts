@@ -3,7 +3,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { UserProfile } from "@/types/userProfile";
 import { useQuery } from "@tanstack/react-query";
 
-const GET_USER_PROFILE = `
+export const GET_USER_PROFILE = `
 query GetUserProfile($userId: String!) {
   userProfile(userId: $userId) {
     id
@@ -37,11 +37,11 @@ export function useUserProfile(
   userId?: string,
   options?: { enabled?: boolean },
 ) {
-  const token = useAuthStore((s) => s.tokens?.accessToken);
-
+  const token = useAuthStore((s) => s.tokens?.accessToken); 
+  const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
   return useQuery<UserProfile | null>({
     queryKey: ["userProfile", userId],
-    enabled: !!userId && !!token && options?.enabled !== false,
+    enabled: !!userId && !!token && !isBootstrapping,
 
     refetchOnMount: true,
     refetchOnReconnect: true,

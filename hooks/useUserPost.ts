@@ -18,7 +18,7 @@ type UserPostsResponse = {
    QUERY
 ========================= */
 
-const GET_USER_POSTS = `
+export const GET_USER_POSTS = `
 query GetUserPosts($userId: String!, $cursor: String, $limit: Int = 20) {
   userPosts(userId: $userId, cursor: $cursor, limit: $limit) {
     hasMore
@@ -46,9 +46,11 @@ query GetUserPosts($userId: String!, $cursor: String, $limit: Int = 20) {
 
 export function useUserPosts(overrideUserId?: string) {
   const authUser = useAuthStore((state) => state.user);
- 
+  const user = useAuthStore((s) => s.user?.data ?? s.user); 
+  const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
+
   const userId = overrideUserId ?? authUser?.id;
- console.log("USER ID USED:", userId);
+  console.log("USER ID USED:", userId);
   const query = useInfiniteQuery<
     UserPostsResponse,
     Error,
@@ -57,7 +59,7 @@ export function useUserPosts(overrideUserId?: string) {
     string | undefined
   >({
     queryKey: ["userPosts", userId],
-    enabled: !!userId,
+    enabled: !!userId && !isBootstrapping,
 
     queryFn: async ({ pageParam }) => {
       if (!userId) {
@@ -67,7 +69,7 @@ export function useUserPosts(overrideUserId?: string) {
           hasMore: false,
         };
       }
-
+      console.log("FETCHING USER POSTS...");
       const data = await graphqlRequest(GET_USER_POSTS, {
         userId,
         cursor: pageParam,

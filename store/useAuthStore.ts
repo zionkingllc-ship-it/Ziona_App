@@ -1,19 +1,23 @@
+import { GET_USER_POSTS } from "@/hooks/useUserPost";
+import { queryClient } from "@/lib/queryClient";
 import { authApi } from "@/services/api/authApi";
 import { clearAuthTokens, setAuthTokens } from "@/services/api/client";
+import { graphqlRequest } from "@/services/graphQL/graphqlClient";
 import { AuthState, AuthTokens, User } from "@/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { queryClient } from "@/lib/queryClient";
 
 type AuthStore = AuthState & {
   isBootstrapping: boolean;
   isInitializing: boolean;
+  _hasHydrated: boolean;
 
   setAuth: (user: User, tokens: AuthTokens) => void;
-  setTokens: (tokens: AuthTokens) => void; 
+  setTokens: (tokens: AuthTokens) => void;
   logout: () => Promise<void>;
   initializeAuth: () => Promise<void>;
+  setHasHydrated: (state: boolean) => void;
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -23,7 +27,7 @@ export const useAuthStore = create<AuthStore>()(
       tokens: null,
       isAuthenticated: false,
       mode: "unauthenticated",
-
+      _hasHydrated: false,
       isBootstrapping: true,
       isInitializing: false,
 
@@ -41,10 +45,11 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: true,
           mode: "authenticated",
         });
-          queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       },
 
-      /* -------- TOKEN REFRESH -------- */
+      /* -------- TOKEN UPDATE -------- */
 
       setTokens: (tokens) => {
         setAuthTokens({
@@ -52,20 +57,15 @@ export const useAuthStore = create<AuthStore>()(
           refreshToken: tokens.refreshToken,
         });
 
-        set({
-          tokens,
-        });
+        set({ tokens });
       },
 
       /* -------- LOGOUT -------- */
 
       logout: async () => {
         try {
-          console.log("Logging out user");
           await authApi.signOut();
-        } catch (err) {
-          console.log("Backend logout failed, continuing anyway");
-        }
+        } catch {}
 
         clearAuthTokens();
 
@@ -77,9 +77,10 @@ export const useAuthStore = create<AuthStore>()(
         });
 
         await AsyncStorage.removeItem("auth-storage");
+        queryClient.clear(); // 🔥 ensure no stale cache
       },
 
-      /* -------- APP START AUTH CHECK -------- */
+      /* -------- INIT AUTH -------- */
 
       initializeAuth: async () => {
         const state = get();
@@ -90,6 +91,14 @@ export const useAuthStore = create<AuthStore>()(
 
         const tokens = state.tokens;
 
+        //  set tokens IMMEDIATELY
+        if (tokens?.accessToken) {
+          setAuthTokens({
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+          });
+        }
+
         if (!tokens?.accessToken) {
           set({
             isBootstrapping: false,
@@ -98,32 +107,55 @@ export const useAuthStore = create<AuthStore>()(
           return;
         }
 
-        setAuthTokens({
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-        });
-
         try {
-          const user = await authApi.getMe();
+          const userRes = await authApi.getMe();
+
+          // normalize again (backend inconsistency safe)
+          const user = userRes?.data ?? userRes;
 
           set({
             user,
             isAuthenticated: true,
             mode: "authenticated",
-            isBootstrapping: false,
-            isInitializing: false,
           });
-        } catch (err) {
-          console.log("Auth verification failed, keeping stored session");
 
-          set({
-            isAuthenticated: false,
-            mode: "authenticated",
-            isBootstrapping: false,
-            isInitializing: false,
-          });
+          //  PREFETCH
+          await Promise.all([
+            queryClient.prefetchQuery({
+              queryKey: ["userProfile", user.id],
+              queryFn: () => authApi.getMe(),
+            }),
+            queryClient.prefetchInfiniteQuery({
+              queryKey: ["userPosts", user.id],
+              queryFn: async ({ pageParam }) => {
+                const data = await graphqlRequest(GET_USER_POSTS, {
+                  userId: user.id,
+                  cursor: pageParam,
+                  limit: 20,
+                });
+
+                const res = data?.userPosts;
+
+                return {
+                  posts: res?.posts ?? [],
+                  nextCursor: res?.nextCursor,
+                  hasMore: res?.hasMore ?? false,
+                };
+              },
+              initialPageParam: undefined,
+            }),
+          ]);
+        } catch (err) {
+          console.log("Auth verification failed");
         }
+
+        set({
+          isBootstrapping: false,
+          isInitializing: false,
+        });
       },
+
+      setHasHydrated: (state: boolean) => set({ _hasHydrated: state }),
     }),
 
     {
@@ -136,6 +168,26 @@ export const useAuthStore = create<AuthStore>()(
         isAuthenticated: state.isAuthenticated,
         mode: state.mode,
       }),
-    }
-  )
+
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+
+        //  unwrap wrongly stored user
+        if (state.user && (state.user as any).data) {
+          const raw = state.user as any;
+          state.user = raw.data;
+        }
+
+        //  restore tokens immediately
+        if (state.tokens?.accessToken) {
+          setAuthTokens({
+            accessToken: state.tokens.accessToken,
+            refreshToken: state.tokens.refreshToken,
+          });
+        }
+
+        state.setHasHydrated(true);
+      },
+    },
+  ),
 );

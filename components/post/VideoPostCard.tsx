@@ -20,7 +20,7 @@ interface Props {
   triggerHeart: () => void;
   screenWidth: number;
   screenHeight: number;
-  tabBarHeight: number;
+  tabBarHeight: number; 
 }
 
 export default function VideoPostCard({
@@ -32,6 +32,7 @@ export default function VideoPostCard({
   triggerHeart,
   screenWidth,
   screenHeight,
+  
 }: Props) {
   const videoRef = useRef<any>(null);
 

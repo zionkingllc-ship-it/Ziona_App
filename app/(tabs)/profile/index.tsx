@@ -1,17 +1,22 @@
 import ProtectedScreen from "@/components/auth/ProtectedScreen";
+import PostThumbnail from "@/components/discover/PostThumbnail";
 import Header from "@/components/layout/header";
 import CenteredMessage from "@/components/ui/CenteredMessage";
 import colors from "@/constants/colors";
 import { generateVideoThumbnail } from "@/helpers/thumbnailGenerator";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useUserPosts } from "@/hooks/useUserPost";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthStore } from "@/store/useAuthStore";
-import { FeedPost } from "@/types/feedTypes";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { FlatList, TouchableOpacity, useWindowDimensions } from "react-native";
+import {
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image, Text, XStack, YStack } from "tamagui";
 
@@ -19,14 +24,18 @@ export default function ProfileScreen() {
   const { width } = useWindowDimensions();
   const itemSize = width / 3 - 4;
 
-  const { posts, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useUserPosts();
+  const user = useAuthStore((s) => s.user);
+  const userId = user?.id;
 
-  const userId = useAuthStore((s) => s.user?.id);
+  const {
+    posts = [],
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useUserPosts(userId);
 
-  const { data: profile } = useUserProfile(userId, {
-    enabled: !!userId,
-  });
+  const { data: profile } = useUserProfile(userId);
 
   const [activeTab, setActiveTab] = useState<"posts" | "liked">("posts");
 
@@ -90,97 +99,21 @@ export default function ProfileScreen() {
     return posts;
   }, [activeTab, posts]);
 
-  /* ================= THUMBNAIL ================= */
-
-  const getPostThumbnail = (post: FeedPost) => {
-    if (post.type === "media") {
-      const media = post.media?.[0];
-      if (!media) return undefined;
-
-      if (media.type === "image") {
-        return { uri: media.url };
-      }
-
-      if (media.type === "video") {
-        return videoThumbnails[post.id]
-          ? { uri: videoThumbnails[post.id] }
-          : undefined;
-      }
-    }
-
-    return undefined;
-  };
-
   const initials = profile?.username?.slice(0, 2)?.toUpperCase() || "U";
 
-  /* ================= RENDER ================= */
+  /* ================= PULL TO REFRESH ================= */
 
-  const renderPost = ({ item }: { item: FeedPost }) => {
-    const thumbnailSource = getPostThumbnail(item);
-
-    const isVideo = item.type === "media" && item.media?.[0]?.type === "video";
-
-    const isCarousel =
-      item.type === "media" && item.media && item.media.length > 1;
-
-    return (
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() =>
-          router.push({
-            pathname: "/profile/post/[postId]",
-            params: { postId: item.id },
-          })
-        }
-        style={{
-          width: itemSize,
-          height: itemSize,
-          margin: 2,
-          borderRadius: 2,
-          overflow: "hidden",
-          backgroundColor: colors.gray,
-        }}
-      >
-        {thumbnailSource && (
-          <Image
-            source={thumbnailSource}
-            style={{ width: "100%", height: "100%" }}
-            resizeMode="cover"
-          />
-        )}
-
-        {isVideo && (
-          <Ionicons
-            name="videocam"
-            size={18}
-            color="white"
-            style={{
-              position: "absolute",
-              top: 6,
-              left: 6,
-            }}
-          />
-        )}
-
-        {isCarousel && (
-          <Ionicons
-            name="images"
-            size={18}
-            color="white"
-            style={{
-              position: "absolute",
-              top: 6,
-              left: 6,
-            }}
-          />
-        )}
-      </TouchableOpacity>
-    );
-  };
+  const { refreshing, onRefresh } = usePullToRefresh([
+    ["userPosts", userId],
+    ["userProfile", userId],
+  ]);
 
   return (
     <ProtectedScreen>
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: colors.white }}
+        edges={["top", "left", "right"]}
+      >
         {/* HEADER */}
         <XStack padding={15}>
           <Header
@@ -262,7 +195,7 @@ export default function ProfileScreen() {
         </YStack>
 
         {/* STATS */}
-        <XStack width={"100%"} height={"11%"}>
+        <XStack width={"100%"} paddingVertical={10}>
           <YStack alignItems="center" justifyContent="center" width={"33.3%"}>
             <Text fontFamily={"$body"} fontWeight="500" fontSize={"$4"}>
               {profile?.stats?.postsCount ?? posts.length}
@@ -294,10 +227,10 @@ export default function ProfileScreen() {
         {/* TABS */}
         <XStack
           width={"50%"}
-          height={"6%"}
           alignSelf="center"
           justifyContent="center"
           alignItems="center"
+          paddingVertical={10}
           padding={10}
         >
           <TouchableOpacity
@@ -324,34 +257,55 @@ export default function ProfileScreen() {
         </XStack>
 
         {/* CONTENT */}
-        {isLoading ? (
-          <CenteredMessage text="Loading..." fontFamily={"$body"} />
-        ) : filteredPosts.length === 0 ? (
-          <YStack marginTop={"$7"}>
-            <CenteredMessage
-              fontFamily={"$body"}
-              text="Your message matters"
-              subtitle="Create with intention. Post with purpose."
-              actionLabel="Create Post"
-              onActionPress={() => router.navigate("/(tabs)/create")}
-              fullScreen={false}
-            />
-          </YStack>
-        ) : (
-          <FlatList
-            data={filteredPosts}
-            keyExtractor={(item) => item.id}
-            renderItem={renderPost}
-            numColumns={3}
-            showsVerticalScrollIndicator={false}
-            onEndReached={() => {
-              if (hasNextPage && !isFetchingNextPage) {
-                fetchNextPage();
+        <YStack flex={1} marginTop={10}>
+          {isLoading ? (
+            <CenteredMessage text="Loading..." fontFamily={"$body"} />
+          ) : filteredPosts.length === 0 ? (
+            <YStack marginTop={"$7"}>
+              <CenteredMessage
+                fontFamily={"$body"}
+                text="Your message matters"
+                subtitle="Create with intention. Post with purpose."
+                actionLabel="Create Post"
+                onActionPress={() => router.navigate("/(tabs)/create")}
+                fullScreen={false}
+              />
+            </YStack>
+          ) : (
+            <FlatList
+              data={filteredPosts}
+              style={{ flex: 1 }}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item, index }) => (
+                <PostThumbnail
+                  post={item}
+                  size={itemSize}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/profile/post/[postId]",
+                      params: { postId: item.id },
+                    })
+                  }
+                />
+              )}
+              numColumns={3}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
-            }}
-            onEndReachedThreshold={0.5}
-          />
-        )}
+              showsVerticalScrollIndicator={false}
+              onEndReached={() => {
+                if (hasNextPage && !isFetchingNextPage) {
+                  fetchNextPage();
+                }
+              }}
+              onEndReachedThreshold={0.5}
+              contentContainerStyle={{
+                paddingBottom: 30,
+                flexGrow: 1,
+              }}
+            />
+          )}
+        </YStack>
       </SafeAreaView>
     </ProtectedScreen>
   );
