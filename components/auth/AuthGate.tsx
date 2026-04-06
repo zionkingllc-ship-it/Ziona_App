@@ -18,4 +18,4 @@ export default function AuthGate({ children }: Props) {
   }
 
   return <>{children}</>;
-} 
+}

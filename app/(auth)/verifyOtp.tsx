@@ -9,7 +9,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Keyboard } from "react-native";
-import { Image, Text, YStack } from "tamagui";
+import { Image, Text, YStack, XStack } from "tamagui";
 
 const OTP_LENGTH = 6;
 
@@ -153,7 +153,8 @@ export default function VerifyOtp() {
 
   return (
     <KeyboardAvoidingWrapper>
-      <Header />
+      <XStack padding={15}><Header /></XStack>
+      
 
       <YStack flex={1} padding="$4" gap="$4" marginTop="$10">
         <Image

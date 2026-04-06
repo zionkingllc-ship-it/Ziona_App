@@ -11,5 +11,5 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
-, "app/(tabs)/feed"  ]
+, "app/(tabs)/feed", "app/authGate/loading.ts"  ]
 }

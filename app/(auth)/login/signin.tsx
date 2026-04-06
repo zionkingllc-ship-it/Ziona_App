@@ -7,7 +7,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable } from "react-native";
-import { Image, Text, YStack } from "tamagui";
+import { Image, Text, XStack, YStack } from "tamagui";
 import { EyeClosed, Eye } from "@tamagui/lucide-icons";
 
 import { useAsyncStore } from "@/store/useAsyncStore";
@@ -94,7 +94,8 @@ export default function SignIn() {
 
   return (
     <KeyboardAvoidingWrapper>
-      <Header />
+      <XStack padding={15}><Header /></XStack>
+      
 
       <YStack
         flex={1}

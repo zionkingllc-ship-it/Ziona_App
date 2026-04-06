@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+type SignupFlow = "email" | "google" | null;
+
 interface SignupState {
   email: string | null;
   birthday: string | null;
@@ -7,6 +9,9 @@ interface SignupState {
   suggestedUsernames: string[];
   selectedUsername: string | null;
 
+  flow: SignupFlow;
+
+  setFlow: (flow: SignupFlow) => void;
   setEmail: (email: string) => void;
   setBirthday: (birthday: string) => void;
   setPassword: (password: string) => void;
@@ -23,30 +28,19 @@ export const useSignupStore = create<SignupState>((set) => ({
   suggestedUsernames: [],
   selectedUsername: null,
 
-  setEmail: (email) =>
-    set({
-      email,
-    }),
+  flow: null,
 
-  setBirthday: (birthday) =>
-    set({
-      birthday,
-    }),
+  setFlow: (flow) => set({ flow }),
 
-  setPassword: (password) =>
-    set({
-      password,
-    }),
+  setEmail: (email) => set({ email }),
+  setBirthday: (birthday) => set({ birthday }),
+  setPassword: (password) => set({ password }),
 
   setSuggestions: (suggestions) =>
-    set({
-      suggestedUsernames: suggestions ?? [],
-    }),
+    set({ suggestedUsernames: suggestions ?? [] }),
 
   setSelectedUsername: (username) =>
-    set({
-      selectedUsername: username,
-    }),
+    set({ selectedUsername: username }),
 
   reset: () =>
     set({
@@ -55,5 +49,6 @@ export const useSignupStore = create<SignupState>((set) => ({
       password: null,
       suggestedUsernames: [],
       selectedUsername: null,
+      flow: null,
     }),
 }));

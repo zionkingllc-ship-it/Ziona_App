@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Header from "@/components/layout/header";
 import colors from "@/constants/colors";
 import { useUpdateAvatar } from "@/hooks/useProfileMutations";
@@ -24,8 +25,10 @@ export default function EditProfileScreen() {
     ["userProfile", userId],
   ]);
 
+  //LOCAL PREVIEW STATE
+  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
+
   const handlePickImage = async () => {
-    // Prevent multiple taps while uploading
     if (avatarMutation.isPending) return;
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -33,6 +36,8 @@ export default function EditProfileScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
+      allowsEditing: true,   
+      aspect: [1, 1],      
       quality: 0.7,
     });
 
@@ -40,16 +45,22 @@ export default function EditProfileScreen() {
 
     const asset = result.assets[0];
 
+    console.log("SELECTED IMAGE:", asset);
+
+    // SET LOCAL PREVIEW IMMEDIATELY
+    setLocalAvatar(asset.uri);
+
     const file = {
       uri: asset.uri,
-      type: "image/jpeg",
-      name: "avatar.jpg",
     };
 
     try {
       await avatarMutation.mutateAsync(file);
     } catch (e) {
       console.log("Avatar update failed", e);
+
+      //revert preview if backend fails
+      setLocalAvatar(null);
     }
   };
 
@@ -79,7 +90,9 @@ export default function EditProfileScreen() {
             <Avatar circular size="$8">
               <Avatar.Image
                 source={
-                  user?.avatarUrl
+                  localAvatar
+                    ? { uri: localAvatar } // ✅ LOCAL FIRST
+                    : user?.avatarUrl
                     ? { uri: user.avatarUrl }
                     : require("@/assets/images/emptyDP.png")
                 }
@@ -100,49 +113,36 @@ export default function EditProfileScreen() {
 
         {/* Info Section */}
         <YStack flex={1} gap="$4" padding={20}>
-          {/* Name */}
           <Pressable onPress={() => router.push("/profile/edit/name")}>
-            <XStack
-              justifyContent="space-between"
-              alignItems="center"
-            >
+            <XStack justifyContent="space-between" alignItems="center">
               <Text fontSize={16}>Name</Text>
               <Text fontSize={16}>
-                {isLoading ? "..." : user?.fullName || ""}
+                {isLoading ? "fetching..." : user?.fullName || ""}
               </Text>
               <ChevronRight size={22} color="#444" />
             </XStack>
           </Pressable>
 
-          {/* Username */}
           <Pressable onPress={() => router.push("/profile/edit/username")}>
-            <XStack
-              justifyContent="space-between"
-              alignItems="center"
-            >
+            <XStack justifyContent="space-between" alignItems="center">
               <Text fontSize={16}>Username</Text>
               <Text fontSize={16}>
-                {isLoading ? "..." : user?.username || ""}
+                {isLoading ? "fetching..." : user?.username || ""}
               </Text>
               <ChevronRight size={22} color="#444" />
             </XStack>
           </Pressable>
 
-          {/* Section Label */}
           <Text marginTop={10}>More info</Text>
 
-          {/* Bio */}
           <YStack>
             <Text marginBottom={4}>Bio</Text>
 
             <Pressable onPress={() => router.push("/profile/edit/bio")}>
-              <XStack
-                justifyContent="space-between"
-                alignItems="center"
-              >
+              <XStack justifyContent="space-between" alignItems="center">
                 <Text flex={1}>
                   {isLoading
-                    ? "..."
+                    ? "fetching..."
                     : user?.bio || "Add a short description about you"}
                 </Text>
                 <ChevronRight size={22} color="#444" />

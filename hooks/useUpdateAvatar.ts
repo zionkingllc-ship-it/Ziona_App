@@ -25,27 +25,40 @@ type AvatarResponse = {
 
 export function useUpdateAvatar() {
   const queryClient = useQueryClient();
-  const userId = useAuthStore((s) => s.user?.id); // ✅ FIXED
+  const userId = useAuthStore((s) => s.user?.id);  
 
   return useMutation({
     mutationFn: async (file: { uri: string }) => {
       const avatarUrl = file.uri;
 
+      console.log("SENDING AVATAR TO BACKEND:", avatarUrl);
+
       const data = await graphqlRequest(UPDATE_AVATAR, {
         avatarUrl,
       });
 
-      return data?.updateProfile?.user as AvatarResponse;
+      console.log("UPDATE AVATAR RESPONSE:", data);
+
+      if (!data?.updateProfile?.success) {
+        throw new Error("Backend failed to update avatar");
+      }
+
+      return data.updateProfile.user as AvatarResponse;
     },
 
     onSuccess: (updatedUser) => {
       if (!userId) return;
 
+      if (!updatedUser?.avatarUrl) {
+        console.log("Backend returned empty avatarUrl");
+        return;
+      }
+
       queryClient.setQueryData(
         ["userProfile", userId],
         (old: any) => ({
           ...old,
-          avatarUrl: updatedUser?.avatarUrl,
+          avatarUrl: updatedUser.avatarUrl,
         })
       );
 
@@ -55,9 +68,3 @@ export function useUpdateAvatar() {
     },
   });
 }
-
-/* =========================
-   UPDATE BIO
-========================= */
-
-

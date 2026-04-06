@@ -1,3 +1,4 @@
+import { graphqlRequest } from "@/services/graphQL/graphqlClient";
 import { useAuthStore } from "@/store/useAuthStore";
 import { FeedPost } from "@/types/feedTypes";
 import { normalizePost } from "@/utils/feed/normalizePost";
@@ -14,28 +15,30 @@ type UserPostsResponse = {
 };
 
 /* =========================
-   TEMP FALLBACK (SAFE)
+   QUERY
 ========================= */
 
-async function fetchUserPostsFallback(
-  userId: string,
-  cursor?: string,
-): Promise<UserPostsResponse> {
-  try {
-    // Replace with real backend later
-    return {
-      posts: [],
-      nextCursor: undefined,
-      hasMore: false,
-    };
-  } catch (error) {
-    return {
-      posts: [],
-      nextCursor: undefined,
-      hasMore: false,
-    };
+const GET_USER_POSTS = `
+query GetUserPosts($userId: String!, $cursor: String, $limit: Int = 20) {
+  userPosts(userId: $userId, cursor: $cursor, limit: $limit) {
+    hasMore
+    nextCursor
+    posts {
+      id
+      type
+      caption
+      createdAt
+      author { id username avatarUrl }
+      category { id label slug bgColor bdColor textPostBg }
+      image { items { id url thumbnailUrl width height } }
+      video { url thumbnailUrl duration width height }
+      scripture { 
+        reference text translation book chapter verseStart verseEnd 
+      }
+    }
   }
 }
+`;
 
 /* =========================
    HOOK
@@ -43,9 +46,9 @@ async function fetchUserPostsFallback(
 
 export function useUserPosts(overrideUserId?: string) {
   const authUser = useAuthStore((state) => state.user);
-
+ 
   const userId = overrideUserId ?? authUser?.id;
-
+ console.log("USER ID USED:", userId);
   const query = useInfiniteQuery<
     UserPostsResponse,
     Error,
@@ -54,7 +57,6 @@ export function useUserPosts(overrideUserId?: string) {
     string | undefined
   >({
     queryKey: ["userPosts", userId],
-
     enabled: !!userId,
 
     queryFn: async ({ pageParam }) => {
@@ -66,7 +68,16 @@ export function useUserPosts(overrideUserId?: string) {
         };
       }
 
-      const res = await fetchUserPostsFallback(userId, pageParam);
+      const data = await graphqlRequest(GET_USER_POSTS, {
+        userId,
+        cursor: pageParam,
+        limit: 20,
+      });
+
+      console.log("USER POSTS RAW FULL:", data);
+      console.log("USER POSTS ARRAY:", data?.userPosts?.posts);
+
+      const res = data?.userPosts;
 
       return {
         posts: res?.posts ?? [],
@@ -81,6 +92,13 @@ export function useUserPosts(overrideUserId?: string) {
       lastPage?.hasMore ? lastPage.nextCursor : undefined,
   });
 
+  const rawPosts = query.data?.pages?.flatMap((page) => page.posts ?? []) ?? [];
+
+  console.log("RAW POSTS BEFORE NORMALIZE:", rawPosts);
+
+  const normalized = rawPosts.map((p) => normalizePost(p));
+
+  console.log("NORMALIZED BEFORE FILTER:", normalized);
   /* =========================
      NORMALIZE + SAFETY
   ========================== */
@@ -98,6 +116,8 @@ export function useUserPosts(overrideUserId?: string) {
 
         return true;
       }) ?? [];
+
+  console.log("NORMALIZED USER POSTS:", posts);
 
   return {
     ...query,

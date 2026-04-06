@@ -31,6 +31,7 @@ export async function updateProfile(input: {
   console.log("AVATAR URL", res.avatar)
    console.log("USER", res.user)
     console.log("USER ID", res.userId)
+    
 
   if (!res?.success) {
     throw new Error(res?.error?.message || "Failed to update profile");
@@ -59,6 +60,7 @@ export async function updateAvatar(file: any) {
 
   const res = data?.updateAvatar;
   console.log("AVATAR URL", res)
+  console.log("UPDATE AVATAR RESPONSE:", data);
 
   if (!res?.success) {
     throw new Error(res?.error?.message || "Failed to update avatar");

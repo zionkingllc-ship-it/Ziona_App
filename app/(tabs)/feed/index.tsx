@@ -126,7 +126,8 @@ export default function Feed() {
   if (query.isLoading) {
     return (
       <View flex={1} justifyContent="center" alignItems="center">
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size={40} color={colors.primary} />
+
       </View>
     );
   }

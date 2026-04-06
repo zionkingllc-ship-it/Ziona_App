@@ -3,9 +3,9 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { useCreatePostStore } from "@/store/createPostStore";
 import { MediaItem } from "@/types/createPost";
 
+import ProtectedScreen from "@/components/auth/ProtectedScreen";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-
 import { Image, StyleSheet, TouchableOpacity } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
 
@@ -24,13 +24,13 @@ export default function CreateScreen() {
     return true;
   }
 
-function normalizeMedia(asset: ImagePicker.ImagePickerAsset): MediaItem {
-  return {
-    id: asset.assetId ?? asset.uri,
-    uri: asset.uri,
-    type: asset.type === "video" ? "VIDEO" : "IMAGE", 
-  };
-}
+  function normalizeMedia(asset: ImagePicker.ImagePickerAsset): MediaItem {
+    return {
+      id: asset.assetId ?? asset.uri,
+      uri: asset.uri,
+      type: asset.type === "video" ? "VIDEO" : "IMAGE",
+    };
+  }
 
   async function pickInitialMedia() {
     const allowed = await ensurePermission();
@@ -51,16 +51,16 @@ function normalizeMedia(asset: ImagePicker.ImagePickerAsset): MediaItem {
    VIDEO FLOW
 ========================= */
 
-   if (video) {
-  if (assets.length > 1) {
-    alert("Only one video allowed.");
-    return;
-  }
-  startDraft("MEDIA", "VIDEO"); 
-  setMedia([normalizeMedia(video)]);
-  router.push("/create/media");
-  return;
-}
+    if (video) {
+      if (assets.length > 1) {
+        alert("Only one video allowed.");
+        return;
+      }
+      startDraft("MEDIA", "VIDEO");
+      setMedia([normalizeMedia(video)]);
+      router.push("/create/media");
+      return;
+    }
 
     /* =========================
    IMAGE FLOW
@@ -90,75 +90,77 @@ function normalizeMedia(asset: ImagePicker.ImagePickerAsset): MediaItem {
   }
 
   return (
-    <YStack
-      flex={1}
-      paddingHorizontal={wp(6)}
-      paddingTop={hp(5)}
-      backgroundColor={colors.white}
-    >
-      <Text
-        fontSize={fs(18)}
-        fontWeight="600"
-        alignSelf="center"
-        marginVertical={hp(4)}
-        fontFamily={"$body"}
+    <ProtectedScreen>
+      <YStack
+        flex={1}
+        paddingHorizontal={wp(6)}
+        paddingTop={hp(5)}
+        backgroundColor={colors.white}
       >
-        Create Post
-      </Text>
-
-      <XStack flexWrap="wrap" rowGap={wp(7)} columnGap={wp(4)}>
-        {/* TEXT */}
-
-        <TouchableOpacity
-          style={[styles.card, cardStyle(wp, hp)]}
-          onPress={openText}
+        <Text
+          fontSize={fs(18)}
+          fontWeight="600"
+          alignSelf="center"
+          marginVertical={hp(4)}
+          fontFamily={"$body"}
         >
-          <YStack alignItems="center" gap={hp(1)}>
-            <Image
-              source={require("@/assets/images/writeIcon.png")}
-              style={iconStyle(wp)}
-            />
-            <Text fontSize={fs(14)} textAlign="center">
-              Share your thoughts
-            </Text>
-          </YStack>
-        </TouchableOpacity>
+          Create Post
+        </Text>
 
-        {/* MEDIA */}
+        <XStack flexWrap="wrap" rowGap={wp(7)} columnGap={wp(4)}>
+          {/* TEXT */}
 
-        <TouchableOpacity
-          style={[styles.card, cardStyle(wp, hp)]}
-          onPress={pickInitialMedia}
-        >
-          <YStack alignItems="center" gap={hp(1)}>
-            <Image
-              source={require("@/assets/images/imageIcon.png")}
-              style={iconStyle(wp)}
-            />
-            <Text fontSize={fs(14)} textAlign="center">
-              Upload a video / image
-            </Text>
-          </YStack>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.card, cardStyle(wp, hp)]}
+            onPress={openText}
+          >
+            <YStack alignItems="center" gap={hp(1)}>
+              <Image
+                source={require("@/assets/images/writeIcon.png")}
+                style={iconStyle(wp)}
+              />
+              <Text fontSize={fs(14)} textAlign="center">
+                Share your thoughts
+              </Text>
+            </YStack>
+          </TouchableOpacity>
 
-        {/* BIBLE */}
+          {/* MEDIA */}
 
-        <TouchableOpacity
-          style={[styles.card, cardStyle(wp, hp)]}
-          onPress={openBible}
-        >
-          <YStack alignItems="center" gap={hp(1)}>
-            <Image
-              source={require("@/assets/images/bibleIcon.png")}
-              style={iconStyle(wp)}
-            />
-            <Text fontSize={fs(14)} textAlign="center">
-              Share a Bible verse
-            </Text>
-          </YStack>
-        </TouchableOpacity>
-      </XStack>
-    </YStack>
+          <TouchableOpacity
+            style={[styles.card, cardStyle(wp, hp)]}
+            onPress={pickInitialMedia}
+          >
+            <YStack alignItems="center" gap={hp(1)}>
+              <Image
+                source={require("@/assets/images/imageIcon.png")}
+                style={iconStyle(wp)}
+              />
+              <Text fontSize={fs(14)} textAlign="center">
+                Upload a video / image
+              </Text>
+            </YStack>
+          </TouchableOpacity>
+
+          {/* BIBLE */}
+
+          <TouchableOpacity
+            style={[styles.card, cardStyle(wp, hp)]}
+            onPress={openBible}
+          >
+            <YStack alignItems="center" gap={hp(1)}>
+              <Image
+                source={require("@/assets/images/bibleIcon.png")}
+                style={iconStyle(wp)}
+              />
+              <Text fontSize={fs(14)} textAlign="center">
+                Share a Bible verse
+              </Text>
+            </YStack>
+          </TouchableOpacity>
+        </XStack>
+      </YStack>
+    </ProtectedScreen>
   );
 }
 

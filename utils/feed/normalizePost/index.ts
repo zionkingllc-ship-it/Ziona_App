@@ -9,15 +9,17 @@ export function normalizePost(p: any): FeedPost | null {
 
   const base = normalizeBase(p);
 
-  if (p.type === "MEDIA") {
+  const type = typeof p.type === "string" ? p.type.toUpperCase() : p.type;
+
+  if (type === "MEDIA") {
     return normalizeMedia(p, base);
   }
 
-  if (p.type === "TEXT") {
+  if (type === "TEXT") {
     return normalizeText(p, base);
   }
 
-  if (p.type === "BIBLE") {
+  if (type === "BIBLE") {
     return normalizeBible(p, base);
   }
 

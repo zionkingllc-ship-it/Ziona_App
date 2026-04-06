@@ -71,6 +71,13 @@ export async function graphqlRequest(
     });
   };
 
+  console.log("GRAPHQL REQUEST BODY:", {
+  query,
+  variables,
+});
+
+
+
   let res = await makeRequest(token);
   let json = await res.json();
  
@@ -96,5 +103,6 @@ export async function graphqlRequest(
     }
   }
 
+  console.log("GRAPHQL RESPONSE FULL:", json);
   return json?.data;
 }

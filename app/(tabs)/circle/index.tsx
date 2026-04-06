@@ -3,7 +3,7 @@ import CirclesIntro from "@/components/circles/CirclesIntro";
 import { useCircleStore } from "@/store/circleStore";
 import { FlatList, StyleSheet, TextInput } from "react-native";
 import { Text, XStack, YStack } from "tamagui";
-
+import ProtectedScreen from "@/components/auth/ProtectedScreen";
 import colors from "@/constants/colors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { router } from "expo-router";
@@ -80,6 +80,7 @@ export default function CirclesScreen() {
   }
 
   return (
+    <ProtectedScreen>
     <YStack flex={1} paddingTop={hp(6)} backgroundColor={colors.white}>
       {/* SEARCH */}
       <XStack
@@ -122,6 +123,7 @@ export default function CirclesScreen() {
         )}
       />
     </YStack>
+    </ProtectedScreen>
   );
 }
 

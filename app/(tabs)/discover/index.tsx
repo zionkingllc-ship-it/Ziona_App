@@ -28,7 +28,7 @@ export default function DiscoverScreen() {
 
         {loading ? (
           <YStack flex={1} justifyContent="center" alignItems="center">
-            <ActivityIndicator />
+            <ActivityIndicator size={40} color={colors.primary}/>
           </YStack>
         ) : (
           <CategoryGrid

@@ -10,6 +10,7 @@ import { useAsyncStore } from "@/store/useAsyncStore";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Image, Text, XStack, YStack } from "tamagui";
+import { api } from "@/services/api/client";
 
 export default function CreateUsername() {
   const { wp, hp, fs } = useResponsive();
@@ -30,22 +31,26 @@ export default function CreateUsername() {
   const [isFocus, setIsFocus] = useState(false);
 
   const userIcon = require("@/assets/images/userIcon.png");
-
+ 
   const isValidUsername = username.trim().length > 0;
 
   const visualValidity: boolean | undefined =
     !isFocus ? undefined : isValidUsername ? true : false;
 
-  const handleSubmit = async () => {
-    if (!isValidUsername) return;
-    if (!email || !birthday || !password) return;
+const flow = useSignupStore((s) => s.flow);
 
-    const cleanUsername = username.trim().toLowerCase();
+const handleSubmit = async () => {
+  if (!isValidUsername) return;
 
-    setSelectedUsername(cleanUsername);
+  const cleanUsername = username.trim().toLowerCase();
 
-    try {
-      start("signup");
+  setSelectedUsername(cleanUsername);
+
+  try {
+    start("signup");
+
+    if (flow === "email") {
+      if (!email || !birthday || !password) return;
 
       await authApi.signUp({
         email,
@@ -56,17 +61,23 @@ export default function CreateUsername() {
 
       router.push({
         pathname: "/(auth)/verifyOtp",
-        params: {
-          email,
-          flow: "signup",
-        },
+        params: { email, flow: "signup" },
       });
-    } catch (error) {
-      console.error("Signup error:", error);
-    } finally {
-      stop("signup");
     }
-  };
+
+    if (flow === "google") {
+      await api.post("/user/finalize-username", {
+        username: cleanUsername,
+      });
+
+      router.replace("/(tabs)/feed");
+    }
+  } catch (error) {
+    console.error("Signup error:", error);
+  } finally {
+    stop("signup");
+  }
+};
 
   return (
     <KeyboardAvoidingWrapper>

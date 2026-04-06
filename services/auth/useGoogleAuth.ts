@@ -1,77 +1,75 @@
-import { useEffect } from "react";
-import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
-
 import { authApi } from "@/services/api/authApi";
 import { useAuthStore } from "@/store/useAuthStore";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
-// Configure Google Signin
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
   offlineAccess: true,
+  forceCodeForRefreshToken: true,
 });
+
+type GoogleAuthResponse = {
+  user?: {
+    id: string;
+    username?: string | null;
+  };
+  tokens?: any;
+  error?: string;
+};
 
 export const useGoogleAuth = () => {
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<GoogleAuthResponse> => {
     try {
-      console.log("Starting Google Sign-In...");
-
-      // Ensure Google Play Services are available
       await GoogleSignin.hasPlayServices();
 
-      // Launch Google login
+      // force fresh session
+      await GoogleSignin.signOut();
+
       const userInfo = await GoogleSignin.signIn();
 
-      console.log("Google user info:", userInfo);
-
-      // Extract ID Token
-      let idToken = userInfo.data?.idToken;
-
-      if (!idToken) {
-        const tokens = await GoogleSignin.getTokens();
-        idToken = tokens.idToken;
+      // Proper type narrowing
+      if (!userInfo || !("data" in userInfo)) {
+        throw new Error("Invalid Google Sign-In response");
       }
 
+      const idToken = userInfo.data?.idToken;
+
+      console.log("====== GOOGLE TOKEN ======");
+      console.log("ID Token:", idToken);
+      console.log("User:", userInfo.data?.user);
+
       if (!idToken) {
-        throw new Error("Google returned null idToken");
+        throw new Error("Google Sign-In failed: No idToken returned");
       }
 
-      console.log("====== GOOGLE LOGIN SUCCESS ======");
-      console.log("Google ID Token:", idToken);
-      console.log("Google User:", userInfo.data?.user);
-
-      // Send token to backend
       const res = await authApi.googleLogin(idToken);
 
-      console.log("Backend Google response:", res);
-
-      if (res.user && res.tokens) {
-        setAuth(res.user, res.tokens);
-        console.log("User authenticated successfully");
-      } else {
-        console.log("Backend did not return expected auth payload");
+      if (!res?.user || !res?.tokens) {
+        throw new Error("Invalid auth response");
       }
 
+      setAuth(res.user, res.tokens);
+      console.log("====== GOOGLE DATA  ======");
+      console.log("Google ID Token:", idToken);
+      console.log("Google User:", userInfo.data?.user);
+      return {
+        user: res.user,
+        tokens: res.tokens,
+      };
     } catch (error: any) {
       console.error("Google Sign-In error:", error);
 
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        console.log("User cancelled Google sign-in");
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        console.log("Google sign-in already in progress");
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        console.log("Google Play Services not available or outdated");
-      } else {
-        console.log("Unexpected Google login error");
-      }
+      return {
+        error:
+          error?.error?.message ||
+          error?.message ||
+          "Google login failed, try again later",
+      };
     }
   };
 
-  return {
-    signInWithGoogle,
-  };
+  return { signInWithGoogle };
 };
-
-

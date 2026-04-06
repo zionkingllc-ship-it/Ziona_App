@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
 import { graphqlRequest } from "@/services/graphQL/graphqlClient";
 import { useAuthStore } from "@/store/useAuthStore";
 import { UserProfile } from "@/types/userProfile";
+import { useQuery } from "@tanstack/react-query";
 
 const GET_USER_PROFILE = `
 query GetUserProfile($userId: String!) {
@@ -35,7 +35,7 @@ function normalizeUserProfile(raw: any): UserProfile | null {
 
 export function useUserProfile(
   userId?: string,
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ) {
   const token = useAuthStore((s) => s.tokens?.accessToken);
 
@@ -47,8 +47,22 @@ export function useUserProfile(
     refetchOnReconnect: true,
 
     queryFn: async () => {
+      if (!userId) return null;
+
       const data = await graphqlRequest(GET_USER_PROFILE, { userId });
-      return normalizeUserProfile(data?.userProfile);
+
+      console.log("USER PROFILE RAW:", data);
+      console.log("userID", userId);
+
+      const normalized = normalizeUserProfile(data?.userProfile);
+
+      console.log("USER PROFILE NORMALIZED:", normalized);
+
+      console.log("USER POSTS RAW FULL RESPONSE:", data);
+      console.log("USER POSTS NODE:", data?.userPosts);
+      console.log("USER POSTS ARRAY LENGTH:", data?.userPosts?.posts?.length);
+
+      return normalized;
     },
   });
 }

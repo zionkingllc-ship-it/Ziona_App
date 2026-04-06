@@ -21,6 +21,8 @@ export function useUpdateProfile() {
         }
       );
 
+
+
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
     },
   });

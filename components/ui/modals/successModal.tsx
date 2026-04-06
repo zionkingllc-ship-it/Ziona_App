@@ -26,8 +26,8 @@ interface Props {
 export default function SuccessModal({
   visible,
   onClose,
-  title = "Thank you for reporting this post",
-  message = "Your feedback is important to us, we’ll review the content of this post, you won’t see this user’s post on your feed again.",
+  title = "",
+  message = "",
   autoClose = true,
   duration = 5000,
   type = "success",
@@ -41,7 +41,7 @@ export default function SuccessModal({
   buttonStyle,
 }: Props) {
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+   let timer: ReturnType<typeof setTimeout>;
 
     if (visible && autoClose) {
       timer = setTimeout(() => {
@@ -52,7 +52,7 @@ export default function SuccessModal({
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [visible]);
+  }, [visible, autoClose, duration, onClose]);
   const warnImage = require("@/assets/images/warningImage.png");
   const successImage = require("@/assets/images/succesImage.png");
   const failedImage = require("@/assets/images/failedImage.png");
