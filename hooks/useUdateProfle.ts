@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateProfile } from "@/services/graphQL/profile/profile";
+import { updateProfile } from "@/services/graphQL/mutation/profile/profile";
 import { useAuthStore } from "@/store/useAuthStore";
 import { UserProfile } from "@/types/userProfile";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
@@ -18,10 +18,8 @@ export function useUpdateProfile() {
         (prev: UserProfile | null) => {
           if (!prev) return prev;
           return { ...prev, ...user };
-        }
+        },
       );
-
-
 
       queryClient.invalidateQueries({ queryKey: ["userProfile", userId] });
     },

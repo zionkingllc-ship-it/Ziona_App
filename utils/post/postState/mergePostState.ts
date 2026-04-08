@@ -19,9 +19,9 @@ export function mergePostState(
   const baseFollowing = post.viewerState.followingAuthor;
   const baseOwner = post.viewerState.isOwner;
 
-  // 🔥 LOCK override ONCE
-  const hasLikedOverride = likedMap[post.id] !== undefined;
-  const hasSavedOverride = savedMap[post.id] !== undefined;
+  //  check existence properly
+  const hasLikedOverride = post.id in likedMap;
+  const hasSavedOverride = post.id in savedMap;
 
   const liked = hasLikedOverride
     ? likedMap[post.id]
@@ -32,7 +32,7 @@ export function mergePostState(
     : baseSaved;
 
   const isFollowing =
-    post.author?.id && followMap[post.author.id] !== undefined
+    post.author?.id && post.author.id in followMap
       ? followMap[post.author.id]
       : baseFollowing;
 
@@ -42,7 +42,7 @@ export function mergePostState(
   const baseSaves = post.stats.savesCount;
 
   let likesCount = baseLikesCount;
- 
+
   if (hasLikedOverride) {
     if (liked && !baseLiked) likesCount += 1;
     if (!liked && baseLiked) likesCount -= 1;

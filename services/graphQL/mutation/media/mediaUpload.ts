@@ -1,4 +1,4 @@
-import { graphqlRequest } from "./graphqlClient";
+import { graphqlRequest } from "../../graphqlClient";
 
 const REQUEST_UPLOAD_MUTATION = `
 mutation UploadMedia($fileName: String!, $fileType: String!, $fileSize: Int!) {
@@ -17,16 +17,13 @@ mutation UploadMedia($fileName: String!, $fileType: String!, $fileSize: Int!) {
 export async function requestMediaUpload(
   fileName: string,
   fileType: string,
-  fileSize: number
+  fileSize: number,
 ) {
-  const data = await graphqlRequest(
-    REQUEST_UPLOAD_MUTATION,
-    {
-      fileName,
-      fileType,
-      fileSize,
-    }
-  );
+  const data = await graphqlRequest(REQUEST_UPLOAD_MUTATION, {
+    fileName,
+    fileType,
+    fileSize,
+  });
 
   const payload = data?.uploadMedia;
 
@@ -44,7 +41,7 @@ export async function requestMediaUpload(
 export async function uploadFileToStorage(
   uploadUrl: string,
   fileUri: string,
-  fileType: string
+  fileType: string,
 ) {
   try {
     const response = await fetch(fileUri);

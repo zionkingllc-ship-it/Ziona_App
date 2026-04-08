@@ -6,31 +6,31 @@ import {
 } from "@/services/graphQL/actions/actionService";
 
 export function useToggleFollow() {
-  const toggleFollowStore = usePostActionsStore((s) => s.toggleFollow);
+  // const toggleFollowStore = usePostActionsStore((s) => s.toggleFollow);
 
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      currentFollowing,
-    }: {
-      userId: string;
-      currentFollowing: boolean;
-    }) => {
-      return currentFollowing
-        ? unfollowUser(userId)
-        : followUser(userId);
-    },
+  // return useMutation({
+  //   mutationFn: async ({
+  //     userId,
+  //     currentFollowing,
+  //   }: {
+  //     userId: string;
+  //     currentFollowing: boolean;
+  //   }) => {
+  //     return currentFollowing
+  //       ? unfollowUser(userId)
+  //       : followUser(userId);
+  //   },
 
-    onMutate: ({ userId, currentFollowing }) => {
-      toggleFollowStore(userId, currentFollowing);
+  //   onMutate: ({ userId, currentFollowing }) => {
+  //     toggleFollowStore(userId, currentFollowing);
 
-      return { userId, previous: currentFollowing };
-    },
+  //     return { userId, previous: currentFollowing };
+  //   },
 
-    onError: (_err, _vars, ctx) => {
-      if (!ctx) return;
+  //   onError: (_err, _vars, ctx) => {
+  //     if (!ctx) return;
 
-      toggleFollowStore(ctx.userId, !ctx.previous);
-    },
-  });
+  //     toggleFollowStore(ctx.userId, !ctx.previous);
+  //   },
+  // });
 }

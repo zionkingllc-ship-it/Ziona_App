@@ -24,7 +24,9 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
 
   /* ================= VIDEO THUMBNAIL ================= */
 
-  useEffect(() => {
+const mediaUrl = firstMedia?.url;
+
+useEffect(() => {
   let isMounted = true;
 
   async function loadThumbnail() {
@@ -32,7 +34,6 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
 
     const backendThumb = firstMedia.thumbnailUrl;
 
-    // ignore bad backend thumbnail
     const isValidBackend =
       backendThumb &&
       !backendThumb.endsWith(".mp4") &&
@@ -44,14 +45,12 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
     }
 
     try {
-      const generated = await generateVideoThumbnail(firstMedia.url);
+      const generated = await generateVideoThumbnail(mediaUrl);
 
       if (generated && isMounted) {
         setThumbnailUri(generated);
       }
-    } catch (err) {
-      console.warn("Thumbnail generation failed", err);
-    }
+    } catch {}
   }
 
   loadThumbnail();
@@ -59,7 +58,7 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
   return () => {
     isMounted = false;
   };
-}, [firstMedia?.url]);
+}, [mediaUrl]);
 
   /* ================= RENDER MEDIA ================= */
 
@@ -87,6 +86,34 @@ export default function PostThumbnail({ post, size, onPress }: Props) {
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
+      );
+    }
+
+    
+    if (isMedia && !firstMedia) {
+      return (
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#111",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 8,
+          }}
+        >
+          <Ionicons name="image" size={20} color="white" />
+          <Text
+            numberOfLines={2}
+            style={{
+              color: "#fff",
+              fontSize: 10,
+              marginTop: 4,
+              textAlign: "center",
+            }}
+          >
+            {post.caption || "Media Post"}
+          </Text>
+        </View>
       );
     }
 

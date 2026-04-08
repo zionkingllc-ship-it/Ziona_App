@@ -1,16 +1,23 @@
+import { SnapListContainer } from "@/components/layout/SnapListContainer";
 import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
 import { preloadPostMedia } from "@/helpers/preloadMedia";
 import { useUserPosts } from "@/hooks/useUserPost";
+import { usePostActionsStore } from "@/store/usePostActionStore";
 import { FeedPost } from "@/types/feedTypes";
+import { mergePostState } from "@/utils/post/postState/mergePostState";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ActivityIndicator, AppState, FlatList, ViewToken } from "react-native";
 import { View } from "tamagui";
-import { SnapListContainer } from "@/components/layout/SnapListContainer";
-import { FlatListProps } from "react-native";
- 
+
 export default function ProfilePostViewerScreen() {
   const { postId } = useLocalSearchParams<{ postId: string }>();
   const tabBarHeight = useBottomTabBarHeight();
@@ -24,8 +31,21 @@ export default function ProfilePostViewerScreen() {
 
   const [containerHeight, setContainerHeight] = useState(0);
   const [containerWidth, setContainerWidth] = useState(0);
+  const likedMap = usePostActionsStore((s) => s.likedPosts);
+  const savedMap = usePostActionsStore((s) => s.savedPosts);
+  const followedMap = usePostActionsStore((s) => s.followedUsers);
 
   const hasScrolledRef = useRef(false);
+
+  const mergedPosts = useMemo(() => {
+    return posts.map((p) =>
+      mergePostState(p, {
+        likedPosts: likedMap,
+        savedPosts: savedMap,
+        followedUsers: followedMap,
+      }),
+    );
+  }, [posts, likedMap, savedMap, followedMap]);
 
   /* ================= INITIAL SCROLL ================= */
 
@@ -106,7 +126,10 @@ export default function ProfilePostViewerScreen() {
   return (
     <SnapListContainer
       flatListRef={flatListRef}
-      data={posts}
+      data={mergedPosts}
+      windowSize={3}
+      maxToRenderPerBatch={2}
+      removeClippedSubviews={false}
       keyExtractor={(item) => item.id}
       viewabilityConfig={viewabilityConfig}
       onViewableItemsChanged={onViewableItemsChanged}
@@ -117,12 +140,9 @@ export default function ProfilePostViewerScreen() {
       renderItem={({ item }) => (
         <PostCard
           post={item}
-          liked={item.viewerState.liked}
           isPlaying={item.id === activePostId && item.id !== pausedPostId}
           onTogglePlay={() => {
-            setPausedPostId((prev) =>
-              prev === item.id ? null : item.id,
-            );
+            setPausedPostId((prev) => (prev === item.id ? null : item.id));
           }}
           screenHeight={containerHeight}
           screenWidth={containerWidth}

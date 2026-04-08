@@ -1,4 +1,4 @@
-import { graphqlRequest } from "../graphqlClient";
+import { graphqlRequest } from "../../graphqlClient";
 import { getToken } from "./token";
 
 /* SAVE */

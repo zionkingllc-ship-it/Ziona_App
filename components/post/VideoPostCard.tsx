@@ -1,7 +1,7 @@
 import colors from "@/constants/colors";
 import { FeedMediaPost } from "@/types/feedTypes";
 import { Play } from "@tamagui/lucide-icons";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
@@ -10,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Video from "react-native-video";
 import { View } from "tamagui";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface Props {
   post: FeedMediaPost;
@@ -20,7 +21,7 @@ interface Props {
   triggerHeart: () => void;
   screenWidth: number;
   screenHeight: number;
-  tabBarHeight: number; 
+  tabBarHeight: number;
 }
 
 export default function VideoPostCard({
@@ -32,7 +33,6 @@ export default function VideoPostCard({
   triggerHeart,
   screenWidth,
   screenHeight,
-  
 }: Props) {
   const videoRef = useRef<any>(null);
 
@@ -43,11 +43,28 @@ export default function VideoPostCard({
     width: progress.value * (screenWidth * 0.9),
   }));
 
-  /* =========================
-     GESTURES (FIXED)
-  ========================= */
+  /* ================= SAFE NAVIGATION HANDLING ================= */
 
-  // DOUBLE TAP → LIKE ONLY
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // 🔥 DO NOTHING IMPERATIVE
+        // playback is controlled via `paused` prop only
+      };
+    }, [])
+  );
+
+  /* ================= SAFE CLEANUP ================= */
+
+  useEffect(() => {
+    return () => {
+      // 🔥 NO imperative calls here
+      // letting React unmount cleanly with paused state
+    };
+  }, []);
+
+  /* ================= GESTURES ================= */
+
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
     .maxDelay(250)
@@ -56,7 +73,6 @@ export default function VideoPostCard({
       runOnJS(triggerHeart)();
     });
 
-  // SINGLE TAP → PLAY/PAUSE ONLY
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
     .maxDelay(250)
@@ -64,22 +80,15 @@ export default function VideoPostCard({
       if (onTogglePlay) runOnJS(onTogglePlay)();
     });
 
-  // IMPORTANT: double tap must take priority
   const gesture = Gesture.Exclusive(doubleTap, singleTap);
 
-  /* =========================
-     VIDEO SOURCE
-  ========================= */
+  /* ================= VIDEO ================= */
 
   const videoItem = post.media?.[0];
   const videoUrl =
     videoItem && videoItem.type === "video" ? videoItem.url : undefined;
 
   if (!videoUrl) return null;
-
-  /* =========================
-     RENDER
-  ========================= */
 
   return (
     <GestureDetector gesture={gesture}>
@@ -97,8 +106,12 @@ export default function VideoPostCard({
           resizeMode="contain"
           repeat
 
-          //  CORE FIX: controlled playback
+          // 🔥 ONLY CONTROL POINT
           paused={!isPlaying}
+
+          // 🔥 CRITICAL ANDROID FIX
+          useTextureView={true}
+          useSecureView={false}
 
           onLoad={(d) => {
             setVideoDuration(d.duration);
@@ -115,7 +128,7 @@ export default function VideoPostCard({
           }}
         />
 
-        {/*  LIKE ANIMATION */}
+        {/* LIKE ANIMATION */}
         <Animated.View
           style={[
             {
@@ -132,7 +145,7 @@ export default function VideoPostCard({
           />
         </Animated.View>
 
-        {/*  PLAY BUTTON */}
+        {/* PLAY BUTTON */}
         {!isPlaying && (
           <View
             width={50}

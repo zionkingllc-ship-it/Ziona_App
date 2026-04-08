@@ -1,15 +1,22 @@
 import { PostCard } from "@/components/post/PostCard";
 import colors from "@/constants/colors";
-import { FeedPost } from "@/types/feedTypes";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, AppState, FlatList, ViewToken } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { View } from "tamagui";
-
 import { preloadPostMedia } from "@/helpers/preloadMedia";
 import { useDiscoverFeed } from "@/hooks/useDiscover";
 import { useResponsive } from "@/hooks/useResponsive";
+import { usePostActionsStore } from "@/store/usePostActionStore";
+import { FeedPost } from "@/types/feedTypes";
+import { mergePostState } from "@/utils/post/postState";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { ActivityIndicator, AppState, FlatList, ViewToken } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { View } from "tamagui";
 
 export default function PostViewerScreen() {
   const tabBarHeight = 0;
@@ -32,9 +39,23 @@ export default function PostViewerScreen() {
 
   const hasScrolledRef = useRef(false);
 
+  const likedMap = usePostActionsStore((s) => s.likedPosts);
+  const savedMap = usePostActionsStore((s) => s.savedPosts);
+  const followedMap = usePostActionsStore((s) => s.followedUsers);
+
   /* ================= FILTER ================= */
 
-  const filteredPosts = posts.filter((post: FeedPost) => {
+  const mergedPosts = useMemo(() => {
+    return posts.map((p) =>
+      mergePostState(p, {
+        likedPosts: likedMap,
+        savedPosts: savedMap,
+        followedUsers: followedMap,
+      }),
+    );
+  }, [posts, likedMap, savedMap, followedMap]);
+
+  const filteredPosts = mergedPosts.filter((post: FeedPost) => {
     if (filter === "images") {
       return post.type === "media" && post.media?.[0]?.type === "image";
     }
@@ -138,7 +159,6 @@ export default function PostViewerScreen() {
     ({ item }: { item: FeedPost }) => (
       <PostCard
         post={item}
-        liked={item.viewerState.liked}
         isPlaying={item.id === activePostId && item.id !== pausedPostId}
         onTogglePlay={() => {
           setPausedPostId((prev) => (prev === item.id ? null : item.id));
@@ -170,9 +190,12 @@ export default function PostViewerScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={{
-            paddingBottom: viewportHeight * 0.07, 
+            paddingBottom: viewportHeight * 0.07,
           }}
           pagingEnabled
+          windowSize={3}
+          maxToRenderPerBatch={2}
+          removeClippedSubviews={false} 
           decelerationRate="fast"
           showsVerticalScrollIndicator={false}
           snapToInterval={viewportHeight}
@@ -184,10 +207,7 @@ export default function PostViewerScreen() {
           })}
           viewabilityConfig={viewabilityConfig}
           onViewableItemsChanged={onViewableItemsChanged}
-          windowSize={3}
           initialNumToRender={2}
-          maxToRenderPerBatch={2}
-          removeClippedSubviews
         />
       </View>
     </SafeAreaView>

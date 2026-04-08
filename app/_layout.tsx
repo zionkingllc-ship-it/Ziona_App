@@ -14,23 +14,33 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, useColorScheme } from "react-native";
+import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { TamaguiProvider, View } from "tamagui";
+import { TamaguiProvider } from "tamagui";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const initializeAuth = useAuthStore((s) => s.initializeAuth);
+  const hasHydrated = useAuthStore((s) => s._hasHydrated);
 
   const scheme = useColorScheme() ?? "light";
   const loadCategories = useCategoryStore((s) => s.loadCategories);
 
+  /* -------- WAIT FOR HYDRATION -------- */
+
   useEffect(() => {
+    if (!hasHydrated) {
+      console.log("[APP] ⏳ Waiting for auth hydration...");
+      return;
+    }
+
+    console.log("[APP] ✅ Auth hydrated, initializing");
+
     loadCategories();
     initializeAuth();
-  }, []);
+  }, [hasHydrated]);
 
   const [fontsLoaded] = useFonts({
     MonaSans_400: require("../assets/fonts/MonaSans-Regular.ttf"),
@@ -46,28 +56,26 @@ export default function RootLayout() {
     Merienda_600: require("../assets/fonts/Merienda-SemiBold.ttf"),
   });
 
-  /* -------- FORCE BLACK ANDROID NAVIGATION BAR -------- */
+  /* -------- NAV BAR -------- */
 
   useEffect(() => {
-    // NavigationBar.setBackgroundColorAsync("#ffffff");
     NavigationBar.setButtonStyleAsync("dark");
   }, []);
 
-  /* -------- HIDE SPLASH AFTER FONTS -------- */
+  /* -------- SPLASH -------- */
 
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded && hasHydrated) {
+      console.log("[APP] 🚀 App ready, hiding splash");
+
       SplashScreen.hideAsync();
       debugAuthStorage();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, hasHydrated]);
 
   const isBootstrapping = useAuthStore((s) => s.isBootstrapping);
-  if (isBootstrapping) {
-    return null;
-  }
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !hasHydrated || isBootstrapping) {
     return null;
   }
 

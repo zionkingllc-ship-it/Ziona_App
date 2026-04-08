@@ -22,7 +22,6 @@ import SuccessModal from "../ui/modals/successModal";
 import { useToggleLike } from "@/hooks/useToggleLike";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-
 /* ICONS */
 const likeIcon = require("@/assets/images/likeIcon.png");
 const likeIconActive = require("@/assets/images/likeIcon2.png");
@@ -31,11 +30,8 @@ const bookmarkIcon = require("@/assets/images/bookmarkIcon.png");
 const bookmarkIconActive = require("@/assets/images/bookmarkIconActive.png");
 const shareIcon = require("@/assets/images/shareIcon.png");
 
-
-
 type Props = {
-  post: FeedPost;
-  liked: boolean;
+  post: FeedPost; 
   isPlaying: boolean;
   screenHeight: number;
   onTogglePlay?: () => void;
@@ -50,7 +46,7 @@ export function PostCard({
   onTogglePlay,
   screenWidth,
   tabBarHeight,
-  liked,
+ 
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [commentsVisible, setCommentsVisible] = useState(false);
@@ -61,11 +57,9 @@ export function PostCard({
   const [createVisible, setCreateVisible] = useState(false);
   const [shareVisible, setShareVisible] = useState(false);
 
-  const likedState = liked;
+  const likedState = post.viewerState.liked;
   const likeCount = post.stats.likesCount;
   const insets = useSafeAreaInsets();
-
-  const toggleLikeMutation = useToggleLike();
 
   const { folders, toggleBookmark, getSavedFolderIds, createFolder } =
     useBookmarksStore();
@@ -74,6 +68,7 @@ export function PostCard({
   const isBookmarked = savedFolderIds.length > 0;
 
   const { getIconSize, getAvatarSize, getFontSize } = useResponsiveSize();
+  const toggleLikeMutation = useToggleLike();
 
   useEffect(() => {
     setExpanded(false);
@@ -82,9 +77,9 @@ export function PostCard({
   const handleLike = () => {
     toggleLikeMutation.mutate({
       postId: post.id,
+      currentLiked: likedState,
     });
   };
-
   return (
     <YStack height={screenHeight} width="100%" backgroundColor="black">
       {/* MEDIA */}
@@ -99,7 +94,7 @@ export function PostCard({
       />
 
       {/*SINGLE OVERLAY*/}
-      <YStack position="absolute" bottom={tabBarHeight/3} width="100%">
+      <YStack position="absolute" bottom={tabBarHeight / 3} width="100%">
         <XStack padding="$4" alignItems="flex-end">
           <YStack flex={1} gap="$2">
             {/* PROFILE ROW */}

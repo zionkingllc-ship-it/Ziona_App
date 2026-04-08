@@ -10,7 +10,13 @@ import { mergePostState } from "@/utils/post/postState/mergePostState";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useFocusEffect } from "@react-navigation/native";
 import { InfiniteData, useQueryClient } from "@tanstack/react-query";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   AppState,
@@ -19,7 +25,6 @@ import {
   ViewToken,
 } from "react-native";
 import { View } from "tamagui";
-import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 export default function Feed() {
   const tabBarHeight = useBottomTabBarHeight();
@@ -43,7 +48,7 @@ export default function Feed() {
   useFocusEffect(
     useCallback(() => {
       queryClient.invalidateQueries({ queryKey: ["feed"], exact: false });
-      
+
       setActivePostId(null);
     }, [queryClient]),
   );
@@ -60,24 +65,29 @@ export default function Feed() {
 
   const pages =
     (query.data as InfiniteData<{ posts: any[] }> | undefined)?.pages ?? [];
+  const data: FeedPost[] = useMemo(() => {
+    if (!pages.length) return [];
 
-  const data: FeedPost[] = pages
-    .flatMap((page) => page.posts ?? [])
-    .map((p) => normalizePost(p))
-    .filter((p): p is FeedPost => {
-      if (!p) return false;
-      if (p.type === "media") {
-        return Array.isArray(p.media) && p.media.length > 0;
-      }
-      return true;
-    })
-    .map((post) =>
-      mergePostState(post, {
-        likedPosts: likedMap,
-        savedPosts: savedMap,
-        followedUsers: followedMap,
-      }),
-    );
+    return pages
+      .flatMap((page) => page.posts ?? [])
+      .map((p) => normalizePost(p))
+      .filter((p): p is FeedPost => {
+        if (!p) return false;
+
+        if (p.type === "media") {
+          return Array.isArray(p.media) && p.media.length > 0;
+        }
+
+        return true;
+      })
+      .map((post) =>
+        mergePostState(post, {
+          likedPosts: likedMap,
+          savedPosts: savedMap,
+          followedUsers: followedMap,
+        }),
+      );
+  }, [pages, likedMap, savedMap, followedMap]);
 
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 80,
@@ -88,11 +98,13 @@ export default function Feed() {
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (!viewableItems.length) return;
 
-      setPausedPostId(null);
-
       const current = viewableItems[0].item;
       if (!current?.id) return;
 
+      // prevent loop
+      if (current.id === activePostId) return;
+
+      setPausedPostId(null);
       setActivePostId(current.id);
 
       const index = data.findIndex((p) => p.id === current.id);
@@ -108,12 +120,9 @@ export default function Feed() {
     ({ item }: { item: FeedPost }) => (
       <PostCard
         post={item}
-         liked={item.viewerState.liked}
         isPlaying={item.id === activePostId && item.id !== pausedPostId}
         onTogglePlay={() => {
-          setPausedPostId((prev) =>
-            prev === item.id ? null : item.id,
-          );
+          setPausedPostId((prev) => (prev === item.id ? null : item.id));
         }}
         screenHeight={containerHeight}
         screenWidth={containerWidth}
@@ -127,7 +136,6 @@ export default function Feed() {
     return (
       <View flex={1} justifyContent="center" alignItems="center">
         <ActivityIndicator size={40} color={colors.primary} />
-
       </View>
     );
   }
@@ -152,15 +160,16 @@ export default function Feed() {
       >
         {data.length === 0 ? (
           <View flex={1} justifyContent="center" alignItems="center">
-            <Text style={{ color: colors.text }}>
-              No posts yet
-            </Text>
+            <Text style={{ color: colors.text }}>No posts yet</Text>
           </View>
         ) : (
           <FlatList
             ref={flatListRef}
             data={data}
-             extraData={likedMap} 
+            windowSize={3}
+            maxToRenderPerBatch={2}
+            removeClippedSubviews={false} 
+            extraData={{ likedMap, savedMap }}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
             pagingEnabled

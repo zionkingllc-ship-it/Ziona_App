@@ -18,7 +18,7 @@ export function normalizePost(p: any): FeedPost | null {
   if (type === "TEXT") {
     return normalizeText(p, base);
   }
-
+ 
   if (type === "BIBLE") {
     return normalizeBible(p, base);
   }

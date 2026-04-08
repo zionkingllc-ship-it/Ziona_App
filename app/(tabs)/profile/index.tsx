@@ -7,10 +7,13 @@ import { generateVideoThumbnail } from "@/helpers/thumbnailGenerator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useUserPosts } from "@/hooks/useUserPost";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useLikedPosts } from "@/services/graphQL/queries/actions/useLikedPosts";
 import { useAuthStore } from "@/store/useAuthStore";
+import { normalizePost } from "@/utils/feed/normalizePost";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
+import { FeedPost } from "@/types/feedTypes";
 import {
   FlatList,
   RefreshControl,
@@ -26,6 +29,22 @@ export default function ProfileScreen() {
 
   const user = useAuthStore((s) => s.user);
   const userId = user?.id;
+
+  const {
+    data: likedData,
+    fetchNextPage: fetchLikedNext,
+    hasNextPage: hasLikedNext,
+    isFetchingNextPage: fetchingLikedNext,
+  } = useLikedPosts();
+
+const likedPosts = useMemo(() => {
+  if (!likedData?.pages?.length) return [];
+
+  return likedData.pages
+    .flatMap((p) => p.posts ?? [])
+    .map((p) => normalizePost(p))
+    .filter((p): p is FeedPost => p !== null);
+}, [likedData?.pages]);
 
   const {
     posts = [],
@@ -53,52 +72,55 @@ export default function ProfileScreen() {
   /* ================= VIDEO THUMBNAILS ================= */
 
   useEffect(() => {
-    if (!posts.length) return;
+  if (!posts.length) return;
 
-    let isMounted = true;
+  let isMounted = true;
 
-    async function generateThumbnails() {
-      const thumbnails: Record<string, string> = {};
+  async function generateThumbnails() {
+    const thumbnails: Record<string, string> = {};
 
-      await Promise.all(
-        posts.map(async (post) => {
-          if (post.type !== "media") return;
+    await Promise.all(
+      posts.map(async (post) => {
+        if (post.type !== "media") return;
 
-          const media = post.media?.[0];
-          if (!media) return;
+        const media = post.media?.[0];
+        if (!media) return;
 
-          if (media.type === "video") {
-            if (media.thumbnailUrl) {
-              thumbnails[post.id] = media.thumbnailUrl;
-            } else if (media.url) {
-              const generated = await generateVideoThumbnail(media.url);
-              if (generated) thumbnails[post.id] = generated;
-            }
+        // skip if already exists
+        if (videoThumbnails[post.id]) return;
+
+        if (media.type === "video") {
+          if (media.thumbnailUrl) {
+            thumbnails[post.id] = media.thumbnailUrl;
+          } else if (media.url) {
+            const generated = await generateVideoThumbnail(media.url);
+            if (generated) thumbnails[post.id] = generated;
           }
-        }),
-      );
+        }
+      }),
+    );
 
-      if (isMounted) {
-        setVideoThumbnails((prev) => ({ ...prev, ...thumbnails }));
-      }
+    //  prevent unnecessary state updates
+    if (isMounted && Object.keys(thumbnails).length > 0) {
+      setVideoThumbnails((prev) => ({ ...prev, ...thumbnails }));
     }
+  }
 
-    generateThumbnails();
+  generateThumbnails();
 
-    return () => {
-      isMounted = false;
-    };
-  }, [posts]);
+  return () => {
+    isMounted = false;
+  };
+}, [posts, videoThumbnails]);
 
   /* ================= FILTER ================= */
 
   const filteredPosts = useMemo(() => {
     if (activeTab === "liked") {
-      return posts.filter((post) => post.viewerState?.liked);
+      return likedPosts;
     }
     return posts;
-  }, [activeTab, posts]);
-
+  }, [activeTab, posts, likedPosts]);
   const initials = profile?.username?.slice(0, 2)?.toUpperCase() || "U";
 
   /* ================= PULL TO REFRESH ================= */
@@ -294,8 +316,14 @@ export default function ProfileScreen() {
               }
               showsVerticalScrollIndicator={false}
               onEndReached={() => {
-                if (hasNextPage && !isFetchingNextPage) {
-                  fetchNextPage();
+                if (activeTab === "liked") {
+                  if (hasLikedNext && !fetchingLikedNext) {
+                    fetchLikedNext();
+                  }
+                } else {
+                  if (hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                  }
                 }
               }}
               onEndReachedThreshold={0.5}
