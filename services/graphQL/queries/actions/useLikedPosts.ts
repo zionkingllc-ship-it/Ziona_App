@@ -71,11 +71,25 @@ export function useLikedPosts() {
 
   return useInfiniteQuery({
     queryKey: ["likedPosts", userId],
+
     enabled: !!userId,
- 
+
     initialPageParam: undefined,
 
     queryFn: async ({ pageParam }) => {
+      if (!userId) {
+        return {
+          posts: [],
+          nextCursor: undefined,
+          hasMore: false,
+        };
+      }
+
+      console.log("[LIKED] 🚀 Fetch", {
+        userId,
+        cursor: pageParam,
+      });
+
       const data = await graphqlRequest(GET_LIKED_POSTS, {
         userId,
         limit: 20,
@@ -84,15 +98,31 @@ export function useLikedPosts() {
 
       const res = data?.likedPosts ?? {};
 
+      console.log("[LIKED] ✅ Response", {
+        count: res.posts?.length,
+        hasMore: res.hasMore,
+        nextCursor: res.nextCursor,
+      });
+
       return {
         posts: res.posts ?? [],
-        nextCursor: res.nextCursor ?? null,
+        nextCursor: res.nextCursor ?? undefined,
         hasMore: res.hasMore ?? false,
       };
     },
 
     getNextPageParam: (lastPage) => {
-      return lastPage?.nextCursor ?? undefined;
+      const next = lastPage?.hasMore
+        ? lastPage.nextCursor
+        : undefined;
+
+      console.log("[LIKED] 🔄 Pagination", {
+        hasMore: lastPage?.hasMore,
+        nextCursor: lastPage?.nextCursor,
+        resolvedNext: next,
+      });
+
+      return next;
     },
   });
 }

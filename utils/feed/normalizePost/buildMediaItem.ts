@@ -1,21 +1,35 @@
 import { fixMediaUrl } from "./fixMediaUrl";
 
-export function buildMediaItem(
-  m: any
-):
-  | {
-      type: "image" | "video";
-      url: string;
-      thumbnailUrl?: string;
-    }
-  | null {
+type MediaItem = {
+  type: "image" | "video";
+  url: string;
+  thumbnailUrl?: string;
+};
+
+function isVideoUrl(url: string): boolean {
+  const clean = url.split("?")[0].toLowerCase();
+
+  return (
+    clean.endsWith(".mp4") ||
+    clean.endsWith(".mov") ||
+    clean.endsWith(".m3u8") ||
+    clean.includes("/video") // fallback for signed URLs
+  );
+}
+
+function isValidUrl(url: string): boolean {
+  return typeof url === "string" && url.startsWith("http");
+}
+
+export function buildMediaItem(m: any): MediaItem | null {
   console.log("[MEDIA][BUILD] 🧩 Incoming raw media", m);
 
   const url = fixMediaUrl(m?.url);
 
-  if (!url) {
-    console.warn("[MEDIA][BUILD] ⚠️ Invalid URL after fixMediaUrl", {
+  if (!url || !isValidUrl(url)) {
+    console.warn("[MEDIA][BUILD] ❌ Invalid URL", {
       original: m?.url,
+      fixed: url,
     });
     return null;
   }
@@ -24,22 +38,13 @@ export function buildMediaItem(
 
   const isValidThumb =
     rawThumb &&
-    !rawThumb.endsWith(".mp4") &&
-    !rawThumb.includes(".mp4?");
+    isValidUrl(rawThumb) &&
+    !rawThumb.toLowerCase().includes(".mp4");
 
-  const isVideo =
-    url.includes(".mp4") ||
-    url.includes(".mov") ||
-    url.includes(".m3u8");
+  const isVideo = isVideoUrl(url);
 
-  const type: "image" | "video" = isVideo ? "video" : "image";
-
-  const result: {
-    type: "image" | "video";
-    url: string;
-    thumbnailUrl?: string;
-  } = {
-    type,
+  const result: MediaItem = {
+    type: isVideo ? "video" : "image",
     url,
     thumbnailUrl: isValidThumb ? rawThumb : undefined,
   };

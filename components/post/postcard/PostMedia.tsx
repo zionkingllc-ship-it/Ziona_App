@@ -1,4 +1,4 @@
-import { FeedMediaPost, FeedPost } from "@/types/feedTypes";
+import { FeedPost } from "@/types/feedTypes";
 import React from "react";
 import {
   useAnimatedStyle,
@@ -51,28 +51,17 @@ export default function PostMedia({
 
   /* ================= MEDIA ================= */
   if (post.type === "media") {
-    const mediaPost = post as FeedMediaPost;
-    const firstMedia = mediaPost.media?.[0];
+    // 🔥 NO CAST — TRUST TYPE NARROWING
 
-    if (!firstMedia || !firstMedia.url) return null;
+    if (post.mediaType === "video") {
+      if (!post.media?.length || !post.media[0]?.url) {
+        console.warn("[PostMedia] ❌ Invalid video media", post);
+        return null;
+      }
 
-    if (firstMedia.type === "image") {
-      return (
-        <CarouselPostCard
-          post={mediaPost}
-          onLike={onLike}
-          heartStyle={heartStyle}
-          triggerHeart={triggerHeart}
-          screenWidth={screenWidth}
-          screenHeight={screenHeight}
-        />
-      );
-    }
-
-    if (firstMedia.type === "video") {
       return (
         <VideoPostCard
-          post={mediaPost}
+          post={post} // ✅ now STRICT video type
           isPlaying={isPlaying}
           onTogglePlay={onTogglePlay}
           onLike={onLike}
@@ -85,7 +74,22 @@ export default function PostMedia({
       );
     }
 
-    return null;
+    // ✅ IMAGE SAFE PATH
+    if (!post.media?.length) {
+      console.warn("[PostMedia] ❌ Empty image media", post);
+      return null;
+    }
+
+    return (
+      <CarouselPostCard
+        post={post}
+        onLike={onLike}
+        heartStyle={heartStyle}
+        triggerHeart={triggerHeart}
+        screenWidth={screenWidth}
+        screenHeight={screenHeight}
+      />
+    );
   }
 
   /* ================= TEXT / BIBLE ================= */

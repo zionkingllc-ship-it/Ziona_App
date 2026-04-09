@@ -1,5 +1,5 @@
 export function normalizeBase(p: any) {
-  const isFromLikedQuery = p.viewerState == null;
+  
 
   return {
     id: p.id,
@@ -34,10 +34,7 @@ export function normalizeBase(p: any) {
 
    
     viewerState: {
-      liked: isFromLikedQuery
-        ? true
-        : p.viewerState?.liked ?? false,
-
+      liked: p.viewerState?.liked ?? false,
       saved: p.viewerState?.saved ?? false,
       followingAuthor: p.viewerState?.followingAuthor ?? false,
       isOwner: p.viewerState?.isOwner ?? false,

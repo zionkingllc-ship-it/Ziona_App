@@ -9,11 +9,11 @@ import { useUserPosts } from "@/hooks/useUserPost";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useLikedPosts } from "@/services/graphQL/queries/actions/useLikedPosts";
 import { useAuthStore } from "@/store/useAuthStore";
+import { FeedPost } from "@/types/feedTypes";
 import { normalizePost } from "@/utils/feed/normalizePost";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { FeedPost } from "@/types/feedTypes";
 import {
   FlatList,
   RefreshControl,
@@ -37,14 +37,14 @@ export default function ProfileScreen() {
     isFetchingNextPage: fetchingLikedNext,
   } = useLikedPosts();
 
-const likedPosts = useMemo(() => {
-  if (!likedData?.pages?.length) return [];
+  const likedPosts = useMemo(() => {
+    if (!likedData?.pages?.length) return [];
 
-  return likedData.pages
-    .flatMap((p) => p.posts ?? [])
-    .map((p) => normalizePost(p))
-    .filter((p): p is FeedPost => p !== null);
-}, [likedData?.pages]);
+    return likedData.pages
+      .flatMap((p) => p.posts ?? [])
+      .map((p) => normalizePost(p))
+      .filter((p): p is FeedPost => p !== null);
+  }, [likedData?.pages]);
 
   const {
     posts = [],
@@ -72,46 +72,46 @@ const likedPosts = useMemo(() => {
   /* ================= VIDEO THUMBNAILS ================= */
 
   useEffect(() => {
-  if (!posts.length) return;
+    if (!posts.length) return;
 
-  let isMounted = true;
+    let isMounted = true;
 
-  async function generateThumbnails() {
-    const thumbnails: Record<string, string> = {};
+    async function generateThumbnails() {
+      const thumbnails: Record<string, string> = {};
 
-    await Promise.all(
-      posts.map(async (post) => {
-        if (post.type !== "media") return;
+      await Promise.all(
+        posts.map(async (post) => {
+          if (post.type !== "media") return;
 
-        const media = post.media?.[0];
-        if (!media) return;
+          const media = post.media?.[0];
+          if (!media) return;
 
-        // skip if already exists
-        if (videoThumbnails[post.id]) return;
+          // skip if already exists
+          if (videoThumbnails[post.id]) return;
 
-        if (media.type === "video") {
-          if (media.thumbnailUrl) {
-            thumbnails[post.id] = media.thumbnailUrl;
-          } else if (media.url) {
-            const generated = await generateVideoThumbnail(media.url);
-            if (generated) thumbnails[post.id] = generated;
+          if (media.type === "video") {
+            if (media.thumbnailUrl) {
+              thumbnails[post.id] = media.thumbnailUrl;
+            } else if (media.url) {
+              const generated = await generateVideoThumbnail(media.url);
+              if (generated) thumbnails[post.id] = generated;
+            }
           }
-        }
-      }),
-    );
+        }),
+      );
 
-    //  prevent unnecessary state updates
-    if (isMounted && Object.keys(thumbnails).length > 0) {
-      setVideoThumbnails((prev) => ({ ...prev, ...thumbnails }));
+      //  prevent unnecessary state updates
+      if (isMounted && Object.keys(thumbnails).length > 0) {
+        setVideoThumbnails((prev) => ({ ...prev, ...thumbnails }));
+      }
     }
-  }
 
-  generateThumbnails();
+    generateThumbnails();
 
-  return () => {
-    isMounted = false;
-  };
-}, [posts, videoThumbnails]);
+    return () => {
+      isMounted = false;
+    };
+  }, [posts, videoThumbnails]);
 
   /* ================= FILTER ================= */
 
@@ -304,8 +304,12 @@ const likedPosts = useMemo(() => {
                   size={itemSize}
                   onPress={() =>
                     router.push({
-                      pathname: "/profile/post/[postId]",
-                      params: { postId: item.id },
+                      pathname: "/viewer/[postId]",
+                      params: {
+                        postId: item.id,
+                        source: activeTab === "liked" ? "liked" : "user",
+                        index: String(index),
+                      },
                     })
                   }
                 />

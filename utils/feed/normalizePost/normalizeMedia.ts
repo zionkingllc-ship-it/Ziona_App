@@ -1,96 +1,85 @@
 import { buildMediaItem } from "./buildMediaItem";
 import { fixMediaUrl } from "./fixMediaUrl";
 
-export function normalizeMedia(p: any, base: any) {
-  console.log("[NORMALIZE][MEDIA] 🧩 Incoming post", {
-    id: p?.id,
-    hasMedia: !!p?.media?.length,
-    hasImages: !!p?.image?.items?.length,
-    hasVideo: !!p?.video?.url,
-  });
+type MediaItem = {
+  type: "image" | "video";
+  url: string;
+  thumbnailUrl?: string;
+};
 
+export function normalizeMedia(p: any, base: any) {
   const caption = p.caption ?? "";
 
   /* =========================
-     CASE 1: GENERIC MEDIA ARRAY
+     GENERIC MEDIA ARRAY
   ========================== */
   if (Array.isArray(p.media) && p.media.length > 0) {
-    console.log("[NORMALIZE][MEDIA] 📦 Processing p.media array");
+    const built = p.media
+      .map(buildMediaItem)
+      .filter((m): m is MediaItem => !!m && !!m.url);
 
-    const media = p.media.map(buildMediaItem).filter(Boolean);
+    if (!built.length) return null;
 
-    console.log("[NORMALIZE][MEDIA] 📊 Built media count", media.length);
+    const video = built.find((m) => m.type === "video");
 
-    if (!media.length) {
-      console.warn("[NORMALIZE][MEDIA] ⚠️ No valid media after build");
-      return null;
+    if (video) {
+      // 🔥 STRICT VIDEO RETURN
+      return {
+        ...base,
+        type: "media",
+        mediaType: "video",
+        caption,
+        media: [video], // guaranteed single valid video
+      };
     }
 
-    const hasVideo = media.some((m: any) => m.type === "video");
+    const images = built.filter((m) => m.type === "image");
 
-    const result = {
+    if (!images.length) return null;
+
+    return {
       ...base,
       type: "media",
-      mediaType: hasVideo ? "video" : "image",
+      mediaType: "image",
       caption,
-      media,
+      media: images,
     };
-
-    console.log("[NORMALIZE][MEDIA] ✅ Result (p.media)", result);
-
-    return result;
   }
 
   /* =========================
-     CASE 2: IMAGE ITEMS
+     IMAGE ITEMS
   ========================== */
   if (p.image?.items?.length) {
-    console.log("[NORMALIZE][MEDIA] 🖼️ Processing image items");
-
     const media = p.image.items
       .map((i: any) => buildMediaItem({ ...i, type: "image" }))
-      .filter(Boolean);
+      .filter((m): m is MediaItem => !!m && !!m.url);
 
-    console.log("[NORMALIZE][MEDIA] 📊 Built image media count", media.length);
+    if (!media.length) return null;
 
-    if (!media.length) {
-      console.warn("[NORMALIZE][MEDIA] ⚠️ No valid image media");
-      return null;
-    }
-
-    const result = {
+    return {
       ...base,
       type: "media",
       mediaType: "image",
       caption,
       media,
     };
-
-    console.log("[NORMALIZE][MEDIA] ✅ Result (image.items)", result);
-
-    return result;
   }
 
   /* =========================
-     CASE 3: VIDEO
+     VIDEO
   ========================== */
   if (p.video?.url) {
-    console.log("[NORMALIZE][MEDIA] 🎥 Processing video");
-
     const url = fixMediaUrl(p.video.url);
     const rawThumbnail = fixMediaUrl(p.video.thumbnailUrl);
 
-    if (!url) {
-      console.warn("[NORMALIZE][MEDIA] ⚠️ Invalid video URL");
-      return null;
-    }
+    if (!url) return null;
 
     const isValidThumbnail =
       rawThumbnail &&
       !rawThumbnail.endsWith(".mp4") &&
       !rawThumbnail.includes(".mp4?");
 
-    const result = {
+    return {
       ...base,
       type: "media",
       caption,
@@ -103,26 +92,7 @@ export function normalizeMedia(p: any, base: any) {
         },
       ],
     };
-
-    console.log("[NORMALIZE][MEDIA] ✅ Result (video)", result);
-
-    return result;
   }
 
-  /* =========================
-     FALLBACK
-  ========================== */
-  console.warn("[NORMALIZE][MEDIA] ⚠️ No media found, returning empty");
-
-  const fallback = {
-    ...base,
-    type: "media",
-    caption,
-    mediaType: "image",
-    media: [],
-  };
-
-  console.log("[NORMALIZE][MEDIA] ✅ Result (fallback)", fallback);
-
-  return fallback;
+  return null;
 }

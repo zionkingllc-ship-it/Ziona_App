@@ -1,7 +1,14 @@
+import { queryClient } from "@/lib/queryClient";
 import { likePost, unlikePost } from "@/services/graphQL/mutation/actions";
 import { usePostActionsStore } from "@/store/usePostActionStore";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+
+const FEED_KEYS = [
+  ["forYouFeed"],
+  ["followingFeed"],
+  ["userPosts"],
+  ["likedPosts"],
+];
 
 export function useToggleLike() {
   const toggleLikeStore = usePostActionsStore((s) => s.toggleLike);
@@ -14,49 +21,61 @@ export function useToggleLike() {
       postId: string;
       currentLiked: boolean;
     }) => {
-      return currentLiked
-        ? unlikePost(postId)
-        : likePost(postId);
+      return currentLiked ? unlikePost(postId) : likePost(postId);
     },
 
     onMutate: async ({ postId, currentLiked }) => {
       const next = !currentLiked;
 
-      // defer Zustand update
+      // Zustand optimistic
       setTimeout(() => {
         toggleLikeStore(postId, next);
       }, 0);
 
-      // optimistic cache update
+      // cache optimistic
+      const updater = (oldData: any) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages?.map((page: any) => ({
+            ...page,
+            posts: page.posts?.map((p: any) => {
+              if (p.id !== postId) return p;
+
+              return {
+                ...p,
+                viewerState: {
+                  ...p.viewerState,
+                  liked: next,
+                },
+                stats: {
+                  ...p.stats,
+                  likesCount: next
+                    ? (p.stats?.likesCount ?? 0) + 1
+                    : (p.stats?.likesCount ?? 0) - 1,
+                },
+              };
+            }),
+          })),
+        };
+      };
+      FEED_KEYS.forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
+
+      FEED_KEYS.forEach((key) => {
+        queryClient.setQueriesData({ queryKey: key, exact: false }, updater);
+      });
+
       queryClient.setQueriesData(
-        { queryKey: ["feed"], exact: false },
+        { queryKey: ["likedPosts"], exact: false },
         (oldData: any) => {
           if (!oldData) return oldData;
 
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
-              ...page,
-              posts: page.posts.map((p: any) => {
-                if (p.id !== postId) return p;
-
-                return {
-                  ...p,
-                  viewerState: {
-                    ...p.viewerState,
-                    liked: next,
-                  },
-                  stats: {
-                    ...p.stats,
-                    likesCount: next
-                      ? p.stats.likesCount + 1
-                      : p.stats.likesCount - 1,
-                  },
-                };
-              }),
-            })),
-          };
-        }
+          // OPTIONAL: inject/remove post
+          return oldData;
+        },
       );
 
       return { postId, previous: currentLiked };
@@ -65,73 +84,79 @@ export function useToggleLike() {
     onError: (_err, _vars, ctx) => {
       if (!ctx) return;
 
-      // defer rollback too (IMPORTANT)
+      // rollback Zustand
       setTimeout(() => {
         toggleLikeStore(ctx.postId, ctx.previous);
       }, 0);
 
-      queryClient.setQueriesData(
-        { queryKey: ["feed"], exact: false },
-        (oldData: any) => {
-          if (!oldData) return oldData;
+      const updater = (oldData: any) => {
+        if (!oldData) return oldData;
 
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
-              ...page,
-              posts: page.posts.map((p: any) => {
-                if (p.id !== ctx.postId) return p;
+        return {
+          ...oldData,
+          pages: oldData.pages?.map((page: any) => ({
+            ...page,
+            posts: page.posts?.map((p: any) => {
+              if (p.id !== ctx.postId) return p;
 
-                return {
-                  ...p,
-                  viewerState: {
-                    ...p.viewerState,
-                    liked: ctx.previous,
-                  },
-                  stats: {
-                    ...p.stats,
-                    likesCount: ctx.previous
-                      ? p.stats.likesCount + 1
-                      : p.stats.likesCount - 1,
-                  },
-                };
-              }),
-            })),
-          };
-        }
-      );
+              return {
+                ...p,
+                viewerState: {
+                  ...p.viewerState,
+                  liked: ctx.previous,
+                },
+                stats: {
+                  ...p.stats,
+                  likesCount: ctx.previous
+                    ? (p.stats?.likesCount ?? 0) + 1
+                    : (p.stats?.likesCount ?? 0) - 1,
+                },
+              };
+            }),
+          })),
+        };
+      };
+
+      FEED_KEYS.forEach((key) => {
+        queryClient.setQueriesData({ queryKey: key, exact: false }, updater);
+      });
     },
 
     onSuccess: (data, { postId }) => {
       const newCount = data?.stats?.likesCount;
 
+      // invalidate to sync backend truth
+      FEED_KEYS.forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
+
       if (typeof newCount !== "number") return;
 
-      //  backend truth sync
-      queryClient.setQueriesData(
-        { queryKey: ["feed"], exact: false },
-        (oldData: any) => {
-          if (!oldData) return oldData;
+      const updater = (oldData: any) => {
+        if (!oldData) return oldData;
 
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
-              ...page,
-              posts: page.posts.map((p: any) => {
-                if (p.id !== postId) return p;
+        return {
+          ...oldData,
+          pages: oldData.pages?.map((page: any) => ({
+            ...page,
+            posts: page.posts?.map((p: any) => {
+              if (p.id !== postId) return p;
 
-                return {
-                  ...p,
-                  stats: {
-                    ...p.stats,
-                    likesCount: newCount,
-                  },
-                };
-              }),
-            })),
-          };
-        }
-      );
+              return {
+                ...p,
+                stats: {
+                  ...p.stats,
+                  likesCount: newCount,
+                },
+              };
+            }),
+          })),
+        };
+      };
+
+      FEED_KEYS.forEach((key) => {
+        queryClient.setQueriesData({ queryKey: key, exact: false }, updater);
+      });
     },
   });
 }

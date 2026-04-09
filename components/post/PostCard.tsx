@@ -46,7 +46,6 @@ export function PostCard({
   onTogglePlay,
   screenWidth,
   tabBarHeight,
- 
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [commentsVisible, setCommentsVisible] = useState(false);
@@ -83,15 +82,29 @@ export function PostCard({
   return (
     <YStack height={screenHeight} width="100%" backgroundColor="black">
       {/* MEDIA */}
-      <PostMedia
-        post={post}
-        isPlaying={isPlaying}
-        onTogglePlay={onTogglePlay}
-        screenWidth={screenWidth}
-        screenHeight={screenHeight}
-        tabBarHeight={tabBarHeight}
-        onLike={handleLike}
-      />
+ {/* MEDIA */}
+{(() => {
+  const playing = isPlaying;
+
+  console.log("[PostCard] 🎬", {
+    id: post.id,
+    type: post.type,
+    mediaType: post.type === "media" ? post.mediaType : null,
+    isPlaying: playing,
+  });
+
+  return (
+    <PostMedia
+      post={post}
+      isPlaying={playing}
+      onTogglePlay={onTogglePlay}
+      screenWidth={screenWidth}
+      screenHeight={screenHeight}
+      tabBarHeight={tabBarHeight}
+      onLike={handleLike}
+    />
+  );
+})()}
 
       {/*SINGLE OVERLAY*/}
       <YStack position="absolute" bottom={tabBarHeight / 3} width="100%">
